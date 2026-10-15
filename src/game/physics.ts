@@ -206,25 +206,3 @@ export function seeded(seed: number): Rng {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-
-// ---------- disputa de pênaltis ----------
-
-export interface Shootout { a: (boolean | null)[]; b: (boolean | null)[] }
-
-/** Acabou? Retorna 'a', 'b' ou null. Cinco cobranças cada; depois, morte súbita. */
-export function shootoutWinner(so: Shootout): 'a' | 'b' | null {
-  const ga = so.a.filter(Boolean).length;
-  const gb = so.b.filter(Boolean).length;
-  const na = so.a.length;
-  const nb = so.b.length;
-  if (na <= 5 && nb <= 5) {
-    const leftA = 5 - na;
-    const leftB = 5 - nb;
-    if (ga + leftA < gb) return 'b';
-    if (gb + leftB < ga) return 'a';
-    if (na === 5 && nb === 5 && ga !== gb) return ga > gb ? 'a' : 'b';
-    return null;
-  }
-  if (na === nb && ga !== gb) return ga > gb ? 'a' : 'b';
-  return null;
-}

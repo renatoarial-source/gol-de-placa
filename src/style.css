@@ -94,3 +94,28 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .modal { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(0, 0, 0, .6); padding: 16px; }
 .modal .card { width: min(380px, 100%); text-align: center; }
 .answers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+/* versão 1.1: travas da versão completa, clima/torcida e "Meu craque" */
+.btn.gold { background: linear-gradient(180deg, #ffe066, #ffb300); }
+.btn.dim { filter: saturate(.55) brightness(.9); }
+.lock { font-size: .85em; }
+.sub { text-align: center; margin: 0; font-weight: 700; color: var(--muted); }
+.card > b { font-size: 15px; }
+.seg.wrap { flex-wrap: wrap; }
+.seg.wrap button { flex: 1 1 30%; }
+.team { position: relative; }
+.team.locked { opacity: .5; }
+.team .lk { position: absolute; top: 4px; right: 4px; font-size: 12px; }
+#hud .line .ic { width: 20px; text-align: center; font-size: 15px; }
+.screen.bottom { margin: auto auto 0; max-height: 64vh; background: linear-gradient(180deg, rgba(5, 25, 12, 0), rgba(5, 25, 12, .92) 12%); padding-top: 28px; }
+.builder { gap: 8px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.sw { width: 38px; height: 38px; border-radius: 12px; border: 3px solid rgba(255, 255, 255, .25); }
+.sw.on { border-color: var(--yellow); transform: scale(1.08); }
+.num { display: flex; align-items: center; gap: 8px; }
+.num button { width: 44px; height: 44px; border-radius: 12px; border: 0; background: rgba(255, 255, 255, .14); color: #fff; font: 800 22px var(--font); }
+.num span { min-width: 40px; text-align: center; font: 800 26px var(--font); }
+.builder input { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: #fff; font: 700 17px var(--font); padding: 0 10px; }
+.row > div { display: grid; gap: 6px; min-width: 0; }
+.unlock ul { margin: 0; padding-left: 4px; list-style: none; display: grid; gap: 6px; font-weight: 700; }
+.msg { min-height: 1.3em; margin: 0; color: var(--red); text-align: center; }

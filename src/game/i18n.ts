@@ -318,8 +318,104 @@ const ja: Pack = {
   },
 };
 
+
+// ---------- textos da versão 1.1: clima, torcida, craque e versão completa ----------
+const EXTRA = {
+  pt: {
+    weather: 'Clima', day: '☀️ Dia', night: '🌙 Noite', rain: '🌧️ Chuva', snow: '❄️ Neve',
+    crowd: 'Torcida', crowdFull: 'Lotado', crowdHalf: 'Média', crowdFew: 'Pouca',
+    matchTitle: 'Como vai ser o jogo', duelKick: 'Você bate as 5 cobranças. Faça 3 gols para vencer!', duelKeep: 'Você defende as 5 cobranças. Pegue 3 para vencer!',
+    myPlayer: '🧑 Meu craque', skin: 'Pele', hairColor: 'Cor do cabelo', hairStyle: 'Cabelo', boots: 'Chuteira', number: 'Número', playerName: 'Nome na camisa',
+    hs_short: 'Curto', hs_long: 'Comprido', hs_mohawk: 'Moicano', hs_curly: 'Black', hs_bald: 'Careca', saveLook: 'Salvar ✓',
+    fullVersion: '⭐ Versão completa', locked: 'Na versão completa',
+    unlockTitle: '⭐ Versão completa', unlockText: 'Libere tudo com uma compra só:',
+    unlock1: '🎯 Cobranças de falta com barreira', unlock2: '🧤 Jogar como goleiro', unlock3: '🌎 16 seleções e 12 times', unlock4: '🧑 Monte o seu próprio craque',
+    unlockBuy: 'Liberar tudo', unlockRestore: 'Já comprei', purchaseFail: 'A compra não foi concluída. Tente de novo.', restoreNone: 'Nenhuma compra encontrada nesta conta.', unlocked: 'Tudo liberado! ⭐',
+  },
+  en: {
+    weather: 'Weather', day: '☀️ Day', night: '🌙 Night', rain: '🌧️ Rain', snow: '❄️ Snow',
+    crowd: 'Crowd', crowdFull: 'Packed', crowdHalf: 'Medium', crowdFew: 'Few',
+    matchTitle: 'Match setup', duelKick: 'You take all 5 kicks. Score 3 to win!', duelKeep: 'You face all 5 kicks. Save 3 to win!',
+    myPlayer: '🧑 My player', skin: 'Skin', hairColor: 'Hair color', hairStyle: 'Hair', boots: 'Boots', number: 'Number', playerName: 'Name on shirt',
+    hs_short: 'Short', hs_long: 'Long', hs_mohawk: 'Mohawk', hs_curly: 'Afro', hs_bald: 'Bald', saveLook: 'Save ✓',
+    fullVersion: '⭐ Full version', locked: 'In the full version',
+    unlockTitle: '⭐ Full version', unlockText: 'Unlock everything with a single purchase:',
+    unlock1: '🎯 Free kicks with a wall', unlock2: '🧤 Play as goalkeeper', unlock3: '🌎 16 nations and 12 clubs', unlock4: '🧑 Build your own player',
+    unlockBuy: 'Unlock all', unlockRestore: 'I already bought it', purchaseFail: 'The purchase was not completed. Try again.', restoreNone: 'No purchase found on this account.', unlocked: 'Everything unlocked! ⭐',
+  },
+  es: {
+    weather: 'Clima', day: '☀️ Día', night: '🌙 Noche', rain: '🌧️ Lluvia', snow: '❄️ Nieve',
+    crowd: 'Hinchada', crowdFull: 'Llena', crowdHalf: 'Media', crowdFew: 'Poca',
+    matchTitle: 'Cómo será el partido', duelKick: 'Pateas los 5 tiros. ¡Haz 3 goles para ganar!', duelKeep: 'Atajas los 5 tiros. ¡Ataja 3 para ganar!',
+    myPlayer: '🧑 Mi crack', skin: 'Piel', hairColor: 'Color de pelo', hairStyle: 'Pelo', boots: 'Botines', number: 'Número', playerName: 'Nombre en la camiseta',
+    hs_short: 'Corto', hs_long: 'Largo', hs_mohawk: 'Mohicano', hs_curly: 'Afro', hs_bald: 'Pelado', saveLook: 'Guardar ✓',
+    fullVersion: '⭐ Versión completa', locked: 'En la versión completa',
+    unlockTitle: '⭐ Versión completa', unlockText: 'Desbloquea todo con una sola compra:',
+    unlock1: '🎯 Tiros libres con barrera', unlock2: '🧤 Jugar de portero', unlock3: '🌎 16 selecciones y 12 clubes', unlock4: '🧑 Crea tu propio crack',
+    unlockBuy: 'Desbloquear todo', unlockRestore: 'Ya lo compré', purchaseFail: 'La compra no se completó. Inténtalo de nuevo.', restoreNone: 'No hay compras en esta cuenta.', unlocked: '¡Todo desbloqueado! ⭐',
+  },
+  de: {
+    weather: 'Wetter', day: '☀️ Tag', night: '🌙 Nacht', rain: '🌧️ Regen', snow: '❄️ Schnee',
+    crowd: 'Fans', crowdFull: 'Voll', crowdHalf: 'Mittel', crowdFew: 'Wenig',
+    matchTitle: 'Spiel einstellen', duelKick: 'Du schießt alle 5. Triff 3-mal, um zu gewinnen!', duelKeep: 'Du hältst alle 5. Halte 3, um zu gewinnen!',
+    myPlayer: '🧑 Mein Spieler', skin: 'Haut', hairColor: 'Haarfarbe', hairStyle: 'Frisur', boots: 'Schuhe', number: 'Nummer', playerName: 'Name auf dem Trikot',
+    hs_short: 'Kurz', hs_long: 'Lang', hs_mohawk: 'Irokese', hs_curly: 'Afro', hs_bald: 'Glatze', saveLook: 'Speichern ✓',
+    fullVersion: '⭐ Vollversion', locked: 'In der Vollversion',
+    unlockTitle: '⭐ Vollversion', unlockText: 'Alles freischalten mit einem Kauf:',
+    unlock1: '🎯 Freistöße mit Mauer', unlock2: '🧤 Als Torwart spielen', unlock3: '🌎 16 Länder und 12 Vereine', unlock4: '🧑 Eigenen Spieler bauen',
+    unlockBuy: 'Alles freischalten', unlockRestore: 'Schon gekauft', purchaseFail: 'Der Kauf wurde nicht abgeschlossen. Versuche es erneut.', restoreNone: 'Kein Kauf in diesem Konto gefunden.', unlocked: 'Alles freigeschaltet! ⭐',
+  },
+  fr: {
+    weather: 'Météo', day: '☀️ Jour', night: '🌙 Nuit', rain: '🌧️ Pluie', snow: '❄️ Neige',
+    crowd: 'Public', crowdFull: 'Plein', crowdHalf: 'Moyen', crowdFew: 'Peu',
+    matchTitle: 'Le match', duelKick: 'Tu tires les 5 tirs. Marque 3 buts pour gagner !', duelKeep: 'Tu arrêtes les 5 tirs. Arrêtes-en 3 pour gagner !',
+    myPlayer: '🧑 Mon joueur', skin: 'Peau', hairColor: 'Couleur des cheveux', hairStyle: 'Coiffure', boots: 'Crampons', number: 'Numéro', playerName: 'Nom sur le maillot',
+    hs_short: 'Courts', hs_long: 'Longs', hs_mohawk: 'Iroquois', hs_curly: 'Afro', hs_bald: 'Chauve', saveLook: 'Enregistrer ✓',
+    fullVersion: '⭐ Version complète', locked: 'Dans la version complète',
+    unlockTitle: '⭐ Version complète', unlockText: 'Débloque tout en un seul achat :',
+    unlock1: '🎯 Coups francs avec un mur', unlock2: '🧤 Jouer gardien', unlock3: '🌎 16 sélections et 12 clubs', unlock4: '🧑 Crée ton propre joueur',
+    unlockBuy: 'Tout débloquer', unlockRestore: 'Déjà acheté', purchaseFail: "L'achat n'a pas abouti. Réessaie.", restoreNone: 'Aucun achat trouvé sur ce compte.', unlocked: 'Tout est débloqué ! ⭐',
+  },
+  it: {
+    weather: 'Meteo', day: '☀️ Giorno', night: '🌙 Notte', rain: '🌧️ Pioggia', snow: '❄️ Neve',
+    crowd: 'Tifosi', crowdFull: 'Pieno', crowdHalf: 'Medio', crowdFew: 'Pochi',
+    matchTitle: 'La partita', duelKick: 'Tiri tutti e 5. Segna 3 gol per vincere!', duelKeep: 'Pari tutti e 5. Parane 3 per vincere!',
+    myPlayer: '🧑 Il mio campione', skin: 'Pelle', hairColor: 'Colore capelli', hairStyle: 'Capelli', boots: 'Scarpini', number: 'Numero', playerName: 'Nome sulla maglia',
+    hs_short: 'Corti', hs_long: 'Lunghi', hs_mohawk: 'Moicano', hs_curly: 'Afro', hs_bald: 'Calvo', saveLook: 'Salva ✓',
+    fullVersion: '⭐ Versione completa', locked: 'Nella versione completa',
+    unlockTitle: '⭐ Versione completa', unlockText: 'Sblocca tutto con un solo acquisto:',
+    unlock1: '🎯 Punizioni con la barriera', unlock2: '🧤 Gioca in porta', unlock3: '🌎 16 nazionali e 12 squadre', unlock4: '🧑 Crea il tuo campione',
+    unlockBuy: 'Sblocca tutto', unlockRestore: 'Già acquistato', purchaseFail: "L'acquisto non è stato completato. Riprova.", restoreNone: 'Nessun acquisto trovato su questo account.', unlocked: 'Tutto sbloccato! ⭐',
+  },
+  zh: {
+    weather: '天气', day: '☀️ 白天', night: '🌙 夜晚', rain: '🌧️ 下雨', snow: '❄️ 下雪',
+    crowd: '观众', crowdFull: '满场', crowdHalf: '一半', crowdFew: '很少',
+    matchTitle: '比赛设置', duelKick: '你来踢全部 5 球。进 3 球就赢！', duelKeep: '你来扑全部 5 球。扑出 3 球就赢！',
+    myPlayer: '🧑 我的球员', skin: '肤色', hairColor: '发色', hairStyle: '发型', boots: '球鞋', number: '号码', playerName: '球衣名字',
+    hs_short: '短发', hs_long: '长发', hs_mohawk: '莫西干', hs_curly: '爆炸头', hs_bald: '光头', saveLook: '保存 ✓',
+    fullVersion: '⭐ 完整版', locked: '完整版内容',
+    unlockTitle: '⭐ 完整版', unlockText: '一次购买，解锁全部：',
+    unlock1: '🎯 有人墙的任意球', unlock2: '🧤 当守门员', unlock3: '🌎 16 支国家队和 12 支俱乐部', unlock4: '🧑 打造你自己的球员',
+    unlockBuy: '全部解锁', unlockRestore: '我已购买', purchaseFail: '购买未完成，请重试。', restoreNone: '此账号没有找到购买记录。', unlocked: '已全部解锁！⭐',
+  },
+  ja: {
+    weather: '天気', day: '☀️ 昼', night: '🌙 夜', rain: '🌧️ 雨', snow: '❄️ 雪',
+    crowd: 'サポーター', crowdFull: '満員', crowdHalf: 'ふつう', crowdFew: 'すくない',
+    matchTitle: '試合の設定', duelKick: '5本ぜんぶけるよ。3点とれば勝ち！', duelKeep: '5本ぜんぶ止めるよ。3本止めれば勝ち！',
+    myPlayer: '🧑 マイ選手', skin: '肌', hairColor: '髪の色', hairStyle: '髪型', boots: 'スパイク', number: '背番号', playerName: 'ユニフォームの名前',
+    hs_short: 'ショート', hs_long: 'ロング', hs_mohawk: 'モヒカン', hs_curly: 'アフロ', hs_bald: 'スキンヘッド', saveLook: '保存 ✓',
+    fullVersion: '⭐ 完全版', locked: '完全版で遊べます',
+    unlockTitle: '⭐ 完全版', unlockText: '1回の購入ですべて解放：',
+    unlock1: '🎯 壁ありのフリーキック', unlock2: '🧤 キーパーで遊ぶ', unlock3: '🌎 16の代表と12のクラブ', unlock4: '🧑 自分だけの選手をつくる',
+    unlockBuy: 'すべて解放', unlockRestore: '購入済み', purchaseFail: '購入が完了しませんでした。もう一度お試しください。', restoreNone: 'このアカウントに購入履歴がありません。', unlocked: 'すべて解放されました！⭐',
+  },
+} satisfies Record<Lang, Record<string, string>>;
+
 export const LANGS: Record<Lang, Pack> = { pt, en, es, de, fr, it, zh, ja };
-export type UiKey = keyof Pack['ui'];
+for (const l of Object.keys(EXTRA) as Lang[]) Object.assign(LANGS[l].ui, EXTRA[l]);
+export type UiKey = keyof Pack['ui'] | keyof (typeof EXTRA)['pt'];
+/** Texto da interface no idioma escolhido. */
+export const uiText = (l: Lang, k: UiKey): string => (LANGS[l].ui as Record<string, string>)[k];
 
 export function detectLang(): Lang {
   const nav = (typeof navigator !== 'undefined' && navigator.language || 'pt').toLowerCase();

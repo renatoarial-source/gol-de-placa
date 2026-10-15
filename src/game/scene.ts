@@ -21,6 +21,16 @@ function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => 
 const lambert = (color: string | THREE.Texture) =>
   typeof color === 'string' ? new THREE.MeshLambertMaterial({ color }) : new THREE.MeshLambertMaterial({ map: color });
 
+export type HairStyle = 'short' | 'long' | 'mohawk' | 'curly' | 'bald';
+export const HAIR_STYLES: HairStyle[] = ['short', 'long', 'mohawk', 'curly', 'bald'];
+export const SKIN_COLORS = SKINS;
+export const HAIR_COLORS = HAIRS;
+export const BOOT_COLORS = ['#161616', '#ffffff', '#ff3d00', '#ffd400', '#00c853', '#2979ff', '#e040fb'];
+/** "Meu craque": como o boneco da criança aparece. */
+export interface Look { skin: number; hair: number; style: HairStyle; boots: number; number: number; name: string }
+export type Weather = 'day' | 'night' | 'rain' | 'snow';
+export type Crowd = 'full' | 'half' | 'few';
+
 interface Body {
   root: THREE.Group; // posição no campo
   pose: THREE.Group; // inclinação (mergulho do goleiro)
@@ -50,7 +60,7 @@ function faceTex(skin: string, hair: string): THREE.Texture {
   return faceCache.get(k)!;
 }
 
-function shirtTex(kit: Kit, color: string, number: number | null): THREE.Texture {
+function shirtTex(kit: Kit, color: string, number: number | null, name = ''): THREE.Texture {
   return canvasTex(128, 128, (g) => {
     g.fillStyle = color; g.fillRect(0, 0, 128, 128);
     if (kit.stripe && color === kit.shirt) {
@@ -61,26 +71,35 @@ function shirtTex(kit: Kit, color: string, number: number | null): THREE.Texture
       g.font = '900 72px system-ui, sans-serif';
       g.textAlign = 'center'; g.textBaseline = 'middle';
       g.lineWidth = 8; g.strokeStyle = 'rgba(0,0,0,.55)';
-      g.strokeText(String(number), 64, 70);
-      g.fillStyle = '#ffffff'; g.fillText(String(number), 64, 70);
+      const y = name ? 78 : 70;
+      g.strokeText(String(number), 64, y);
+      g.fillStyle = '#ffffff'; g.fillText(String(number), 64, y);
+      if (name) {
+        g.font = `900 ${name.length > 7 ? 15 : 19}px system-ui, sans-serif`;
+        g.lineWidth = 4;
+        g.strokeText(name.toUpperCase(), 64, 24);
+        g.fillText(name.toUpperCase(), 64, 24);
+      }
     }
   });
 }
 
 /** Boneco de blocos virado para +z. */
-function makeBody(kit: Kit, number: number, seed: number, keeper = false): Body {
-  const skin = SKINS[seed % SKINS.length];
-  const hair = HAIRS[(seed * 7 + 3) % HAIRS.length];
+function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?: Look): Body {
+  const skin = SKINS[look ? look.skin : seed % SKINS.length];
+  const hair = HAIRS[look ? look.hair : (seed * 7 + 3) % HAIRS.length];
+  const style: HairStyle = look ? look.style : (['short', 'short', 'curly', 'long', 'mohawk', 'bald'] as HairStyle[])[(seed * 5 + 1) % 6];
+  if (look) number = look.number;
   const shirt = keeper ? kit.keeper : kit.shirt;
   const shorts = keeper ? '#1b1b1b' : kit.shorts;
   const socks = keeper ? kit.keeper : kit.socks;
   const mSkin = lambert(skin);
   const mShirt = lambert(shirt);
   const mShirtFront = lambert(shirtTex(kit, shirt, null));
-  const mShirtBack = lambert(shirtTex(kit, shirt, number));
+  const mShirtBack = lambert(shirtTex(kit, shirt, number, look?.name ?? ''));
   const mShorts = lambert(shorts);
   const mSocks = lambert(socks);
-  const mShoe = lambert('#161616');
+  const mShoe = lambert(look ? BOOT_COLORS[look.boots] : '#161616');
   const mHair = lambert(hair);
   const mGlove = lambert(keeper ? '#f5f5f5' : skin);
 
@@ -113,9 +132,14 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false): Body 
   };
   const armL = arm(-0.39);
   const armR = arm(0.39);
-  const head = box(0.46, 0.46, 0.46, [mSkin, mSkin, mHair, mSkin, lambert(faceTex(skin, hair)), mHair], 1.8);
+  const bald = style === 'bald';
+  const top = bald ? mSkin : mHair;
+  const head = box(0.46, 0.46, 0.46, [mSkin, mSkin, top, mSkin, lambert(faceTex(skin, bald ? skin : hair)), top], 1.8);
   pose.add(head);
-  pose.add(box(0.5, 0.1, 0.5, mHair, 2.06));
+  if (style === 'short' || style === 'long') pose.add(box(0.5, 0.1, 0.5, mHair, 2.06));
+  if (style === 'long') pose.add(box(0.5, 0.5, 0.1, mHair, 1.82, 0, -0.26));
+  if (style === 'mohawk') pose.add(box(0.12, 0.22, 0.48, mHair, 2.12));
+  if (style === 'curly') pose.add(box(0.62, 0.3, 0.6, mHair, 2.1, 0, -0.03));
   pose.traverse((o) => { o.castShadow = false; });
   return { root, pose, legL, legR, armL, armR };
 }
@@ -149,9 +173,17 @@ export class Pitch {
   private kicker: Body | null = null;
   private keeper: Body | null = null;
   private wall: Body[] = [];
-  private crowd: THREE.InstancedMesh;
-  private crowdBase: THREE.Matrix4[] = [];
+  private crowd!: THREE.InstancedMesh;
+  private crowdY!: Float32Array;
+  private crowdX!: Float32Array; // posição ao longo do estádio, para a "ola"
   private cheer = 0;
+  private hemi!: THREE.HemisphereLight;
+  private sun!: THREE.DirectionalLight;
+  private lamps: THREE.Mesh[] = [];
+  private fall: THREE.Points | null = null;
+  private weather: Weather = 'day';
+  private snowCover!: THREE.Mesh;
+  private showcaseBody: Body | null = null;
   private tweens: Tween[] = [];
   private last = performance.now();
   private idle = 0;
@@ -164,14 +196,17 @@ export class Pitch {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.scene.background = new THREE.Color('#7cc4f5');
     this.scene.fog = new THREE.Fog('#a8d8f7', 60, 140);
-    this.scene.add(new THREE.HemisphereLight('#ffffff', '#3d7a2a', 1.6));
-    const sun = new THREE.DirectionalLight('#ffffff', 1.5);
-    sun.position.set(-12, 30, 18);
-    this.scene.add(sun);
+    this.hemi = new THREE.HemisphereLight('#ffffff', '#3d7a2a', 1.6);
+    this.scene.add(this.hemi);
+    this.sun = new THREE.DirectionalLight('#ffffff', 1.5);
+    this.sun.position.set(-12, 30, 18);
+    this.scene.add(this.sun);
 
     this.buildPitch();
     this.net = this.buildGoal();
-    this.crowd = this.buildStands();
+    this.buildStands();
+    this.buildLights();
+    this.setAtmosphere({ weather: 'day', crowd: 'full', colors: ['#ffd400', '#1f4fc4'] });
 
     this.ball = new THREE.Mesh(new THREE.SphereGeometry(BALL_R * 1.5, 24, 16), lambert(this.ballTexture()));
     this.scene.add(this.ball);
@@ -241,6 +276,20 @@ export class Pitch {
     field.rotation.x = -Math.PI / 2;
     field.position.set(0, 0, Z0 + D / 2);
     this.scene.add(field);
+    // camada de neve por cima do gramado (só aparece com neve)
+    const snowTex = canvasTex(256, 256, (g) => {
+      for (let i = 0; i < 900; i++) {
+        g.fillStyle = `rgba(255,255,255,${0.25 + Math.random() * 0.5})`;
+        const r = 2 + Math.random() * 10;
+        g.beginPath(); g.arc(Math.random() * 256, Math.random() * 256, r, 0, Math.PI * 2); g.fill();
+      }
+    });
+    snowTex.wrapS = snowTex.wrapT = THREE.RepeatWrapping;
+    snowTex.repeat.set(10, 9);
+    this.snowCover = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshLambertMaterial({ map: snowTex, transparent: true, depthWrite: false }));
+    this.snowCover.rotation.x = -Math.PI / 2;
+    this.snowCover.position.set(0, 0.006, Z0 + D / 2);
+    this.scene.add(this.snowCover);
     const outer = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), lambert('#3a8a35'));
     outer.rotation.x = -Math.PI / 2;
     outer.position.y = -0.01;
@@ -281,39 +330,128 @@ export class Pitch {
     return net;
   }
 
-  private buildStands(): THREE.InstancedMesh {
+  private buildStands() {
     const grey = lambert('#8a96a3');
     const dark = lambert('#5b6672');
-    // arquibancadas atrás do gol, atrás do batedor e dos lados
-    const stand = (x: number, z: number, w: number, d: number, ry: number) => {
+    // arquibancadas atrás do gol, atrás do batedor e dos lados; cada cadeira pode ter um torcedor
+    const stands: { g: THREE.Group; w: number }[] = [];
+    const stand = (x: number, z: number, w: number, ry: number) => {
       const g = new THREE.Group();
       for (let r = 0; r < 8; r++) g.add(box(w, 0.9, 1.4, r % 2 ? grey : dark, 0.45 + r * 0.9, 0, -r * 1.4));
       g.position.set(x, 0, z); g.rotation.y = ry;
       this.scene.add(g);
-      return { g, w, d };
+      g.updateMatrixWorld();
+      stands.push({ g, w });
     };
-    const stands = [stand(0, -16, 64, 11, 0), stand(0, 52, 64, 11, Math.PI), stand(-34, 18, 70, 11, Math.PI / 2), stand(34, 18, 70, 11, -Math.PI / 2)];
-    const colors = ['#ffd400', '#1f4fc4', '#ffffff', '#e53935', '#43a047', '#ff8f00', '#8e24aa', '#00acc1'];
-    const per = 260;
-    const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.42, 0.62, 0.36), new THREE.MeshLambertMaterial(), per * stands.length);
-    const m = new THREE.Matrix4();
-    const c = new THREE.Color();
-    let i = 0;
+    stand(0, -16, 64, 0); stand(0, 52, 64, Math.PI); stand(-34, 18, 70, Math.PI / 2); stand(34, 18, 70, -Math.PI / 2);
+    const seats: THREE.Vector3[] = [];
+    const along: number[] = [];
+    let offset = 0;
     for (const s of stands) {
-      s.g.updateMatrixWorld();
-      for (let k = 0; k < per; k++) {
-        const r = Math.floor(Math.random() * 8);
-        const local = new THREE.Vector3((Math.random() - 0.5) * (s.w - 2), 0.9 + r * 0.9 + 0.3, -r * 1.4);
-        local.applyMatrix4(s.g.matrixWorld);
-        m.makeTranslation(local.x, local.y, local.z);
-        mesh.setMatrixAt(i, m);
-        this.crowdBase.push(m.clone());
-        mesh.setColorAt(i, c.set(colors[Math.floor(Math.random() * colors.length)]));
-        i++;
+      for (let r = 0; r < 8; r++) {
+        for (let x = -s.w / 2 + 1; x < s.w / 2 - 1; x += 0.75) {
+          seats.push(new THREE.Vector3(x + (Math.random() - 0.5) * 0.2, 0.9 + r * 0.9 + 0.3, -r * 1.4).applyMatrix4(s.g.matrixWorld));
+          along.push(offset + x + s.w / 2);
+        }
       }
+      offset += s.w;
     }
-    this.scene.add(mesh);
-    return mesh;
+    // ordem embaralhada: com a torcida "média" ou "pouca", só os primeiros aparecem, espalhados
+    const order = seats.map((_, i) => i).sort(() => Math.random() - 0.5);
+    const n = seats.length;
+    this.crowd = new THREE.InstancedMesh(new THREE.BoxGeometry(0.42, 0.62, 0.36), new THREE.MeshLambertMaterial(), n);
+    this.crowdY = new Float32Array(n);
+    this.crowdX = new Float32Array(n);
+    const m = new THREE.Matrix4();
+    order.forEach((si, i) => {
+      const p = seats[si];
+      m.makeTranslation(p.x, p.y, p.z);
+      this.crowd.setMatrixAt(i, m);
+      this.crowdY[i] = p.y;
+      this.crowdX[i] = along[si];
+    });
+    this.scene.add(this.crowd);
+  }
+
+  /** Torres de iluminação: acesas à noite e na chuva. */
+  private buildLights() {
+    const pole = lambert('#9aa3ad');
+    for (const [x, z] of [[-30, -12], [30, -12], [-30, 46], [30, 46]]) {
+      this.scene.add(box(0.6, 26, 0.6, pole, 13, x, z));
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(5, 3, 0.6), new THREE.MeshBasicMaterial({ color: '#d9e3ec' }));
+      lamp.position.set(x, 27, z);
+      lamp.lookAt(0, 0, 14);
+      this.scene.add(lamp);
+      this.lamps.push(lamp);
+    }
+  }
+
+  /** Clima e torcida da partida. colors: cores das camisas dos dois times, para a torcida. */
+  setAtmosphere(o: { weather: Weather; crowd: Crowd; colors: string[] }) {
+    this.weather = o.weather;
+    const sky = { day: '#7cc4f5', night: '#0b1736', rain: '#6f7f8f', snow: '#c9d7e4' }[o.weather];
+    const fog = { day: '#a8d8f7', night: '#0b1736', rain: '#7d8b98', snow: '#dbe5ee' }[o.weather];
+    (this.scene.background as THREE.Color).set(sky);
+    const f = this.scene.fog as THREE.Fog;
+    f.color.set(fog);
+    // a névoa escurece a arquibancada à noite e deixa a chuva/neve com cara de tempo fechado
+    f.near = { day: 60, night: 20, rain: 20, snow: 26 }[o.weather];
+    f.far = { day: 140, night: 72, rain: 85, snow: 100 }[o.weather];
+    this.hemi.intensity = { day: 1.6, night: 0.4, rain: 0.85, snow: 1.5 }[o.weather];
+    this.hemi.color.set(o.weather === 'night' ? '#9fb6ff' : '#ffffff');
+    this.hemi.groundColor.set(o.weather === 'night' ? '#0d2a12' : '#3d7a2a');
+    this.sun.intensity = { day: 1.5, night: 1.1, rain: 0.55, snow: 0.9 }[o.weather];
+    // à noite a "luz do sol" vira a luz dos refletores, vinda de cima
+    this.sun.color.set(o.weather === 'night' ? '#fff3d6' : '#ffffff');
+    this.sun.position.set(o.weather === 'night' ? 0 : -12, 30, o.weather === 'night' ? 10 : 18);
+    for (const l of this.lamps) (l.material as THREE.MeshBasicMaterial).color.set(o.weather === 'night' || o.weather === 'rain' ? '#fffbe0' : '#8f99a3');
+    this.snowCover.visible = o.weather === 'snow';
+
+    if (this.fall) { this.scene.remove(this.fall); this.fall.geometry.dispose(); this.fall = null; }
+    if (o.weather === 'rain' || o.weather === 'snow') {
+      const count = o.weather === 'rain' ? 2600 : 1400;
+      const pos = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        pos[i * 3] = (Math.random() - 0.5) * 50;
+        pos[i * 3 + 1] = Math.random() * 20;
+        pos[i * 3 + 2] = -6 + Math.random() * 30;
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const rain = o.weather === 'rain';
+      const dot = canvasTex(32, 32, (c) => {
+        if (rain) { c.fillStyle = 'rgba(220,235,255,.9)'; c.fillRect(14, 0, 4, 32); return; }
+        const r = c.createRadialGradient(16, 16, 1, 16, 16, 15);
+        r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = r; c.fillRect(0, 0, 32, 32);
+      });
+      this.fall = new THREE.Points(g, new THREE.PointsMaterial({ map: dot, size: rain ? 0.6 : 0.28, transparent: true, depthWrite: false, opacity: rain ? 0.85 : 0.95 }));
+      this.scene.add(this.fall);
+    }
+
+    // torcida: quantidade e cores dos times (mais um pouco de cores variadas)
+    const share = { full: 1, half: 0.5, few: 0.16 }[o.crowd];
+    this.crowd.count = Math.floor(this.crowdY.length * share);
+    const pal = [...o.colors, ...o.colors, '#ffffff', '#e53935', '#43a047', '#ff8f00', '#8e24aa'];
+    const c = new THREE.Color();
+    for (let i = 0; i < this.crowdY.length; i++) this.crowd.setColorAt(i, c.set(pal[Math.floor(Math.random() * pal.length)]));
+    if (this.crowd.instanceColor) this.crowd.instanceColor.needsUpdate = true;
+  }
+
+  /** Vitrine do "Meu craque": o boneco girando de perto. */
+  showcase(look: Look, kit: Kit, keeper: boolean) {
+    this.tweens = [];
+    this.clearPlayers();
+    this.ball.visible = false;
+    const b = makeBody(kit, look.number, 1, keeper, look);
+    b.root.position.set(0, 0, 6);
+    this.scene.add(b.root);
+    this.showcaseBody = b;
+    // o boneco fica na parte de cima da tela; embaixo vêm as opções
+    this.camera.position.set(0, 1.6, 13.2);
+    this.camera.lookAt(0, -0.9, 6);
+    this.camera.fov = 52;
+    this.camera.updateProjectionMatrix();
   }
 
   resize() {
@@ -345,13 +483,13 @@ export class Pitch {
   }
 
   private clearPlayers() {
-    for (const b of [this.kicker, this.keeper, ...this.wall]) if (b) this.scene.remove(b.root);
-    this.kicker = this.keeper = null;
+    for (const b of [this.kicker, this.keeper, this.showcaseBody, ...this.wall]) if (b) this.scene.remove(b.root);
+    this.kicker = this.keeper = this.showcaseBody = null;
     this.wall = [];
   }
 
   /** Arruma a cena para uma cobrança. */
-  setup(o: { sx: number; sz: number; view: 'kick' | 'keep'; kickerKit: Kit; keeperKit: Kit; wall: Wall | null; seed: number }) {
+  setup(o: { sx: number; sz: number; view: 'kick' | 'keep'; kickerKit: Kit; keeperKit: Kit; wall: Wall | null; seed: number; look?: Look }) {
     this.tweens = [];
     this.clearPlayers();
     this.spot = { sx: o.sx, sz: o.sz };
@@ -362,7 +500,8 @@ export class Pitch {
     this.ball.visible = true;
 
     const dir = Math.atan2(-o.sx, -o.sz); // virado para o gol
-    this.kicker = makeBody(o.kickerKit, 7 + (o.seed % 4) * 2, o.seed);
+    // o boneco da criança usa o "Meu craque" (batedor ou goleiro, conforme o papel)
+    this.kicker = makeBody(o.kickerKit, 7 + (o.seed % 4) * 2, o.seed, false, o.view === 'kick' ? o.look : undefined);
     // começa atrás e à esquerda da bola (chuta de pé direito)
     const d = Math.hypot(o.sx, o.sz);
     this.back = { x: o.sx / d, z: o.sz / d };
@@ -370,7 +509,7 @@ export class Pitch {
     this.kicker.root.rotation.y = dir;
     this.scene.add(this.kicker.root);
 
-    this.keeper = makeBody(o.keeperKit, 1, o.seed + 2, true);
+    this.keeper = makeBody(o.keeperKit, 1, o.seed + 2, true, o.view === 'keep' ? o.look : undefined);
     this.keeper.root.position.set(0, 0, 0.35);
     this.keeper.root.rotation.y = Math.atan2(o.sx, o.sz) * 0.5;
     this.keeper.armL.rotation.z = 0.5; this.keeper.armR.rotation.z = -0.5;
@@ -411,18 +550,32 @@ export class Pitch {
       this.keeper.pose.position.x = Math.sin(this.idle * 3) * 0.12;
       this.keeper.pose.position.y = Math.abs(Math.sin(this.idle * 6)) * 0.04;
     }
-    // torcida pulando
-    if (this.cheer > 0) {
-      this.cheer = Math.max(0, this.cheer - dt);
-      const m = new THREE.Matrix4();
-      for (let i = 0; i < this.crowdBase.length; i++) {
-        const jump = Math.max(0, Math.sin(this.idle * 12 + i * 1.7)) * 0.35 * Math.min(1, this.cheer);
-        m.copy(this.crowdBase[i]);
-        m.elements[13] += jump;
-        this.crowd.setMatrixAt(i, m);
-      }
-      this.crowd.instanceMatrix.needsUpdate = true;
+    // torcida: balança sempre, faz a "ola" de tempos em tempos e pula no gol
+    this.cheer = Math.max(0, this.cheer - dt);
+    const arr = this.crowd.instanceMatrix.array as Float32Array;
+    const wave = (this.idle * 22) % 520; // a ola percorre o estádio (~268 m) e some por um tempo
+    const party = Math.min(1, this.cheer);
+    for (let i = 0; i < this.crowd.count; i++) {
+      const ph = i * 1.7;
+      let y = Math.sin(this.idle * 2 + ph) * 0.03;
+      const dw = Math.abs(this.crowdX[i] - wave);
+      if (dw < 6) y += (1 - dw / 6) * 0.5;
+      if (party) y += Math.max(0, Math.sin(this.idle * 12 + ph)) * 0.4 * party;
+      arr[i * 16 + 13] = this.crowdY[i] + y;
     }
+    this.crowd.instanceMatrix.needsUpdate = true;
+    if (this.fall) {
+      const p = this.fall.geometry.attributes.position as THREE.BufferAttribute;
+      const a = p.array as Float32Array;
+      const rain = this.weather === 'rain';
+      for (let i = 0; i < p.count; i++) {
+        a[i * 3 + 1] -= dt * (rain ? 22 : 2.2);
+        if (!rain) a[i * 3] += Math.sin(this.idle + i) * dt * 0.5;
+        if (a[i * 3 + 1] < 0) a[i * 3 + 1] += 20;
+      }
+      p.needsUpdate = true;
+    }
+    if (this.showcaseBody) this.showcaseBody.root.rotation.y += dt * 0.8;
     this.ballShadow.position.x = this.ball.position.x;
     this.ballShadow.position.z = this.ball.position.z;
     const s = Math.max(0.3, 1 - this.ball.position.y / 6);

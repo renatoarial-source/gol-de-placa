@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   GOAL_H, HALF, PENALTY_Z, aimResult, ballAt, cpuKeeperTarget, cpuSaves, cpuShot, placeWall, playerSaves,
-  seeded, shootoutWinner, shotFromSwipe, wallHit, type Shot,
+  seeded, shotFromSwipe, wallHit, type Shot,
 } from '../src/game/physics';
 
 const H = 800;
@@ -85,15 +85,13 @@ describe('máquina', () => {
   });
 });
 
-describe('disputa de pênaltis', () => {
-  it('termina antes quando não dá mais para alcançar', () => {
-    expect(shootoutWinner({ a: [true, true, true], b: [false, false, false] })).toBe('a');
-    expect(shootoutWinner({ a: [true, true], b: [false, false] })).toBeNull();
-  });
-  it('empate em 5 vai para morte súbita', () => {
-    const five = [true, false, true, false, true];
-    expect(shootoutWinner({ a: five, b: five })).toBeNull();
-    expect(shootoutWinner({ a: [...five, true], b: [...five] })).toBeNull();
-    expect(shootoutWinner({ a: [...five, true], b: [...five, false] })).toBe('a');
+import { LANGS } from '../src/game/i18n';
+describe('traduções', () => {
+  it('os 8 idiomas têm os mesmos textos e falas', () => {
+    const keys = (o: object) => Object.keys(o).sort().join(',');
+    for (const l of Object.values(LANGS)) {
+      expect(keys(l.ui)).toBe(keys(LANGS.pt.ui));
+      expect(keys(l.calls)).toBe(keys(LANGS.pt.calls));
+    }
   });
 });
