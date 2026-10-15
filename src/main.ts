@@ -293,16 +293,21 @@ async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall
   while (!shot) {
     const sw = await waitSwipe(id);
     guard(id);
-    shot = shotFromSwipe({ ...sw, screenH: innerHeight }, sx, sz, kind);
+    // a bola vai para o ponto do gol onde o dedo terminou o gesto
+    const end = sw.points[sw.points.length - 1];
+    const aim = pitch.goalPointAt(end.x, end.y) ?? { x: 0, y: 5 };
+    shot = shotFromSwipe({ ...sw, screenH: innerHeight }, sx, sz, kind, aim);
   }
   firstKick = false;
   hint.classList.add('hidden');
   const aim = aimResult(shot, wall);
   const keeperAt = cpuKeeperTarget(shot, kind, diff, rng);
   const s = shot;
+  const saves = aim === 'target' && cpuSaves(s, keeperAt, diff);
   const outcome = await pitch.play({
-    shot: s, runUp: 0.35, wallU: wallHit(s, wall), cpuKeeper: keeperAt,
-    decide: () => (aim !== 'target' ? aim : cpuSaves(s, keeperAt, diff) ? 'save' : 'goal'),
+    // quando defende, o goleiro vai na bola; quando não, pula onde tinha lido
+    shot: s, runUp: 0.35, wallU: wallHit(s, wall), cpuKeeper: saves ? { x: s.tx, y: s.ty } : keeperAt,
+    decide: () => (aim !== 'target' ? aim : saves ? 'save' : 'goal'),
     onKick: audio.kick,
   });
   guard(id);
@@ -328,13 +333,17 @@ async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall
   const T = flightTime(shot);
   let t0 = 0;
   let tap: { x: number; y: number; t: number } | null = null;
+  let saved: boolean | null = null;
   const onTap = (e: PointerEvent) => {
     if (!t0 || tap) return;
     const p = pitch.goalPointAt(e.clientX, e.clientY);
     if (!p) return;
     const at = (performance.now() - t0) / 1000;
     tap = { ...p, t: at };
-    pitch.keeperDive(p.x, p.y, Math.max(0.12, Math.min(0.35, T - at)));
+    // pulou no lugar certo e a tempo: as luvas vão na bola; senão, vai onde a criança tocou
+    saved = aimResult(shot, wall) === 'target' && playerSaves(shot, tap, diff, kind);
+    const to = saved ? { x: shot.tx, y: shot.ty } : p;
+    pitch.keeperDive(to.x, to.y, Math.max(0.12, T - at));
   };
   touch.classList.remove('hidden');
   touch.addEventListener('pointerdown', onTap);
@@ -343,7 +352,7 @@ async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall
       shot, runUp: 0.9, wallU: wallHit(shot, wall), cpuKeeper: null,
       decide: () => {
         const aim = aimResult(shot, wall);
-        return aim !== 'target' ? aim : playerSaves(shot, tap, diff, kind) ? 'save' : 'goal';
+        return aim !== 'target' ? aim : (saved ?? playerSaves(shot, tap, diff, kind)) ? 'save' : 'goal';
       },
       onKick: audio.kick,
       onFlightStart: (now) => { t0 = now; },

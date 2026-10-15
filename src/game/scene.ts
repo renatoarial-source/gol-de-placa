@@ -2,7 +2,7 @@
  * Toda a animação é feita aqui; quem decide o resultado é o jogo (main.ts) e a física.
  */
 import * as THREE from 'three';
-import { BALL_R, GOAL_H, HALF, PLAYER_W, WALL_JUMP, ballAt, flightTime, type Outcome, type Shot, type Wall } from './physics';
+import { BALL_R, G, GOAL_H, HALF, PLAYER_W, WALL_JUMP, ballAtTime, flightTime, velocityAt, type Outcome, type Shot, type Wall } from './physics';
 import type { Kit } from './teams';
 
 const GOAL_W_T = 2 * HALF + 0.24;
@@ -189,6 +189,7 @@ export class Pitch {
   private idle = 0;
   private spot = { sx: 0, sz: 11 };
   private keeperDiving = false;
+  private keeperMode: 'dive' | 'up' | 'low' = 'up';
   private back = { x: 0, z: 1 };
 
   constructor(canvas: HTMLCanvasElement) {
@@ -466,7 +467,9 @@ export class Pitch {
     const { sx, sz } = this.spot;
     const d = Math.hypot(sx, sz);
     const back = 4.2;
-    const px = sx + (sx / d) * back, pz = sz + (sz / d) * back;
+    // um pouco à direita: o batedor (que vem pela esquerda) não tampa o caminho da bola
+    const side = 0.75;
+    const px = sx + (sx / d) * back + (sz / d) * side, pz = sz + (sz / d) * back - (sx / d) * side;
     this.camera.position.set(px, 3.0, pz);
     this.camera.lookAt(sx * 0.55, 0.3, sz * 0.55);
     // cabem na tela: as duas traves (largura) e a bola e o travessão (altura)
@@ -495,6 +498,7 @@ export class Pitch {
     this.spot = { sx: o.sx, sz: o.sz };
     this.keeperDiving = false;
     this.net.scale.set(1, 1, 1);
+    this.bp.set(o.sx, BALL_R, o.sz);
     this.ball.position.set(o.sx, BALL_R * 1.5, o.sz);
     this.ball.rotation.set(0, 0, 0);
     this.ball.visible = true;
@@ -582,35 +586,125 @@ export class Pitch {
     this.ballShadow.scale.set(s, s, s);
   }
 
-  /** O goleiro (do jogador ou da máquina) pula na direção de (x, y) no gol. */
-  keeperDive(x: number, y: number, dur: number) {
+  /** O goleiro pula para alcançar (x, y) no gol daqui a `contactIn` segundos.
+   * Bola longe: mergulho de lado (gira em torno dos pés e cai deitado). Bola alta no meio: salta com
+   * os braços para cima. Bola baixa no meio: agacha e encaixa. */
+  keeperDive(x: number, y: number, contactIn: number) {
     const k = this.keeper;
     if (!k || this.keeperDiving) return;
     this.keeperDiving = true;
-    const tx = THREE.MathUtils.clamp(x, -HALF, HALF);
-    const ty = THREE.MathUtils.clamp(y, 0.1, GOAL_H);
-    const from = k.pose.position.x;
-    const lean = THREE.MathUtils.clamp(-Math.atan2(tx, Math.max(0.3, ty + 0.4)), -1.45, 1.45);
-    const shift = tx - Math.sin(-lean) * 1.1;
-    const lift = Math.max(0, ty - 1.3) * 0.7;
+    const C = THREE.MathUtils.clamp;
+    const tx = C(x, -HALF - 0.4, HALF + 0.4);
+    const ty = C(y, BALL_R, GOAL_H + 0.3);
+    const side = Math.sign(tx) || 1;
+    const ax = Math.abs(tx);
+    const x0 = k.pose.position.x;
+    const dur = Math.max(0.12, contactIn);
+    const mode: 'dive' | 'up' | 'low' = ax < 0.9 && ty < 1.0 ? 'low' : ax < 1.2 ? 'up' : 'dive';
+    this.keeperMode = mode;
+    // pés (fx, fy) e inclinação do corpo para as luvas chegarem na bola
+    let fx = tx * 0.85, fy = 0, rot = 0;
+    if (mode === 'up') {
+      fx = tx * 0.75;
+      fy = C(ty - 2.15, 0, 0.6);
+      rot = -Math.atan2(tx - fx, 2);
+    } else if (mode === 'dive') {
+      fx = tx * 0.45;
+      fy = C((ty - 1.3) * 0.9, 0, 0.9);
+      rot = -side * C(Math.atan2(ax - Math.abs(fx), Math.max(0.05, ty - fy)), 0, 1.5);
+    }
     void this.tween(dur, (q) => {
       const e = 1 - (1 - q) * (1 - q);
-      k.pose.position.x = from + (shift - from) * e;
-      k.pose.position.y = lift * Math.sin(Math.PI * Math.min(1, q * 1.2)) + (Math.abs(lean) > 0.6 ? 0.25 * e : 0);
-      k.pose.rotation.z = lean * e;
-      k.armL.rotation.z = 0.5 + (Math.PI - 0.5) * e * 0.95;
-      k.armR.rotation.z = -0.5 - (Math.PI - 0.5) * e * 0.95;
+      k.pose.position.x = x0 + (fx - x0) * e;
+      k.pose.rotation.z = rot * e;
+      if (mode === 'low') {
+        k.pose.position.y = -0.32 * e;
+        k.armL.rotation.set(-1.25 * e, 0, 0.2); k.armR.rotation.set(-1.25 * e, 0, -0.2);
+        k.legL.rotation.z = 0.45 * e; k.legR.rotation.z = -0.45 * e;
+      } else {
+        k.pose.position.y = fy * Math.sin((Math.PI / 2) * q) + (mode === 'dive' ? 0.18 * Math.sin(Math.abs(rot)) * e : 0);
+        k.armL.rotation.set(0, 0, 0.5 + (Math.PI * 0.94 - 0.5) * e);
+        k.armR.rotation.set(0, 0, -0.5 - (Math.PI * 0.94 - 0.5) * e);
+        // pernas em tesoura no mergulho
+        k.legL.rotation.x = 0.35 * e; k.legR.rotation.x = -0.25 * e;
+      }
+    }).then(() => {
+      if (mode === 'low') return;
+      // depois do contato: cai no gramado (de lado no mergulho, de pé no salto)
+      const y1 = k.pose.position.y, r1 = k.pose.rotation.z;
+      const rEnd = mode === 'dive' ? -side * 1.5 : r1;
+      void this.tween(0.45, (q) => {
+        const e = q * q;
+        k.pose.rotation.z = r1 + (rEnd - r1) * e;
+        k.pose.position.y = y1 + ((mode === 'dive' ? 0.2 : 0) - y1) * e;
+      });
     });
   }
 
-  /** Ponto do gol (plano z = 0) sob o dedo, para o goleiro do jogador. */
+  /** Ponto entre as luvas do goleiro (para a bola encaixar nas mãos). */
+  private gloves(): THREE.Vector3 {
+    const k = this.keeper!;
+    k.root.updateMatrixWorld(true);
+    const a = k.armL.localToWorld(new THREE.Vector3(0.05, -0.62, 0.12));
+    const b = k.armR.localToWorld(new THREE.Vector3(-0.05, -0.62, 0.12));
+    return a.add(b).multiplyScalar(0.5);
+  }
+
+  /** Ponto do plano do gol (z = 0) sob o dedo: mira do chute ou pulo do goleiro.
+   * Pode ficar fora do gol (ao lado, acima) ou abaixo do chão (= chute rasteiro). */
   goalPointAt(clientX: number, clientY: number): { x: number; y: number } | null {
     const v = new THREE.Vector2((clientX / window.innerWidth) * 2 - 1, -(clientY / window.innerHeight) * 2 + 1);
     const ray = new THREE.Raycaster();
     ray.setFromCamera(v, this.camera);
     const p = new THREE.Vector3();
     if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), p)) return null;
-    return { x: THREE.MathUtils.clamp(p.x, -HALF - 1, HALF + 1), y: THREE.MathUtils.clamp(p.y, 0, GOAL_H + 0.8) };
+    return { x: THREE.MathUtils.clamp(p.x, -HALF - 4, HALF + 4), y: THREE.MathUtils.clamp(p.y, -2, GOAL_H + 3) };
+  }
+
+  /** Onde um ponto do campo aparece na tela (usado nos testes para mirar). */
+  screenOf(x: number, y: number, z: number): { x: number; y: number } {
+    const v = new THREE.Vector3(x, y, z).project(this.camera);
+    return { x: ((v.x + 1) / 2) * window.innerWidth, y: ((1 - v.y) / 2) * window.innerHeight };
+  }
+
+  /** Bola: posição física (centro) e desenho (a esfera é desenhada 1,5x maior, apoiada no chão). */
+  private bp = new THREE.Vector3();
+  private drawBall(dt: number, v: { x: number; z: number }) {
+    this.ball.position.set(this.bp.x, this.bp.y + BALL_R * 0.5, this.bp.z);
+    // gira como se rolasse na direção do movimento
+    this.ball.rotation.x += (v.z * dt) / (BALL_R * 1.5);
+    this.ball.rotation.z -= (v.x * dt) / (BALL_R * 1.5);
+  }
+
+  /** Continua o movimento da bola com gravidade, quiques, atrito e a rede (se entrou no gol). */
+  private simulate(v: THREE.Vector3, dur: number, inGoal: boolean): Promise<void> {
+    let last = 0;
+    let netHit = false;
+    return this.tween(dur, (q) => {
+      const dt = (q - last) * dur;
+      last = q;
+      const n = Math.max(1, Math.ceil(dt / 0.008));
+      const h = dt / n;
+      for (let i = 0; i < n; i++) {
+        v.y -= G * h;
+        this.bp.addScaledVector(v, h);
+        if (this.bp.y < BALL_R) {
+          this.bp.y = BALL_R;
+          v.y = v.y < -0.8 ? -v.y * 0.5 : 0;
+          const f = v.y === 0 ? 1 - 1.6 * h : 0.92; // rolando ou quicando
+          v.x *= f; v.z *= f;
+        }
+        if (inGoal && this.bp.z < 0) {
+          if (this.bp.z < -1.65) {
+            this.bp.z = -1.65; v.z = Math.abs(v.z) * 0.12; v.x *= 0.35; v.y *= 0.35;
+            if (!netHit) { netHit = true; void this.tween(0.4, (k) => { this.net.scale.z = 1 + 0.2 * Math.sin(Math.PI * k); }); }
+          }
+          if (this.bp.y > GOAL_H - BALL_R) { this.bp.y = GOAL_H - BALL_R; v.y = -Math.abs(v.y) * 0.2; }
+          if (Math.abs(this.bp.x) > HALF - BALL_R) { this.bp.x = Math.sign(this.bp.x) * (HALF - BALL_R); v.x = -v.x * 0.2; }
+        }
+      }
+      this.drawBall(dt, v);
+    });
   }
 
   /** Corrida, chute, voo da bola e o desfecho. Resolve com o resultado. */
@@ -630,64 +724,69 @@ export class Pitch {
     k.legL.rotation.x = 0.3;
     void this.tween(0.25, (q) => { k.legR.rotation.x = -1.4 * Math.sin(Math.PI * q); });
     o.onKick?.();
-    for (const b of this.wall) {
-      void this.tween(0.5, (q) => { b.root.position.y = WALL_JUMP * Math.sin(Math.PI * q); });
+    for (const w of this.wall) {
+      void this.tween(0.5, (q) => { w.root.position.y = WALL_JUMP * Math.sin(Math.PI * q); });
     }
     const T = flightTime(s);
     if (o.cpuKeeper) {
+      // o goleiro da máquina reage um instante depois do chute e chega junto com a bola
       const c = o.cpuKeeper;
-      setTimeout(() => this.keeperDive(c.x, c.y, T * 0.7), T * 150);
+      const react = T * 0.14;
+      void this.tween(react, () => {}).then(() => this.keeperDive(c.x, c.y, T - react));
     }
     o.onFlightStart?.(performance.now());
-    const endU = o.wallU ?? 1;
-    const spin = s.speed * 0.6;
-    await this.tween(T * endU, (q) => {
-      const p = ballAt(s, q * endU);
-      this.ball.position.set(p.x, p.y + BALL_R * 0.5, p.z);
-      this.ball.rotation.x -= spin * 0.016;
-      this.ball.rotation.y += s.bend * 0.05;
+    const endT = T * (o.wallU ?? 1);
+    let last = 0;
+    await this.tween(endT, (q) => {
+      const t = q * endT;
+      const p = ballAtTime(s, t);
+      this.bp.set(p.x, p.y, p.z);
+      this.drawBall(t - last, velocityAt(s, t));
+      last = t;
     });
+    const v0 = velocityAt(s, endT);
+    const v = new THREE.Vector3(v0.x, v0.y, v0.z);
     if (o.wallU !== null) {
-      await this.bounce(new THREE.Vector3((Math.random() - 0.5) * 3, 3, 7), 0.8);
+      // bate na barreira e volta
+      v.set(v.x * 0.3 + (Math.random() - 0.5) * 3, Math.abs(v.y) * 0.3 + 2, Math.abs(v.z) * 0.3);
+      await this.simulate(v, 0.9, false);
       return 'wall';
     }
     const res = o.decide();
-    const p = this.ball.position.clone();
+    const rnd = Math.random;
     if (res === 'goal') {
-      void this.tween(0.35, (q) => { this.net.scale.z = 1 + 0.18 * Math.sin(Math.PI * q); });
-      await this.tween(0.45, (q) => {
-        this.ball.position.set(p.x + s.bend * 0.05 * q, Math.max(BALL_R * 1.5, p.y - q * q * 1.2), p.z - 1.6 * (1 - (1 - q) * (1 - q)));
-      });
       this.celebrate(true);
+      await this.simulate(v, 1.1, true);
     } else if (res === 'save') {
-      const side = Math.sign(p.x || 1);
-      await this.bounce(new THREE.Vector3(side * 4, 3.5, 5), 0.8);
+      if (!this.keeperDiving) this.keeperDive(this.bp.x, this.bp.y, 0.12);
+      const catchIt = this.keeperMode !== 'dive' || (Math.abs(s.tx) < 1.8 && s.ty < 1.8 && s.speed < 20);
+      if (catchIt) {
+        // encaixa: a bola fica nas luvas
+        await this.tween(0.9, () => { this.bp.copy(this.gloves()); this.ball.position.set(this.bp.x, this.bp.y, this.bp.z); });
+      } else {
+        // espalma para fora (ou por cima, se a bola vinha alta)
+        const high = s.ty > 1.9;
+        v.set(Math.sign(this.bp.x || 1) * (2 + rnd() * 2), high ? 4.5 : 2 + rnd() * 2, high ? -2 : Math.abs(v.z) * 0.3 + 1);
+        await this.simulate(v, 1.0, false);
+      }
       this.celebrate(false);
     } else if (res === 'post') {
-      await this.bounce(new THREE.Vector3(-Math.sign(p.x || 1) * 2, 2, 8), 0.8);
+      const side = Math.abs(s.tx) > HALF - BALL_R && s.ty < GOAL_H;
+      if (side) v.set(-Math.sign(s.tx) * (Math.abs(v.x) * 0.4 + 1.2), v.y * 0.6, Math.abs(v.z) * 0.45);
+      else v.set(v.x * 0.6, -Math.abs(v.y) * 0.4 - 1, Math.abs(v.z) * 0.4);
+      await this.simulate(v, 1.0, false);
     } else {
-      const dir = new THREE.Vector3(s.tx - s.sx, 0, -s.sz).normalize();
-      await this.tween(0.6, (q) => {
-        this.ball.position.set(p.x + dir.x * 6 * q, Math.max(BALL_R * 1.5, p.y + (res === 'over' ? 1.5 * q : -q)), p.z + dir.z * 6 * q);
-      });
+      // para fora ou por cima: a bola segue o caminho e quica atrás do gol
+      await this.simulate(v, 1.0, false);
     }
     return res;
-  }
-
-  private async bounce(v: THREE.Vector3, dur: number) {
-    const p = this.ball.position.clone();
-    await this.tween(dur, (q) => {
-      const t = q * dur;
-      this.ball.position.set(p.x + v.x * t, Math.max(BALL_R * 1.5, p.y + v.y * t - 4.9 * t * t), p.z + v.z * t);
-      this.ball.rotation.z += 0.2;
-    });
   }
 
   /** Comemoração: quem fez o gol pula; ou o goleiro levanta os braços. */
   celebrate(goal: boolean) {
     this.cheer = 2.5;
     const b = goal ? this.kicker : this.keeper;
-    if (!b) return;
+    if (!b || (!goal && this.keeperMode === 'dive')) return; // goleiro que mergulhou fica no chão
     const y0 = b.root.position.y;
     void this.tween(1.4, (q) => {
       b.root.position.y = y0 + Math.abs(Math.sin(q * Math.PI * 3)) * 0.45;

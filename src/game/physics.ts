@@ -1,7 +1,7 @@
-/* Física simplificada do chute e decisões da máquina (goleiro e batedor).
+/* Física do chute e decisões da máquina (goleiro e batedor).
  * Coordenadas em metros: o gol fica em z = 0, centrado em x = 0; y é a altura.
- * A bola sai de (sx, 0, sz) e cruza a linha do gol em (tx, ty). O efeito (bend) e a
- * subida (loft) entortam o caminho no meio, sem mudar onde a bola chega.
+ * A bola sai de (sx, 0, sz) e cruza a linha do gol em (tx, ty) no tempo T. No ar ela cai com a
+ * gravidade (parábola) e o efeito (bend) a empurra para o lado; chute rasteiro vai rolando.
  */
 
 export const GOAL_W = 7.32;
@@ -14,6 +14,9 @@ export const WALL_DIST = 9.15;
 export const WALL_H = 1.85;
 export const WALL_JUMP = 0.35;
 export const PLAYER_W = 0.5;
+export const G = 9.81;
+/** Abaixo disso o chute é rasteiro: a bola vai rolando pela grama. */
+export const GROUND_SHOT = 0.25;
 
 export type Kind = 'penalty' | 'free';
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -23,8 +26,7 @@ export interface Shot {
   sx: number; sz: number; // onde está a bola
   tx: number; ty: number; // onde ela cruza a linha do gol
   speed: number; // m/s
-  bend: number; // desvio lateral máximo no meio do caminho (m)
-  loft: number; // subida extra no meio do caminho (m)
+  bend: number; // desvio lateral máximo no meio do caminho (m), pelo efeito
 }
 
 export interface Wall { x: number; z: number; count: number; jumps: boolean }
@@ -33,18 +35,49 @@ export interface Vec3 { x: number; y: number; z: number }
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
-export function ballAt(s: Shot, u: number): Vec3 {
-  const k = Math.sin(Math.PI * clamp(u, 0, 1));
+/** Aceleração lateral do efeito e velocidades iniciais que levam a bola até (tx, ty) no tempo T. */
+function launch(s: Shot) {
+  const T = flightTime(s);
+  const ax = (-8 * s.bend) / (T * T); // desvio "bend" no meio do caminho
+  const vx = (s.tx - s.sx - 0.5 * ax * T * T) / T;
+  const ground = s.ty <= GROUND_SHOT;
+  const vy = ground ? 0 : (s.ty - BALL_R + 0.5 * G * T * T) / T;
+  return { T, ax, vx, vy, vz: -s.sz / T, ground };
+}
+
+/** Posição da bola t segundos depois do chute (até cruzar a linha do gol). */
+export function ballAtTime(s: Shot, t: number): Vec3 {
+  const l = launch(s);
   return {
-    x: s.sx + (s.tx - s.sx) * u + s.bend * k,
-    y: BALL_R + (s.ty - BALL_R) * u + s.loft * k,
-    z: s.sz * (1 - u),
+    x: s.sx + l.vx * t + 0.5 * l.ax * t * t,
+    y: l.ground ? BALL_R : Math.max(BALL_R, BALL_R + l.vy * t - 0.5 * G * t * t),
+    z: s.sz + l.vz * t,
   };
+}
+
+/** Velocidade da bola no tempo t (para continuar o movimento depois da linha do gol). */
+export function velocityAt(s: Shot, t: number): Vec3 {
+  const l = launch(s);
+  return { x: l.vx + l.ax * t, y: l.ground ? 0 : l.vy - G * t, z: l.vz };
+}
+
+/** Posição na fração u (0..1) do caminho até a linha do gol. */
+export function ballAt(s: Shot, u: number): Vec3 {
+  return ballAtTime(s, clamp(u, 0, 1) * flightTime(s));
+}
+
+/** Altura máxima da bola no caminho. */
+export function apex(s: Shot): number {
+  const l = launch(s);
+  if (l.ground) return BALL_R;
+  const t = clamp(l.vy / G, 0, l.T);
+  return BALL_R + l.vy * t - 0.5 * G * t * t;
 }
 
 export function distance(s: Shot): number {
   return Math.hypot(s.tx - s.sx, s.sz);
 }
+
 
 export function flightTime(s: Shot): number {
   return distance(s) / s.speed;
@@ -94,25 +127,24 @@ export interface Swipe {
   screenH: number;
 }
 
-/** Transforma o gesto em chute. Retorna null se não foi um chute (gesto curto ou para baixo). */
-export function shotFromSwipe(sw: Swipe, sx: number, sz: number, kind: Kind): Shot | null {
+/** Transforma o gesto em chute. A bola vai para o ponto do gol onde o dedo terminou (aim):
+ * dedo abaixo do gol = rasteiro; acima do travessão = por cima; fora da trave = para fora.
+ * A rapidez do gesto dá a força, e a curva do dedo dá o efeito.
+ * Retorna null se não foi um chute (gesto curto ou para baixo). */
+export function shotFromSwipe(sw: Swipe, sx: number, sz: number, kind: Kind, aim: { x: number; y: number }): Shot | null {
   const p0 = sw.points[0];
   const p1 = sw.points[sw.points.length - 1];
   if (!p0 || !p1) return null;
   const dx = p1.x - p0.x;
   const dy = p1.y - p0.y;
   const len = Math.hypot(dx, dy);
-  if (dy > -sw.screenH * 0.06 || len < sw.screenH * 0.08) return null;
+  if (dy > -sw.screenH * 0.05 || len < sw.screenH * 0.07) return null;
 
-  // direção: o ângulo do gesto em relação à vertical, somado à direção do gol
-  const angle = Math.atan2(dx, -dy);
-  const base = Math.atan2(-sx, sz);
-  const tx = sx + Math.tan(clamp(base + angle * 0.8, -1.2, 1.2)) * sz;
-
+  const tx = aim.x;
+  const ty = aim.y <= GROUND_SHOT ? BALL_R : aim.y;
   // força: rapidez do gesto em "alturas de tela por segundo"
   const vn = (len / sw.screenH) / (Math.max(sw.ms, 60) / 1000);
-  const ty = clamp(0.15 + (vn - 0.8) * 0.75, BALL_R, 4);
-  const speed = clamp(14 + vn * 3.2, 14, kind === 'free' ? 30 : 28);
+  const speed = kind === 'free' ? clamp(15 + vn * 2.6, 16, 27) : clamp(13 + vn * 3.2, 14, 28);
 
   // efeito: quanto o dedo "barrigou" para um dos lados
   let dev = 0;
@@ -122,8 +154,7 @@ export function shotFromSwipe(sw: Swipe, sx: number, sz: number, kind: Kind): Sh
   }
   const maxBend = kind === 'free' ? 3 : 1;
   const bend = clamp((-dev / sw.screenH) * 10, -maxBend, maxBend);
-  const loft = kind === 'free' ? 1 + 0.5 * ty : 0.12 + 0.1 * ty;
-  return { sx, sz, tx, ty, speed, bend, loft };
+  return { sx, sz, tx, ty, speed, bend };
 }
 
 // ---------- máquina ----------
@@ -154,17 +185,13 @@ const MISS: Record<Difficulty, number> = { easy: 0.15, medium: 0.1, hard: 0.06 }
 /** Chute da máquina (quando o jogador é o goleiro). */
 export function cpuShot(sx: number, sz: number, kind: Kind, diff: Difficulty, wall: Wall | null, rng: Rng): Shot {
   const [lo, hi] = KICK_SPEED[diff];
-  const speed = (lo + rng() * (hi - lo)) * (kind === 'free' ? 1.35 : 1);
-  const make = (): Shot => {
-    const ty = 0.25 + rng() * 1.95;
-    return {
-      sx, sz, speed,
-      tx: (rng() * 2 - 1) * (HALF - 0.35),
-      ty,
-      bend: kind === 'free' ? (rng() * 2 - 1) * 2.6 : (rng() * 2 - 1) * 0.5,
-      loft: kind === 'free' ? 1 + 0.5 * ty : 0.12 + 0.1 * ty,
-    };
-  };
+  const speed = (lo + rng() * (hi - lo)) * (kind === 'free' ? 1.25 : 1);
+  const make = (): Shot => ({
+    sx, sz, speed,
+    tx: (rng() * 2 - 1) * (HALF - 0.35),
+    ty: kind === 'penalty' && rng() < 0.25 ? BALL_R : 0.35 + rng() * 1.85, // às vezes rasteiro
+    bend: kind === 'free' ? (rng() * 2 - 1) * 2.6 : (rng() * 2 - 1) * 0.5,
+  });
   if (rng() < MISS[diff]) {
     const s = make();
     if (rng() < 0.5) s.tx = Math.sign(s.tx || 1) * (HALF + 0.4 + rng() * 0.8);
