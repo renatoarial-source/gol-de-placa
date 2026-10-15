@@ -120,3 +120,4 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .unlock ul { margin: 0; padding-left: 4px; list-style: none; display: grid; gap: 6px; font-weight: 700; }
 .msg { min-height: 1.3em; margin: 0; color: var(--red); text-align: center; }
 .set-title { font-weight: 700; }
+.voice-note { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.35; }

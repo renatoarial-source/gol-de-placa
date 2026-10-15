@@ -183,12 +183,15 @@ export class Pitch {
   private fall: THREE.Points | null = null;
   private weather: Weather = 'day';
   private snowCover!: THREE.Mesh;
+  private sky!: THREE.Mesh;
   private showcaseBody: Body | null = null;
   private tweens: Tween[] = [];
   private last = performance.now();
   private idle = 0;
   private spot = { sx: 0, sz: 11 };
   private keeperDiving = false;
+  private view: 'kick' | 'keep' = 'kick';
+  private netBack: THREE.Mesh[] = [];
   private keeperMode: 'dive' | 'up' | 'low' = 'up';
   private back = { x: 0, z: 1 };
 
@@ -203,6 +206,8 @@ export class Pitch {
     this.sun.position.set(-12, 30, 18);
     this.scene.add(this.sun);
 
+    this.sky = new THREE.Mesh(new THREE.SphereGeometry(260, 32, 16), new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false }));
+    this.scene.add(this.sky);
     this.buildPitch();
     this.net = this.buildGoal();
     this.buildStands();
@@ -326,6 +331,7 @@ export class Pitch {
       s.rotation.y = Math.PI / 2; s.position.set(x, GOAL_H / 2, -D / 2);
       return s;
     };
+    this.netBack = [back, roof];
     net.add(back, roof, side(-HALF), side(HALF));
     this.scene.add(net);
     return net;
@@ -374,6 +380,36 @@ export class Pitch {
     this.scene.add(this.crowd);
   }
 
+  /** Céu de verdade: degradê, nuvens de dia, estrelas à noite, nuvens carregadas na chuva e na neve. */
+  private paintSky(w: Weather, base: string) {
+    const tex = canvasTex(2048, 512, (g) => {
+      g.scale(4, 2);
+      const top = { day: '#2f8fe0', night: '#030817', rain: '#4b5866', snow: '#a9b9c9' }[w];
+      const grad = g.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0, top); grad.addColorStop(0.5, base); grad.addColorStop(1, base);
+      g.fillStyle = grad; g.fillRect(0, 0, 512, 256);
+      if (w === 'night') {
+        for (let i = 0; i < 260; i++) {
+          g.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.7})`;
+          g.fillRect(Math.random() * 512, Math.random() * 120, Math.random() < 0.15 ? 2 : 1, 1);
+        }
+        g.fillStyle = '#f4f1d0'; g.beginPath(); g.arc(380, 40, 10, 0, Math.PI * 2); g.fill();
+      } else {
+        const n = w === 'day' ? 40 : 90;
+        const c = { day: 'rgba(255,255,255,.85)', rain: 'rgba(70,80,92,.8)', snow: 'rgba(235,240,246,.85)', night: '' }[w];
+        for (let i = 0; i < n; i++) {
+          const x = Math.random() * 512, y = 25 + Math.random() * 85, r = 3 + Math.random() * 5;
+          g.fillStyle = c;
+          for (let k = 0; k < 5; k++) { g.beginPath(); g.arc(x + k * r * 0.8, y + Math.sin(k * 2) * r * 0.3, r * (k === 2 ? 1.3 : 1), 0, Math.PI * 2); g.fill(); }
+        }
+      }
+    });
+    const m = this.sky.material as THREE.MeshBasicMaterial;
+    m.map?.dispose();
+    m.map = tex;
+    m.needsUpdate = true;
+  }
+
   /** Torres de iluminação: acesas à noite e na chuva. */
   private buildLights() {
     const pole = lambert('#9aa3ad');
@@ -393,6 +429,7 @@ export class Pitch {
     const sky = { day: '#7cc4f5', night: '#0b1736', rain: '#6f7f8f', snow: '#c9d7e4' }[o.weather];
     const fog = { day: '#a8d8f7', night: '#0b1736', rain: '#7d8b98', snow: '#dbe5ee' }[o.weather];
     (this.scene.background as THREE.Color).set(sky);
+    this.paintSky(o.weather, sky);
     const f = this.scene.fog as THREE.Fog;
     f.color.set(fog);
     // a névoa escurece a arquibancada à noite e deixa a chuva/neve com cara de tempo fechado
@@ -463,9 +500,34 @@ export class Pitch {
   }
 
   private placeCamera() {
-    // mesma câmera para batedor e goleiro: alta, atrás da bola, olhando para o gol
     const { sx, sz } = this.spot;
     const d = Math.hypot(sx, sz);
+    // goleiro: atrás do gol, de frente para o cobrador (a rede do fundo e do teto some para não tampar)
+    for (const m of this.netBack) m.visible = this.view === 'kick';
+    const w = window.innerWidth, h = window.innerHeight;
+    if (this.view === 'keep') {
+      // olhando reto para o cobrador; o quadro é "deslocado" para cima (sem entortar as traves),
+      // assim o gol fica embaixo da tela e quase não sobra gramado vazio
+      const dist = 9;
+      this.camera.position.set(-(sx / d) * 1.2, 1.8, -dist);
+      this.camera.lookAt(sx * 0.3, 1.8, sz);
+      const hx = (HALF + 0.7) / dist; // metade da largura visível (tangente)
+      const span = (2 * hx) / (w / h); // altura visível (em tangente)
+      // linha do gol (1,8 m abaixo do olho, a 9 m) a ~70% da altura da tela
+      const goalLine = 1.8 / dist;
+      const top = Math.max(0.7 * span - goalLine, 0.2);
+      const bottom = span - top;
+      const full = Math.max(top, bottom);
+      const fullH = h * ((2 * full) / span);
+      this.camera.aspect = w / fullH;
+      this.camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(full));
+      this.camera.setViewOffset(w, fullH, 0, ((full - top) / (2 * full)) * fullH, w, h);
+      this.camera.updateProjectionMatrix();
+      return;
+    }
+    this.camera.clearViewOffset();
+    this.camera.aspect = w / h;
+    // batedor: alto e atrás da bola, olhando para o gol
     const back = 4.2;
     // um pouco à direita: o batedor (que vem pela esquerda) não tampa o caminho da bola
     const side = 0.75;
@@ -496,6 +558,7 @@ export class Pitch {
     this.tweens = [];
     this.clearPlayers();
     this.spot = { sx: o.sx, sz: o.sz };
+    this.view = o.view;
     this.keeperDiving = false;
     this.net.scale.set(1, 1, 1);
     this.bp.set(o.sx, BALL_R, o.sz);

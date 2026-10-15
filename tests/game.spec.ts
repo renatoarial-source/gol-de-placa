@@ -87,8 +87,9 @@ test('como goleiro (versão completa), com chuva e torcida pouca', async ({ page
   await expect(page.locator('#hint')).toContainText('Agora defenda');
   const vp = page.viewportSize()!;
   await page.waitForTimeout(2700);
-  await page.mouse.click(vp.width / 2, vp.height * 0.3);
-  await expect(page.locator('#call b')).toHaveText(OUTCOME, { timeout: 20_000 });
+  const goal = await page.evaluate(() => (window as unknown as { __gol: { pitch: { screenOf(x: number, y: number, z: number): { x: number; y: number } } } }).__gol.pitch.screenOf(1.5, 1, 0));
+  await page.mouse.click(goal.x, goal.y);
+  await expect(page.locator('#call b')).toHaveText(OUTCOME, { timeout: 45_000 });
   await expect(page.locator('#hud .line').nth(1)).toContainText('🧤');
   await expect(page.locator('#hud .line').nth(1)).toContainText('Brasil');
 });

@@ -98,6 +98,7 @@ function home() {
       <b class="set-title">${t('narration')}</b>
       <div class="seg">${(['male', 'female', 'off'] as audio.Voice[]).map((v) =>
         `<button data-voice="${v}" class="${v === voice ? 'on' : ''}">${t(v === 'male' ? 'voiceMale' : v === 'female' ? 'voiceFemale' : 'voiceOff')}</button>`).join('')}</div>
+      ${voiceNote()}
     </div>
     <button class="promo" data-go="promo"><span class="e">🙈</span><span><b>${t('promoTitle')}</b><span>${t('promoText')}</span></span></button>
   `);
@@ -119,6 +120,13 @@ function home() {
     document.documentElement.lang = LANGS[lang].voice;
     home();
   });
+}
+
+/** Qual voz do aparelho narra e, se não for do gênero escolhido, como baixar uma. */
+function voiceNote(): string {
+  const v = audio.voiceInfo(lang);
+  if (!v) return '';
+  return `<p class="voice-note">${v.name ? esc(t('voiceUsing', { name: v.name })) : ''}${v.real ? '' : `<br>${esc(t('voiceTip'))}`}</p>`;
 }
 
 type Mode = 'penalty' | 'free' | 'cup';
@@ -622,6 +630,7 @@ function parentGate(ok: () => void) {
   }));
 }
 
+audio.onVoices(() => { if (ui.querySelector('.logo')) home(); });
 // compra restaurada ao abrir o app: atualiza a tela inicial (sem interromper uma partida)
 shop.onChange(() => { if (ui.querySelector('.logo')) home(); });
 void shop.init();
