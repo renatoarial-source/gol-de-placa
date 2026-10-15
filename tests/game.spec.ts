@@ -80,6 +80,9 @@ test('como goleiro (versão completa), com chuva e torcida pouca', async ({ page
   await page.click('[data-role=keeper]');
   await page.click('[data-weather=rain]');
   await page.click('[data-crowd=few]');
+  await expect(page.locator('[data-cam]')).toHaveCount(2);
+  await page.click('[data-cam=kicker]');
+  expect(await page.evaluate(() => localStorage.getItem('gol.keeperCam'))).toBe('kicker');
   await page.click('[data-kind=nation]');
   await page.click('[data-team=BR]');
   await expect(page.locator('.sub')).toContainText('Pegue 3');

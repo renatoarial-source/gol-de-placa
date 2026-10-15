@@ -27,6 +27,7 @@ let voice = store.get('voice', store.get('narration', '1') === '0' ? 'off' : 'ma
 let diff = store.get('diff', 'easy') as Difficulty;
 let weather = store.get('weather', 'day') as Weather;
 let crowd = store.get('crowd', 'full') as Crowd;
+let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
 let teamKind = store.get('teamKind', 'club') as 'nation' | 'club';
 let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
 const DEFAULT_LOOK: Look = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '' };
@@ -43,6 +44,7 @@ const callEl = $('call');
 const touch = $('touch');
 const trail = $('trail') as HTMLCanvasElement;
 const pitch = new Pitch($('pitch') as HTMLCanvasElement);
+pitch.keeperCam = keeperCam;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const native = Capacitor.isNativePlatform();
 const rng = Math.random;
@@ -188,6 +190,7 @@ function match(m: Mode, r: Role) {
       <b>${t('difficulty')}</b>${seg<Difficulty>('diff', [['easy', 'easy'], ['medium', 'medium'], ['hard', 'hard']], diff)}
       <b>${t('weather')}</b>${seg<Weather>('weather', [['day', 'day'], ['night', 'night'], ['rain', 'rain'], ['snow', 'snow']], weather)}
       <b>${t('crowd')}</b>${seg<Crowd>('crowd', [['full', 'crowdFull'], ['half', 'crowdHalf'], ['few', 'crowdFew']], crowd)}
+      ${r === 'keeper' || m === 'cup' ? `<b>${t('keeperCam')}</b>${seg<'goal' | 'kicker'>('cam', [['goal', 'camGoal'], ['kicker', 'camKicker']], keeperCam)}` : ''}
     </div>
     <p class="sub">${t(m === 'cup' ? 'cupInfo' : r === 'kicker' ? 'duelKick' : 'duelKeep')}</p>
     <button class="btn big" data-go="start">${t('start')}</button>
@@ -205,6 +208,7 @@ function match(m: Mode, r: Role) {
   on('[data-diff]', (el) => { diff = el.dataset.diff as Difficulty; store.set('diff', diff); again(); });
   on('[data-weather]', (el) => { weather = el.dataset.weather as Weather; store.set('weather', weather); again(); });
   on('[data-crowd]', (el) => { crowd = el.dataset.crowd as Crowd; store.set('crowd', crowd); again(); });
+  on('[data-cam]', (el) => { keeperCam = el.dataset.cam as 'goal' | 'kicker'; pitch.keeperCam = keeperCam; store.set('keeperCam', keeperCam); again(); });
   on('[data-go=back]', () => (m === 'cup' ? modes() : role(m)));
   on('[data-go=start]', () => {
     hideUi();

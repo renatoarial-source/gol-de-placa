@@ -322,6 +322,7 @@ const ja: Pack = {
 // ---------- textos da versão 1.1: clima, torcida, craque e versão completa ----------
 const EXTRA = {
   pt: {
+    keeperCam: 'Câmera ao defender', camGoal: '🧤 Visão do goleiro', camKicker: '⚽ Visão do jogador',
     voiceUsing: 'Voz: {name}', voiceTip: 'Este aparelho não tem essa voz neste idioma: usamos outra com o tom ajustado. Para ter a voz certa, baixe uma em Ajustes › Acessibilidade › Conteúdo Falado › Vozes.',
     cupInfo: '🏆 Copa: disputa de pênaltis de verdade. Você bate e defende, alternando com a máquina!', voiceOff: 'Desligada', voiceMale: '👨 Narrador', voiceFemale: '👩 Narradora',
     weather: 'Clima', day: '☀️ Dia', night: '🌙 Noite', rain: '🌧️ Chuva', snow: '❄️ Neve',
@@ -335,6 +336,7 @@ const EXTRA = {
     unlockBuy: 'Liberar tudo', unlockRestore: 'Já comprei', purchaseFail: 'A compra não foi concluída. Tente de novo.', restoreNone: 'Nenhuma compra encontrada nesta conta.', unlocked: 'Tudo liberado! ⭐',
   },
   en: {
+    keeperCam: 'Camera when saving', camGoal: '🧤 Keeper view', camKicker: '⚽ Player view',
     voiceUsing: 'Voice: {name}', voiceTip: 'This device has no such voice in this language, so another one with an adjusted tone is used. To get the right voice, download one in Settings › Accessibility › Spoken Content › Voices.',
     cupInfo: '🏆 Cup: a real penalty shootout. You shoot and save, taking turns with the machine!', voiceOff: 'Off', voiceMale: '👨 Male', voiceFemale: '👩 Female',
     weather: 'Weather', day: '☀️ Day', night: '🌙 Night', rain: '🌧️ Rain', snow: '❄️ Snow',
@@ -348,6 +350,7 @@ const EXTRA = {
     unlockBuy: 'Unlock all', unlockRestore: 'I already bought it', purchaseFail: 'The purchase was not completed. Try again.', restoreNone: 'No purchase found on this account.', unlocked: 'Everything unlocked! ⭐',
   },
   es: {
+    keeperCam: 'Cámara al atajar', camGoal: '🧤 Vista del portero', camKicker: '⚽ Vista del jugador',
     voiceUsing: 'Voz: {name}', voiceTip: 'Este dispositivo no tiene esa voz en este idioma: usamos otra con el tono ajustado. Para tener la voz correcta, descarga una en Ajustes › Accesibilidad › Contenido leído › Voces.',
     cupInfo: '🏆 Copa: una tanda de penales de verdad. ¡Pateas y atajas, por turnos con la máquina!', voiceOff: 'Apagada', voiceMale: '👨 Narrador', voiceFemale: '👩 Narradora',
     weather: 'Clima', day: '☀️ Día', night: '🌙 Noche', rain: '🌧️ Lluvia', snow: '❄️ Nieve',
@@ -361,6 +364,7 @@ const EXTRA = {
     unlockBuy: 'Desbloquear todo', unlockRestore: 'Ya lo compré', purchaseFail: 'La compra no se completó. Inténtalo de nuevo.', restoreNone: 'No hay compras en esta cuenta.', unlocked: '¡Todo desbloqueado! ⭐',
   },
   de: {
+    keeperCam: 'Kamera beim Halten', camGoal: '🧤 Torwart-Sicht', camKicker: '⚽ Spieler-Sicht',
     voiceUsing: 'Stimme: {name}', voiceTip: 'Dieses Gerät hat diese Stimme in dieser Sprache nicht, daher wird eine andere mit angepasster Tonhöhe verwendet. Lade eine in Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.',
     cupInfo: '🏆 Pokal: echtes Elfmeterschießen. Du schießt und hältst, abwechselnd mit der Maschine!', voiceOff: 'Aus', voiceMale: '👨 Sprecher', voiceFemale: '👩 Sprecherin',
     weather: 'Wetter', day: '☀️ Tag', night: '🌙 Nacht', rain: '🌧️ Regen', snow: '❄️ Schnee',
@@ -374,6 +378,7 @@ const EXTRA = {
     unlockBuy: 'Alles freischalten', unlockRestore: 'Schon gekauft', purchaseFail: 'Der Kauf wurde nicht abgeschlossen. Versuche es erneut.', restoreNone: 'Kein Kauf in diesem Konto gefunden.', unlocked: 'Alles freigeschaltet! ⭐',
   },
   fr: {
+    keeperCam: 'Caméra en défense', camGoal: '🧤 Vue du gardien', camKicker: '⚽ Vue du joueur',
     voiceUsing: 'Voix : {name}', voiceTip: 'Cet appareil n’a pas cette voix dans cette langue : une autre est utilisée avec un ton ajusté. Pour avoir la bonne voix, téléchargez-en une dans Réglages › Accessibilité › Contenu énoncé › Voix.',
     cupInfo: '🏆 Coupe : une vraie séance de tirs au but. Tu tires et tu arrêtes, chacun son tour avec la machine !', voiceOff: 'Désactivés', voiceMale: '👨 Commentateur', voiceFemale: '👩 Commentatrice',
     weather: 'Météo', day: '☀️ Jour', night: '🌙 Nuit', rain: '🌧️ Pluie', snow: '❄️ Neige',
@@ -387,6 +392,7 @@ const EXTRA = {
     unlockBuy: 'Tout débloquer', unlockRestore: 'Déjà acheté', purchaseFail: "L'achat n'a pas abouti. Réessaie.", restoreNone: 'Aucun achat trouvé sur ce compte.', unlocked: 'Tout est débloqué ! ⭐',
   },
   it: {
+    keeperCam: 'Telecamera in porta', camGoal: '🧤 Vista portiere', camKicker: '⚽ Vista giocatore',
     voiceUsing: 'Voce: {name}', voiceTip: 'Questo dispositivo non ha questa voce in questa lingua: ne usiamo un’altra con il tono regolato. Per la voce giusta, scaricane una in Impostazioni › Accessibilità › Contenuto letto › Voci.',
     cupInfo: '🏆 Coppa: veri calci di rigore. Tiri e pari, a turno con la macchina!', voiceOff: 'Spenta', voiceMale: '👨 Telecronista', voiceFemale: '👩 Telecronista donna',
     weather: 'Meteo', day: '☀️ Giorno', night: '🌙 Notte', rain: '🌧️ Pioggia', snow: '❄️ Neve',
@@ -400,6 +406,7 @@ const EXTRA = {
     unlockBuy: 'Sblocca tutto', unlockRestore: 'Già acquistato', purchaseFail: "L'acquisto non è stato completato. Riprova.", restoreNone: 'Nessun acquisto trovato su questo account.', unlocked: 'Tutto sbloccato! ⭐',
   },
   zh: {
+    keeperCam: '扑救时的视角', camGoal: '🧤 守门员视角', camKicker: '⚽ 球员视角',
     voiceUsing: '语音：{name}', voiceTip: '此设备没有该语言的这种语音，已改用其他语音并调整音调。要获得合适的语音，请在 设置 › 辅助功能 › 朗读内容 › 声音 中下载。',
     cupInfo: '🏆 杯赛：真正的点球大战。你和电脑轮流射门和扑救！', voiceOff: '关闭', voiceMale: '👨 男声', voiceFemale: '👩 女声',
     weather: '天气', day: '☀️ 白天', night: '🌙 夜晚', rain: '🌧️ 下雨', snow: '❄️ 下雪',
@@ -413,6 +420,7 @@ const EXTRA = {
     unlockBuy: '全部解锁', unlockRestore: '我已购买', purchaseFail: '购买未完成，请重试。', restoreNone: '此账号没有找到购买记录。', unlocked: '已全部解锁！⭐',
   },
   ja: {
+    keeperCam: '守るときのカメラ', camGoal: '🧤 キーパー視点', camKicker: '⚽ キッカー視点',
     voiceUsing: '音声：{name}', voiceTip: 'この端末にはこの言語のその音声がないため、別の音声の高さを調整して使っています。設定 › アクセシビリティ › 読み上げコンテンツ › 声 からダウンロードできます。',
     cupInfo: '🏆 カップ：本物のPK戦。コンピューターと交代でけって、止めよう！', voiceOff: 'オフ', voiceMale: '👨 男性', voiceFemale: '👩 女性',
     weather: '天気', day: '☀️ 昼', night: '🌙 夜', rain: '🌧️ 雨', snow: '❄️ 雪',

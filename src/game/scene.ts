@@ -191,6 +191,8 @@ export class Pitch {
   private spot = { sx: 0, sz: 11 };
   private keeperDiving = false;
   private view: 'kick' | 'keep' = 'kick';
+  /** Ao defender: câmera atrás do gol ('goal') ou atrás do cobrador ('kicker'). */
+  keeperCam: 'goal' | 'kicker' = 'goal';
   private netBack: THREE.Mesh[] = [];
   private keeperMode: 'dive' | 'up' | 'low' = 'up';
   private back = { x: 0, z: 1 };
@@ -503,9 +505,10 @@ export class Pitch {
     const { sx, sz } = this.spot;
     const d = Math.hypot(sx, sz);
     // goleiro: atrás do gol, de frente para o cobrador (a rede do fundo e do teto some para não tampar)
-    for (const m of this.netBack) m.visible = this.view === 'kick';
+    const behindGoal = this.view === 'keep' && this.keeperCam === 'goal';
+    for (const m of this.netBack) m.visible = !behindGoal;
     const w = window.innerWidth, h = window.innerHeight;
-    if (this.view === 'keep') {
+    if (behindGoal) {
       // olhando reto para o cobrador; o quadro é "deslocado" para cima (sem entortar as traves),
       // assim o gol fica embaixo da tela e quase não sobra gramado vazio
       const dist = 9;
