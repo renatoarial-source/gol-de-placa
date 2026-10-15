@@ -21,6 +21,7 @@ function noiseBuffer(c: AudioContext, secs: number, brown = false): AudioBuffer 
 
 /** Precisa de um toque do usuário antes (regra dos navegadores). */
 export function initAudio() {
+  unlockVoice();
   if (ctx) { void ctx.resume(); return; }
   const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
   if (!AC) return;
@@ -152,27 +153,74 @@ export function crowd(kind: 'cheer' | 'ohh' | 'clap') {
 
 // ---------- narração ----------
 
-let narrate = true;
-export function setNarration(on: boolean) { narrate = on; if (!on) stopTalking(); }
+export type Voice = 'off' | 'male' | 'female';
+let voiceMode: Voice = 'male';
+export function setNarration(v: Voice) { voiceMode = v; if (v === 'off') stopTalking(); }
 
+const synth = (): SpeechSynthesis | null => (typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
 function stopTalking() {
-  try { window.speechSynthesis?.cancel(); } catch { /* sem voz */ }
+  try { synth()?.cancel(); } catch { /* sem voz */ }
+}
+
+// Nomes de vozes conhecidas (Apple, Google, Microsoft) para escolher narrador ou narradora.
+const MALE = /\b(daniel|alex|fred|aaron|arthur|gordon|lee|oliver|rishi|tom|felipe|rafael|ricardo|antonio|jorge|juan|diego|carlos|pablo|markus|martin|yannick|thomas|nicolas|luca|cosimo|li-mu|otoya|hattori|reed|eddy|grandpa|rocko|male|homem|masculin)/i;
+const FEMALE = /\b(samantha|victoria|karen|moira|tessa|fiona|allison|ava|susan|zoe|serena|luciana|joana|fernanda|francisca|heloisa|raquel|monica|mónica|paulina|marisol|anna|petra|helena|amelie|amélie|audrey|aurelie|marie|alice|federica|paola|elsa|tingting|ting-ting|meijia|sinji|yu-shu|kyoko|o-ren|sayaka|flo|sandy|shelley|grandma|female|mulher|feminin)/i;
+
+let voices: SpeechSynthesisVoice[] = [];
+function loadVoices() { try { voices = synth()?.getVoices() ?? []; } catch { voices = []; } }
+if (synth()) { loadVoices(); synth()!.addEventListener?.('voiceschanged', loadVoices); }
+
+/** Melhor voz para o idioma e o gênero; se não houver uma do gênero pedido, muda o tom. */
+function pickVoice(lang: string, want: 'male' | 'female'): { voice?: SpeechSynthesisVoice; pitch: number } {
+  if (!voices.length) loadVoices();
+  const norm = (v: SpeechSynthesisVoice) => v.lang.replace('_', '-').toLowerCase();
+  const exact = voices.filter((v) => norm(v) === lang.toLowerCase());
+  const same = exact.length ? exact : voices.filter((v) => norm(v).startsWith(lang.slice(0, 2).toLowerCase()));
+  const re = want === 'male' ? MALE : FEMALE;
+  const other = want === 'male' ? FEMALE : MALE;
+  const hit = same.find((v) => re.test(v.name));
+  if (hit) return { voice: hit, pitch: 1 };
+  // sem voz do gênero: usa a voz do idioma e ajusta o tom (mais grave para narrador)
+  const v = same.find((x) => !other.test(x.name)) ?? same[0];
+  const otherGender = v ? other.test(v.name) : false;
+  return { voice: v, pitch: want === 'male' ? (otherGender ? 0.7 : 0.85) : otherGender ? 1.35 : 1.15 };
+}
+
+/** O iPhone só deixa falar depois de um toque: na primeira interação, "fala" algo mudo. */
+let unlocked = false;
+export function unlockVoice() {
+  if (unlocked) return;
+  const s = synth();
+  if (!s) return;
+  try {
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0;
+    s.speak(u);
+    unlocked = true;
+  } catch { /* sem voz */ }
 }
 
 /** Fala uma frase da narração e devolve o texto (também mostrado na tela). */
 export function call(lang: Lang, key: CallKey): string {
   const lines = LANGS[lang].calls[key];
   const text = lines[Math.floor(Math.random() * lines.length)];
-  if (narrate && enabled && 'speechSynthesis' in window) {
+  const s = synth();
+  if (voiceMode !== 'off' && enabled && s) {
     try {
+      const code = LANGS[lang].voice;
+      const { voice, pitch } = pickVoice(code, voiceMode);
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = LANGS[lang].voice;
-      const v = speechSynthesis.getVoices().find((x) => x.lang.replace('_', '-').startsWith(u.lang.slice(0, 2)));
-      if (v) u.voice = v;
-      u.rate = key === 'goal' || key === 'corner' || key === 'champion' ? 1.15 : 1.05;
-      u.pitch = key === 'goal' || key === 'corner' ? 1.25 : 1.05;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
+      u.lang = code;
+      if (voice) u.voice = voice;
+      const hype = key === 'goal' || key === 'corner' || key === 'champion';
+      u.rate = hype ? 1.12 : 1.02;
+      u.pitch = Math.min(2, pitch * (hype ? 1.12 : 1));
+      u.volume = 1;
+      // interromper a fala anterior e falar logo em seguida pode fazer o iPhone ignorar a nova
+      const busy = s.speaking || s.pending;
+      if (busy) s.cancel();
+      s.resume();
+      if (busy) setTimeout(() => s.speak(u), 80); else s.speak(u);
     } catch { /* sem voz */ }
   }
   return text;

@@ -118,6 +118,26 @@ test('Meu craque: escolhe cabelo, número e nome e salva', async ({ page }) => {
   expect(look).toMatchObject({ style: 'mohawk', number: 11, name: 'Arial' });
 });
 
+test('Copa na versão do download: disputa alternando bater e defender', async ({ page }) => {
+  await open(page);
+  await page.click('[data-go=play]');
+  await page.click('[data-mode=cup]');
+  await expect(page.locator('.sub')).toContainText('Você bate e defende');
+  await page.click('[data-go=start]');
+  await expect(page.locator('#hint')).toContainText('Sua vez de bater', { timeout: 20_000 });
+  await swipe(page, 20);
+  await expect(page.locator('#hint')).toContainText('Agora defenda', { timeout: 30_000 });
+  await expect(page.locator('#hud .line').nth(1)).toContainText('⚽');
+});
+
+test('narração: escolhe narrador, narradora ou desligada', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('[data-voice]')).toHaveCount(3);
+  await page.click('[data-voice=female]');
+  await expect(page.locator('[data-voice=female]')).toHaveClass(/on/);
+  expect(await page.evaluate(() => localStorage.getItem('gol.voice'))).toBe('female');
+});
+
 test('propaganda do Esconde-Esconde só abre com a conta certa', async ({ page }) => {
   await open(page);
   await page.evaluate(() => { (window as unknown as { opened: string[] }).opened = []; window.open = ((u: string) => { (window as unknown as { opened: string[] }).opened.push(u); return null; }) as typeof window.open; });

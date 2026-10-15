@@ -8,8 +8,8 @@ import { LANGS, detectLang, fmt, uiText, type CallKey, type Lang, type UiKey } f
 import { allTeams, findTeam, teamName, type Team } from './game/teams';
 import {
   PENALTY_Z, aimResult, cpuKeeperTarget, cpuSaves, cpuShot, flightTime, freeKickSpot, isTopCorner, placeWall,
-  playerSaves, shotFromSwipe, wallHit,
-  type Difficulty, type Kind, type Outcome, type Wall,
+  playerSaves, shootoutWinner, shotFromSwipe, wallHit,
+  type Difficulty, type Kind, type Outcome, type Shootout, type Wall,
 } from './game/physics';
 import { BOOT_COLORS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Crowd, type Look, type Weather } from './game/scene';
 import { FREE_TEAM, store as shop } from './game/store';
@@ -23,7 +23,7 @@ const store = {
 let lang = store.get('lang', detectLang()) as Lang;
 if (!(lang in LANGS)) lang = 'pt';
 let sound = store.get('sound', '1') === '1';
-let narration = store.get('narration', '1') === '1';
+let voice = store.get('voice', store.get('narration', '1') === '0' ? 'off' : 'male') as audio.Voice;
 let diff = store.get('diff', 'easy') as Difficulty;
 let weather = store.get('weather', 'day') as Weather;
 let crowd = store.get('crowd', 'full') as Crowd;
@@ -32,7 +32,7 @@ let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
 const DEFAULT_LOOK: Look = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '' };
 let look: Look = (() => { try { return { ...DEFAULT_LOOK, ...JSON.parse(store.get('look', '{}')) }; } catch { return DEFAULT_LOOK; } })();
 audio.setSound(sound);
-audio.setNarration(narration);
+audio.setNarration(voice);
 
 const t = (k: UiKey, vars?: Record<string, string | number>) => fmt(uiText(lang, k), vars);
 const $ = (id: string) => document.getElementById(id)!;
@@ -95,7 +95,9 @@ function home() {
     <div class="card">
       <label class="set">🌐 ${t('language')} <select id="lang">${langs}</select></label>
       <label class="set">${t('sound')} <button class="toggle${sound ? ' on' : ''}" data-tg="sound">${sound ? 'ON' : 'OFF'}</button></label>
-      <label class="set">${t('narration')} <button class="toggle${narration ? ' on' : ''}" data-tg="narration">${narration ? 'ON' : 'OFF'}</button></label>
+      <b class="set-title">${t('narration')}</b>
+      <div class="seg">${(['male', 'female', 'off'] as audio.Voice[]).map((v) =>
+        `<button data-voice="${v}" class="${v === voice ? 'on' : ''}">${t(v === 'male' ? 'voiceMale' : v === 'female' ? 'voiceFemale' : 'voiceOff')}</button>`).join('')}</div>
     </div>
     <button class="promo" data-go="promo"><span class="e">🙈</span><span><b>${t('promoTitle')}</b><span>${t('promoText')}</span></span></button>
   `);
@@ -103,9 +105,12 @@ function home() {
   on('[data-go=player]', () => (unlocked() ? builder() : unlock(home)));
   on('[data-go=full]', () => unlock(home));
   on('[data-go=promo]', () => parentGate(() => window.open(Capacitor.getPlatform() === 'android' ? ESCONDE.android : ESCONDE.ios, '_blank')));
-  on('[data-tg]', (el) => {
-    if (el.dataset.tg === 'sound') { sound = !sound; store.set('sound', sound ? '1' : '0'); audio.setSound(sound); }
-    else { narration = !narration; store.set('narration', narration ? '1' : '0'); audio.setNarration(narration); }
+  on('[data-tg]', () => { sound = !sound; store.set('sound', sound ? '1' : '0'); audio.setSound(sound); home(); });
+  on('[data-voice]', (el) => {
+    voice = el.dataset.voice as audio.Voice;
+    store.set('voice', voice);
+    audio.setNarration(voice);
+    audio.call(lang, 'goal'); // amostra da voz escolhida
     home();
   });
   ($('lang') as HTMLSelectElement).addEventListener('change', (e) => {
@@ -129,7 +134,9 @@ function modes() {
   on('[data-go=back]', home);
   on('[data-mode]', (el) => {
     const m = el.dataset.mode as Mode;
-    if (m === 'free' && !unlocked()) unlock(modes); else role(m);
+    if (m === 'free' && !unlocked()) unlock(modes);
+    else if (m === 'cup') match(m, 'kicker'); // na Copa a criança bate e defende, alternando
+    else role(m);
   });
 }
 
@@ -174,7 +181,7 @@ function match(m: Mode, r: Role) {
       <b>${t('weather')}</b>${seg<Weather>('weather', [['day', 'day'], ['night', 'night'], ['rain', 'rain'], ['snow', 'snow']], weather)}
       <b>${t('crowd')}</b>${seg<Crowd>('crowd', [['full', 'crowdFull'], ['half', 'crowdHalf'], ['few', 'crowdFew']], crowd)}
     </div>
-    <p class="sub">${t(r === 'kicker' ? 'duelKick' : 'duelKeep')}</p>
+    <p class="sub">${t(m === 'cup' ? 'cupInfo' : r === 'kicker' ? 'duelKick' : 'duelKeep')}</p>
     <button class="btn big" data-go="start">${t('start')}</button>
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
@@ -190,11 +197,11 @@ function match(m: Mode, r: Role) {
   on('[data-diff]', (el) => { diff = el.dataset.diff as Difficulty; store.set('diff', diff); again(); });
   on('[data-weather]', (el) => { weather = el.dataset.weather as Weather; store.set('weather', weather); again(); });
   on('[data-crowd]', (el) => { crowd = el.dataset.crowd as Crowd; store.set('crowd', crowd); again(); });
-  on('[data-go=back]', () => role(m));
+  on('[data-go=back]', () => (m === 'cup' ? modes() : role(m)));
   on('[data-go=start]', () => {
     hideUi();
     const id = ++run;
-    void quiet(m === 'cup' ? cup(id, r) : single(id, m, r));
+    void quiet(m === 'cup' ? cup(id) : single(id, m, r));
   });
 }
 
@@ -206,7 +213,7 @@ function pickOpponent(exclude: string[] = []): Team {
 // ---------- placar: batedor x goleiro ----------
 
 interface Row { team: Team; icon: string; marks: boolean[] }
-function board(rows: Row[], slots = 5) {
+function board(rows: Row[], slots = Math.max(5, ...rows.map((r) => r.marks.length))) {
   hud.classList.remove('hidden');
   hud.innerHTML = `<button class="quit" aria-label="${t('menu')}">✕</button><div class="board">${rows.map((r) => {
     const dots = Array.from({ length: slots }, (_, i) => `<span class="dot${r.marks[i] === true ? ' g' : r.marks[i] === false ? ' m' : ''}"></span>`).join('');
@@ -419,7 +426,35 @@ async function single(id: number, m: 'penalty' | 'free', r: Role) {
   on('[data-go=menu]', home);
 }
 
-async function cup(id: number, r: Role) {
+/** Disputa de pênaltis da Copa: a criança bate pelo time dela e defende as cobranças da máquina,
+ * alternando. 5 para cada lado e, se empatar, morte súbita. Devolve [venceu, gols dela, gols da máquina]. */
+async function shootout(id: number, opp: Team): Promise<[boolean, number, number]> {
+  pitch.setAtmosphere({ weather, crowd, colors: [myTeam.kit.shirt, opp.kit.shirt] });
+  const so: Shootout = { a: [], b: [] };
+  const draw = () => board([{ team: myTeam, icon: '⚽', marks: so.a }, { team: opp, icon: '⚽', marks: so.b }]);
+  const score = (w: 'a' | 'b'): [boolean, number, number] => [w === 'a', so.a.filter(Boolean).length, so.b.filter(Boolean).length];
+  let sudden = false;
+  for (;;) {
+    draw();
+    so.a.push(await myKick(id, 'penalty', 0, PENALTY_Z, null, opp));
+    draw();
+    let w = shootoutWinner(so);
+    if (w) return score(w);
+    so.b.push(await myKeep(id, 'penalty', 0, PENALTY_Z, null, opp));
+    draw();
+    w = shootoutWinner(so);
+    if (w) return score(w);
+    if (!sudden && so.a.length >= 5) {
+      sudden = true;
+      callEl.innerHTML = `<b>${t('sudden')}</b><span>${audio.call(lang, 'sudden')}</span>`;
+      callEl.classList.remove('hidden');
+      await sleep(1800); guard(id);
+      callEl.classList.add('hidden');
+    }
+  }
+}
+
+async function cup(id: number) {
   const used: string[] = [];
   const rounds: UiKey[] = ['quarter', 'semi', 'final'];
   for (let i = 0; i < rounds.length; i++) {
@@ -429,16 +464,17 @@ async function cup(id: number, r: Role) {
     callEl.classList.remove('hidden');
     await sleep(1800); guard(id);
     callEl.classList.add('hidden');
-    const n = await duel(id, 'penalty', r, opp);
+    const [won, ga, gb] = await shootout(id, opp);
     guard(id);
-    if (n < 3) {
+    const score = `${myTeam.badge} ${ga} × ${gb} ${opp.badge}`;
+    if (!won) {
       audio.call(lang, 'lose');
       show(`
-        ${resultCard('😢', 'eliminated', `${myTeam.badge} ${n} × ${5 - n} ${opp.badge}`, `<div class="sub">${t(rounds[i])}</div>`)}
+        ${resultCard('😢', 'eliminated', score, `<div class="sub">${t(rounds[i])}</div>`)}
         <button class="btn big" data-go="again">${t('again')}</button>
         <button class="btn alt" data-go="menu">${t('menu')}</button>
       `, false);
-      on('[data-go=again]', () => { hideUi(); const nid = ++run; void quiet(cup(nid, r)); });
+      on('[data-go=again]', () => { hideUi(); const nid = ++run; void quiet(cup(nid)); });
       on('[data-go=menu]', home);
       return;
     }
@@ -446,7 +482,7 @@ async function cup(id: number, r: Role) {
       audio.call(lang, 'win');
       await new Promise<void>((next) => {
         show(`
-          ${resultCard('🎉', 'win', `${myTeam.badge} ${n} × ${5 - n} ${opp.badge}`, `<div class="sub">→ ${t(rounds[i + 1])}</div>`)}
+          ${resultCard('🎉', 'win', score, `<div class="sub">→ ${t(rounds[i + 1])}</div>`)}
           <button class="btn big" data-go="next">${t('next')}</button>
           <button class="btn alt" data-go="menu">${t('menu')}</button>
         `, false);
@@ -463,7 +499,7 @@ async function cup(id: number, r: Role) {
     <button class="btn big" data-go="again">${t('again')}</button>
     <button class="btn alt" data-go="menu">${t('menu')}</button>
   `, false);
-  on('[data-go=again]', () => { hideUi(); const nid = ++run; void quiet(cup(nid, r)); });
+  on('[data-go=again]', () => { hideUi(); const nid = ++run; void quiet(cup(nid)); });
   on('[data-go=menu]', home);
 }
 

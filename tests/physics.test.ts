@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   BALL_R, HALF, PENALTY_Z, aimResult, apex, ballAt, cpuKeeperTarget, flightTime, isTopCorner, velocityAt, cpuSaves, cpuShot, placeWall, playerSaves,
-  seeded, shotFromSwipe, wallHit, type Shot,
+  seeded, shootoutWinner, shotFromSwipe, wallHit, type Shot,
 } from '../src/game/physics';
 
 const H = 800;
@@ -108,5 +108,18 @@ describe('traduções', () => {
       expect(keys(l.ui)).toBe(keys(LANGS.pt.ui));
       expect(keys(l.calls)).toBe(keys(LANGS.pt.calls));
     }
+  });
+});
+
+describe('disputa de pênaltis da Copa', () => {
+  it('termina antes quando não dá mais para alcançar', () => {
+    expect(shootoutWinner({ a: [true, true, true], b: [false, false, false] })).toBe('a');
+    expect(shootoutWinner({ a: [true, true], b: [false, false] })).toBeNull();
+  });
+  it('empate em 5 vai para morte súbita', () => {
+    const five = [true, false, true, false, true];
+    expect(shootoutWinner({ a: five, b: five })).toBeNull();
+    expect(shootoutWinner({ a: [...five, true], b: [...five] })).toBeNull();
+    expect(shootoutWinner({ a: [...five, true], b: [...five, false] })).toBe('a');
   });
 });

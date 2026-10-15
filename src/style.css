@@ -119,3 +119,4 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .row > div { display: grid; gap: 6px; min-width: 0; }
 .unlock ul { margin: 0; padding-left: 4px; list-style: none; display: grid; gap: 6px; font-weight: 700; }
 .msg { min-height: 1.3em; margin: 0; color: var(--red); text-align: center; }
+.set-title { font-weight: 700; }
