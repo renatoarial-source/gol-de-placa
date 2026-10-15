@@ -322,6 +322,7 @@ const ja: Pack = {
 // ---------- textos da versão 1.1: clima, torcida, craque e versão completa ----------
 const EXTRA = {
   pt: {
+    fanTitle: '🎵 Torcida e música', music: 'Música da torcida', mus_batucada: '🥁 Batucada', mus_charanga: '🎺 Charanga', mus_palmas: '👏 Palmas e coro', mus_off: '🔇 Sem música', heart: 'Cores do time do coração', heartNone: 'Sem time do coração', heart1: 'Cor principal', heart2: 'Segunda cor', heartInfo: 'A torcida e as bandeiras do estádio usam essas cores.',
     keeperCam: 'Câmera ao defender', camGoal: '🧤 Visão do goleiro', camKicker: '⚽ Visão do jogador',
     voiceUsing: 'Voz: {name}', voiceTip: 'Este aparelho não tem essa voz neste idioma: usamos outra com o tom ajustado. Para ter a voz certa, baixe uma em Ajustes › Acessibilidade › Conteúdo Falado › Vozes.',
     cupInfo: '🏆 Copa: disputa de pênaltis de verdade. Você bate e defende, alternando com a máquina!', voiceOff: 'Desligada', voiceMale: '👨 Narrador', voiceFemale: '👩 Narradora',
@@ -336,6 +337,7 @@ const EXTRA = {
     unlockBuy: 'Liberar tudo', unlockRestore: 'Já comprei', purchaseFail: 'A compra não foi concluída. Tente de novo.', restoreNone: 'Nenhuma compra encontrada nesta conta.', unlocked: 'Tudo liberado! ⭐',
   },
   en: {
+    fanTitle: '🎵 Fans and music', music: 'Fan music', mus_batucada: '🥁 Drums', mus_charanga: '🎺 Brass band', mus_palmas: '👏 Claps and chant', mus_off: '🔇 No music', heart: 'Your favorite team\'s colors', heartNone: 'No favorite team', heart1: 'Main color', heart2: 'Second color', heartInfo: 'The fans and the flags in the stadium use these colors.',
     keeperCam: 'Camera when saving', camGoal: '🧤 Keeper view', camKicker: '⚽ Player view',
     voiceUsing: 'Voice: {name}', voiceTip: 'This device has no such voice in this language, so another one with an adjusted tone is used. To get the right voice, download one in Settings › Accessibility › Spoken Content › Voices.',
     cupInfo: '🏆 Cup: a real penalty shootout. You shoot and save, taking turns with the machine!', voiceOff: 'Off', voiceMale: '👨 Male', voiceFemale: '👩 Female',
@@ -350,6 +352,7 @@ const EXTRA = {
     unlockBuy: 'Unlock all', unlockRestore: 'I already bought it', purchaseFail: 'The purchase was not completed. Try again.', restoreNone: 'No purchase found on this account.', unlocked: 'Everything unlocked! ⭐',
   },
   es: {
+    fanTitle: '🎵 Hinchada y música', music: 'Música de la hinchada', mus_batucada: '🥁 Batucada', mus_charanga: '🎺 Charanga', mus_palmas: '👏 Palmas y coro', mus_off: '🔇 Sin música', heart: 'Colores de tu equipo del alma', heartNone: 'Sin equipo', heart1: 'Color principal', heart2: 'Segundo color', heartInfo: 'La hinchada y las banderas del estadio usan estos colores.',
     keeperCam: 'Cámara al atajar', camGoal: '🧤 Vista del portero', camKicker: '⚽ Vista del jugador',
     voiceUsing: 'Voz: {name}', voiceTip: 'Este dispositivo no tiene esa voz en este idioma: usamos otra con el tono ajustado. Para tener la voz correcta, descarga una en Ajustes › Accesibilidad › Contenido leído › Voces.',
     cupInfo: '🏆 Copa: una tanda de penales de verdad. ¡Pateas y atajas, por turnos con la máquina!', voiceOff: 'Apagada', voiceMale: '👨 Narrador', voiceFemale: '👩 Narradora',
@@ -364,6 +367,7 @@ const EXTRA = {
     unlockBuy: 'Desbloquear todo', unlockRestore: 'Ya lo compré', purchaseFail: 'La compra no se completó. Inténtalo de nuevo.', restoreNone: 'No hay compras en esta cuenta.', unlocked: '¡Todo desbloqueado! ⭐',
   },
   de: {
+    fanTitle: '🎵 Fans und Musik', music: 'Fan-Musik', mus_batucada: '🥁 Trommeln', mus_charanga: '🎺 Blaskapelle', mus_palmas: '👏 Klatschen und Gesang', mus_off: '🔇 Keine Musik', heart: 'Farben deines Lieblingsteams', heartNone: 'Kein Lieblingsteam', heart1: 'Hauptfarbe', heart2: 'Zweite Farbe', heartInfo: 'Die Fans und die Fahnen im Stadion nutzen diese Farben.',
     keeperCam: 'Kamera beim Halten', camGoal: '🧤 Torwart-Sicht', camKicker: '⚽ Spieler-Sicht',
     voiceUsing: 'Stimme: {name}', voiceTip: 'Dieses Gerät hat diese Stimme in dieser Sprache nicht, daher wird eine andere mit angepasster Tonhöhe verwendet. Lade eine in Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.',
     cupInfo: '🏆 Pokal: echtes Elfmeterschießen. Du schießt und hältst, abwechselnd mit der Maschine!', voiceOff: 'Aus', voiceMale: '👨 Sprecher', voiceFemale: '👩 Sprecherin',
@@ -378,6 +382,7 @@ const EXTRA = {
     unlockBuy: 'Alles freischalten', unlockRestore: 'Schon gekauft', purchaseFail: 'Der Kauf wurde nicht abgeschlossen. Versuche es erneut.', restoreNone: 'Kein Kauf in diesem Konto gefunden.', unlocked: 'Alles freigeschaltet! ⭐',
   },
   fr: {
+    fanTitle: '🎵 Supporters et musique', music: 'Musique des supporters', mus_batucada: '🥁 Batucada', mus_charanga: '🎺 Fanfare', mus_palmas: '👏 Applaudissements et chants', mus_off: '🔇 Sans musique', heart: 'Couleurs de ton équipe de cœur', heartNone: 'Pas d’équipe de cœur', heart1: 'Couleur principale', heart2: 'Deuxième couleur', heartInfo: 'Les supporters et les drapeaux du stade utilisent ces couleurs.',
     keeperCam: 'Caméra en défense', camGoal: '🧤 Vue du gardien', camKicker: '⚽ Vue du joueur',
     voiceUsing: 'Voix : {name}', voiceTip: 'Cet appareil n’a pas cette voix dans cette langue : une autre est utilisée avec un ton ajusté. Pour avoir la bonne voix, téléchargez-en une dans Réglages › Accessibilité › Contenu énoncé › Voix.',
     cupInfo: '🏆 Coupe : une vraie séance de tirs au but. Tu tires et tu arrêtes, chacun son tour avec la machine !', voiceOff: 'Désactivés', voiceMale: '👨 Commentateur', voiceFemale: '👩 Commentatrice',
@@ -392,6 +397,7 @@ const EXTRA = {
     unlockBuy: 'Tout débloquer', unlockRestore: 'Déjà acheté', purchaseFail: "L'achat n'a pas abouti. Réessaie.", restoreNone: 'Aucun achat trouvé sur ce compte.', unlocked: 'Tout est débloqué ! ⭐',
   },
   it: {
+    fanTitle: '🎵 Tifosi e musica', music: 'Musica dei tifosi', mus_batucada: '🥁 Tamburi', mus_charanga: '🎺 Banda', mus_palmas: '👏 Applausi e cori', mus_off: '🔇 Senza musica', heart: 'Colori della squadra del cuore', heartNone: 'Nessuna squadra del cuore', heart1: 'Colore principale', heart2: 'Secondo colore', heartInfo: 'I tifosi e le bandiere dello stadio usano questi colori.',
     keeperCam: 'Telecamera in porta', camGoal: '🧤 Vista portiere', camKicker: '⚽ Vista giocatore',
     voiceUsing: 'Voce: {name}', voiceTip: 'Questo dispositivo non ha questa voce in questa lingua: ne usiamo un’altra con il tono regolato. Per la voce giusta, scaricane una in Impostazioni › Accessibilità › Contenuto letto › Voci.',
     cupInfo: '🏆 Coppa: veri calci di rigore. Tiri e pari, a turno con la macchina!', voiceOff: 'Spenta', voiceMale: '👨 Telecronista', voiceFemale: '👩 Telecronista donna',
@@ -406,6 +412,7 @@ const EXTRA = {
     unlockBuy: 'Sblocca tutto', unlockRestore: 'Già acquistato', purchaseFail: "L'acquisto non è stato completato. Riprova.", restoreNone: 'Nessun acquisto trovato su questo account.', unlocked: 'Tutto sbloccato! ⭐',
   },
   zh: {
+    fanTitle: '🎵 球迷和音乐', music: '球迷音乐', mus_batucada: '🥁 鼓乐', mus_charanga: '🎺 铜管乐队', mus_palmas: '👏 掌声和合唱', mus_off: '🔇 无音乐', heart: '主队颜色', heartNone: '没有主队', heart1: '主色', heart2: '第二颜色', heartInfo: '球迷和看台上的旗帜会使用这些颜色。',
     keeperCam: '扑救时的视角', camGoal: '🧤 守门员视角', camKicker: '⚽ 球员视角',
     voiceUsing: '语音：{name}', voiceTip: '此设备没有该语言的这种语音，已改用其他语音并调整音调。要获得合适的语音，请在 设置 › 辅助功能 › 朗读内容 › 声音 中下载。',
     cupInfo: '🏆 杯赛：真正的点球大战。你和电脑轮流射门和扑救！', voiceOff: '关闭', voiceMale: '👨 男声', voiceFemale: '👩 女声',
@@ -420,6 +427,7 @@ const EXTRA = {
     unlockBuy: '全部解锁', unlockRestore: '我已购买', purchaseFail: '购买未完成，请重试。', restoreNone: '此账号没有找到购买记录。', unlocked: '已全部解锁！⭐',
   },
   ja: {
+    fanTitle: '🎵 サポーターと音楽', music: '応援の音楽', mus_batucada: '🥁 打楽器', mus_charanga: '🎺 ブラスバンド', mus_palmas: '👏 手拍子とコール', mus_off: '🔇 音楽なし', heart: '応援するチームの色', heartNone: '応援チームなし', heart1: 'メインの色', heart2: '2番目の色', heartInfo: 'スタジアムのサポーターと旗がこの色になります。',
     keeperCam: '守るときのカメラ', camGoal: '🧤 キーパー視点', camKicker: '⚽ キッカー視点',
     voiceUsing: '音声：{name}', voiceTip: 'この端末にはこの言語のその音声がないため、別の音声の高さを調整して使っています。設定 › アクセシビリティ › 読み上げコンテンツ › 声 からダウンロードできます。',
     cupInfo: '🏆 カップ：本物のPK戦。コンピューターと交代でけって、止めよう！', voiceOff: 'オフ', voiceMale: '👨 男性', voiceFemale: '👩 女性',

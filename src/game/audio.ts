@@ -41,6 +41,14 @@ export function initAudio() {
   crowdGain.gain.value = 0.18;
   src.connect(lp).connect(crowdGain).connect(master);
   src.start();
+  onReady?.(ctx, master);
+}
+
+let onReady: ((c: AudioContext, out: GainNode) => void) | null = null;
+/** A música da torcida pluga aqui quando o áudio é liberado pelo primeiro toque. */
+export function whenAudioReady(fn: (c: AudioContext, out: GainNode) => void) {
+  onReady = fn;
+  if (ctx && master) fn(ctx, master);
 }
 
 export function setSound(on: boolean) {

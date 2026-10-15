@@ -121,3 +121,5 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .msg { min-height: 1.3em; margin: 0; color: var(--red); text-align: center; }
 .set-title { font-weight: 700; }
 .voice-note { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.35; }
+.flag { height: 44px; border-radius: 8px; background: linear-gradient(180deg, var(--a) 0 35%, var(--b) 35% 65%, var(--a) 65%); border: 1px solid var(--line); }
+.row .btn { font-size: 16px; padding-inline: 8px; }

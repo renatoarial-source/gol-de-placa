@@ -184,6 +184,7 @@ export class Pitch {
   private weather: Weather = 'day';
   private snowCover!: THREE.Mesh;
   private sky!: THREE.Mesh;
+  private flags: THREE.Mesh[] = [];
   private showcaseBody: Body | null = null;
   private tweens: Tween[] = [];
   private last = performance.now();
@@ -380,6 +381,36 @@ export class Pitch {
       this.crowdX[i] = along[si];
     });
     this.scene.add(this.crowd);
+
+    // bandeiras da torcida na primeira fila (atrás do gol e atrás do batedor)
+    const pole = lambert('#d8d8d8');
+    const spots: [number, number, number][] = [];
+    for (let i = 0; i < 9; i++) spots.push([-26 + i * 6.5, -15.2, 0], [-26 + i * 6.5, 51.2, Math.PI]);
+    for (const [x, z, ry] of spots) {
+      const g = new THREE.Group();
+      g.add(box(0.06, 2.4, 0.06, pole, 1.2));
+      const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.05, 8, 1), new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }));
+      flag.position.set(0.85, 1.9, 0);
+      g.add(flag);
+      g.position.set(x, 1.0, z);
+      g.rotation.y = ry;
+      this.scene.add(g);
+      this.flags.push(flag);
+    }
+  }
+
+  /** Bandeiras com duas faixas nas cores escolhidas (time do coração ou dos times em campo). */
+  private paintFlags(c1: string, c2: string) {
+    const tex = canvasTex(64, 40, (g) => {
+      g.fillStyle = c1; g.fillRect(0, 0, 64, 40);
+      g.fillStyle = c2; g.fillRect(0, 14, 64, 12);
+    });
+    for (const f of this.flags) {
+      const m = f.material as THREE.MeshLambertMaterial;
+      m.map?.dispose();
+      m.map = tex;
+      m.needsUpdate = true;
+    }
   }
 
   /** Céu de verdade: degradê, nuvens de dia, estrelas à noite, nuvens carregadas na chuva e na neve. */
@@ -426,7 +457,8 @@ export class Pitch {
   }
 
   /** Clima e torcida da partida. colors: cores das camisas dos dois times, para a torcida. */
-  setAtmosphere(o: { weather: Weather; crowd: Crowd; colors: string[] }) {
+  setAtmosphere(o: { weather: Weather; crowd: Crowd; colors: string[]; flag?: [string, string] }) {
+    this.paintFlags(...(o.flag ?? [o.colors[0], '#ffffff']));
     this.weather = o.weather;
     const sky = { day: '#7cc4f5', night: '#0b1736', rain: '#6f7f8f', snow: '#c9d7e4' }[o.weather];
     const fog = { day: '#a8d8f7', night: '#0b1736', rain: '#7d8b98', snow: '#dbe5ee' }[o.weather];
@@ -646,6 +678,15 @@ export class Pitch {
       p.needsUpdate = true;
     }
     if (this.showcaseBody) this.showcaseBody.root.rotation.y += dt * 0.8;
+    // bandeiras tremulando (mais forte na festa do gol)
+    this.flags.forEach((f, i) => {
+      const pos = (f.geometry as THREE.PlaneGeometry).attributes.position as THREE.BufferAttribute;
+      for (let k = 0; k < pos.count; k++) {
+        const x = pos.getX(k) + 0.85;
+        pos.setZ(k, Math.sin(this.idle * (party ? 9 : 4) + x * 3 + i) * 0.12 * x);
+      }
+      pos.needsUpdate = true;
+    });
     this.ballShadow.position.x = this.ball.position.x;
     this.ballShadow.position.z = this.ball.position.z;
     const s = Math.max(0.3, 1 - this.ball.position.y / 6);

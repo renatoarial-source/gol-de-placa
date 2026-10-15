@@ -142,6 +142,22 @@ test('narração: escolhe narrador, narradora ou desligada', async ({ page }) =>
   expect(await page.evaluate(() => localStorage.getItem('gol.voice'))).toBe('female');
 });
 
+test('Torcida e música: escolhe o ritmo e as cores do time do coração', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await open(page);
+  await page.click('[data-go=fans]');
+  await expect(page.locator('[data-music]')).toHaveCount(4);
+  await page.click('[data-music=charanga]');
+  await page.click('[data-h0="#111111"]');
+  await page.click('[data-h1="#ffffff"]');
+  await expect(page.locator('.flag')).toBeVisible();
+  expect(await page.evaluate(() => [localStorage.getItem('gol.music'), localStorage.getItem('gol.heart')])).toEqual(['charanga', '["#111111","#ffffff"]']);
+  await page.click('[data-heart=none]');
+  await expect(page.locator('.flag')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('propaganda do Esconde-Esconde só abre com a conta certa', async ({ page }) => {
   await open(page);
   await page.evaluate(() => { (window as unknown as { opened: string[] }).opened = []; window.open = ((u: string) => { (window as unknown as { opened: string[] }).opened.push(u); return null; }) as typeof window.open; });

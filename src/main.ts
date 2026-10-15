@@ -14,6 +14,7 @@ import {
 import { BOOT_COLORS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Crowd, type Look, type Weather } from './game/scene';
 import { FREE_TEAM, store as shop } from './game/store';
 import * as audio from './game/audio';
+import { MUSIC_STYLES, music, type MusicStyle } from './game/music';
 
 // ---------- preferências ----------
 const store = {
@@ -28,6 +29,11 @@ let diff = store.get('diff', 'easy') as Difficulty;
 let weather = store.get('weather', 'day') as Weather;
 let crowd = store.get('crowd', 'full') as Crowd;
 let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
+let musicStyle = store.get('music', 'batucada') as MusicStyle;
+/** Cores do time do coração (só cores, sem nome de clube), ou null. */
+const HEART_COLORS = ['#111111', '#ffffff', '#d50000', '#0d47a1', '#1b8a3a', '#ffd400', '#7b1f2e', '#ff6d00', '#6a1b9a', '#64b5f6'];
+let heart: [string, string] | null = (() => { try { const h = JSON.parse(store.get('heart', 'null')); return Array.isArray(h) ? h as [string, string] : null; } catch { return null; } })();
+music.setStyle(musicStyle);
 let teamKind = store.get('teamKind', 'club') as 'nation' | 'club';
 let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
 const DEFAULT_LOOK: Look = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '' };
@@ -50,6 +56,16 @@ const native = Capacitor.isNativePlatform();
 const rng = Math.random;
 const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
+/** Clima, torcida e as cores das arquibancadas (time do coração, se escolhido). */
+function atmo(opp?: Team) {
+  const teams = [myTeam.kit.shirt, opp?.kit.shirt ?? '#ffffff'];
+  return {
+    weather, crowd,
+    colors: heart ? [...heart, ...heart, ...heart, ...teams] : teams,
+    flag: heart ?? [myTeam.kit.shirt, myTeam.kit.shorts] as [string, string],
+  };
+}
+
 /** Sem a versão completa, só o time do download e o boneco padrão. */
 const unlocked = () => shop.isUnlocked();
 const myLook = () => (unlocked() ? look : undefined);
@@ -59,7 +75,7 @@ function enforceFree() {
 
 document.documentElement.lang = LANGS[lang].voice;
 enforceFree();
-pitch.setAtmosphere({ weather, crowd, colors: [myTeam.kit.shirt, '#ffffff'] });
+pitch.setAtmosphere(atmo());
 pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myTeam.kit, keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
 
 // Cada partida tem um número; ao sair para o menu, as esperas antigas são abandonadas.
@@ -85,6 +101,7 @@ const lock = (locked: boolean) => (locked ? ' <span class="lock">🔒</span>' : 
 
 function home() {
   run++;
+  music.setIntensity(0.35);
   enforceFree();
   hud.classList.add('hidden'); hint.classList.add('hidden'); callEl.classList.add('hidden'); touch.classList.add('hidden');
   pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myTeam.kit, keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
@@ -92,7 +109,10 @@ function home() {
   show(`
     <div class="logo"><span class="ball">⚽</span><h1>GOL DE<br>PLACA</h1><p>${t('tagline')}</p></div>
     <button class="btn big" data-go="play">${t('play')}</button>
-    <button class="btn alt" data-go="player">${t('myPlayer')}${lock(!unlocked())}</button>
+    <div class="row">
+      <button class="btn alt" data-go="player">${t('myPlayer')}${lock(!unlocked())}</button>
+      <button class="btn alt" data-go="fans">${t('fanTitle')}</button>
+    </div>
     ${unlocked() ? '' : `<button class="btn gold" data-go="full">${t('fullVersion')}</button>`}
     <div class="card">
       <label class="set">🌐 ${t('language')} <select id="lang">${langs}</select></label>
@@ -106,6 +126,7 @@ function home() {
   `);
   on('[data-go=play]', modes);
   on('[data-go=player]', () => (unlocked() ? builder() : unlock(home)));
+  on('[data-go=fans]', fans);
   on('[data-go=full]', () => unlock(home));
   on('[data-go=promo]', () => parentGate(() => window.open(Capacitor.getPlatform() === 'android' ? ESCONDE.android : ESCONDE.ios, '_blank')));
   on('[data-tg]', () => { sound = !sound; store.set('sound', sound ? '1' : '0'); audio.setSound(sound); home(); });
@@ -296,7 +317,8 @@ function react(outcome: Outcome, kickerIsMe: boolean, top: boolean) {
   const good = (outcome === 'goal') === kickerIsMe;
   const key: CallKey = outcome === 'goal' ? (top ? 'corner' : 'goal') : outcome;
   showCall(outcome, good, key);
-  if (outcome === 'goal') { audio.net(); audio.crowd('cheer'); }
+  music.setIntensity(0.45);
+  if (outcome === 'goal') { audio.net(); audio.crowd('cheer'); music.burst(); }
   else if (outcome === 'save') audio.crowd('clap');
   else if (outcome === 'post') { audio.post(); audio.crowd('ohh'); }
   else audio.crowd('ohh');
@@ -307,6 +329,7 @@ function react(outcome: Outcome, kickerIsMe: boolean, top: boolean) {
 async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team): Promise<boolean> {
   pitch.setup({ sx, sz, view: 'kick', kickerKit: myTeam.kit, keeperKit: opp.kit, wall, seed: Math.floor(rng() * 100), look: myLook() });
   showHint(t('yourKick'), firstKick ? t('howKick') : '');
+  music.setIntensity(0.75);
   audio.whistle();
   let shot = null;
   while (!shot) {
@@ -341,6 +364,7 @@ async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall
 async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team): Promise<boolean> {
   pitch.setup({ sx, sz, view: 'keep', kickerKit: opp.kit, keeperKit: myTeam.kit, wall, seed: Math.floor(rng() * 100), look: myLook() });
   showHint(t('yourKeep'), firstKeep ? t('howKeep') : '');
+  music.setIntensity(0.75);
   firstKeep = false;
   await sleep(900);
   guard(id);
@@ -399,7 +423,7 @@ function spotFor(kind: Kind) {
 
 /** Devolve quantas cobranças a criança venceu (gols como batedor, defesas como goleiro). */
 async function duel(id: number, kind: Kind, r: Role, opp: Team): Promise<number> {
-  pitch.setAtmosphere({ weather, crowd, colors: [myTeam.kit.shirt, opp.kit.shirt] });
+  pitch.setAtmosphere(atmo(opp));
   const mine: boolean[] = [];
   const draw = () => {
     const theirs = mine.map((x) => !x);
@@ -441,7 +465,7 @@ async function single(id: number, m: 'penalty' | 'free', r: Role) {
 /** Disputa de pênaltis da Copa: a criança bate pelo time dela e defende as cobranças da máquina,
  * alternando. 5 para cada lado e, se empatar, morte súbita. Devolve [venceu, gols dela, gols da máquina]. */
 async function shootout(id: number, opp: Team): Promise<[boolean, number, number]> {
-  pitch.setAtmosphere({ weather, crowd, colors: [myTeam.kit.shirt, opp.kit.shirt] });
+  pitch.setAtmosphere(atmo(opp));
   const so: Shootout = { a: [], b: [] };
   const draw = () => board([{ team: myTeam, icon: '⚽', marks: so.a }, { team: opp, icon: '⚽', marks: so.b }]);
   const score = (w: 'a' | 'b'): [boolean, number, number] => [w === 'a', so.a.filter(Boolean).length, so.b.filter(Boolean).length];
@@ -527,6 +551,47 @@ function confetti() {
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 5000);
   }
+}
+
+// ---------- Torcida e música ----------
+
+function fans() {
+  const swatches = (which: 0 | 1) =>
+    `<div class="swatches">${HEART_COLORS.map((c) => `<button class="sw${heart?.[which] === c ? ' on' : ''}" data-h${which}="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
+  show(`
+    <h2>${t('fanTitle')}</h2>
+    <div class="card">
+      <b>${t('music')}</b>
+      <div class="seg wrap">${MUSIC_STYLES.map((m) => `<button data-music="${m}" class="${m === musicStyle ? 'on' : ''}">${t(('mus_' + m) as UiKey)}</button>`).join('')}</div>
+    </div>
+    <div class="card">
+      <b>${t('heart')}</b>
+      <button class="toggle${heart ? '' : ' on'}" data-heart="none">${t('heartNone')}</button>
+      <b>${t('heart1')}</b>${swatches(0)}
+      <b>${t('heart2')}</b>${swatches(1)}
+      ${heart ? `<div class="flag" style="--a:${heart[0]};--b:${heart[1]}"></div>` : ''}
+      <p class="voice-note">${t('heartInfo')}</p>
+    </div>
+    <button class="btn alt" data-go="back">${t('back')}</button>
+  `);
+  on('[data-music]', (el) => {
+    musicStyle = el.dataset.music as MusicStyle;
+    store.set('music', musicStyle);
+    music.setStyle(musicStyle);
+    fans();
+  });
+  const pick = (i: 0 | 1, c: string) => {
+    const h: [string, string] = heart ? [...heart] as [string, string] : ['#111111', '#ffffff'];
+    h[i] = c;
+    heart = h;
+    store.set('heart', JSON.stringify(heart));
+    pitch.setAtmosphere(atmo());
+    fans();
+  };
+  on('[data-h0]', (el) => pick(0, el.dataset.h0!));
+  on('[data-h1]', (el) => pick(1, el.dataset.h1!));
+  on('[data-heart]', () => { heart = null; store.set('heart', 'null'); pitch.setAtmosphere(atmo()); fans(); });
+  on('[data-go=back]', home);
 }
 
 // ---------- Meu craque ----------
