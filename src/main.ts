@@ -34,6 +34,9 @@ let musicStyle = store.get('music', 'batucada') as MusicStyle;
 const HEART_COLORS = ['#111111', '#ffffff', '#d50000', '#0d47a1', '#1b8a3a', '#ffd400', '#7b1f2e', '#ff6d00', '#6a1b9a', '#64b5f6'];
 let heart: [string, string] | null = (() => { try { const h = JSON.parse(store.get('heart', 'null')); return Array.isArray(h) ? h as [string, string] : null; } catch { return null; } })();
 music.setStyle(musicStyle);
+// narração gravada: carrega as falas do idioma/voz e abaixa a música quando o narrador fala
+audio.whenAudioReady(() => audio.preloadVoice(lang));
+audio.onSpeak((secs) => music.duck(secs));
 let teamKind = store.get('teamKind', 'club') as 'nation' | 'club';
 let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
 const DEFAULT_LOOK: Look = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '' };
@@ -120,7 +123,6 @@ function home() {
       <b class="set-title">${t('narration')}</b>
       <div class="seg">${(['male', 'female', 'off'] as audio.Voice[]).map((v) =>
         `<button data-voice="${v}" class="${v === voice ? 'on' : ''}">${t(v === 'male' ? 'voiceMale' : v === 'female' ? 'voiceFemale' : 'voiceOff')}</button>`).join('')}</div>
-      ${voiceNote()}
     </div>
     <button class="promo" data-go="promo"><span class="e">🙈</span><span><b>${t('promoTitle')}</b><span>${t('promoText')}</span></span></button>
   `);
@@ -134,22 +136,17 @@ function home() {
     voice = el.dataset.voice as audio.Voice;
     store.set('voice', voice);
     audio.setNarration(voice);
+    audio.preloadVoice(lang);
     audio.call(lang, 'goal'); // amostra da voz escolhida
     home();
   });
   ($('lang') as HTMLSelectElement).addEventListener('change', (e) => {
     lang = (e.target as HTMLSelectElement).value as Lang;
     store.set('lang', lang);
+    audio.preloadVoice(lang);
     document.documentElement.lang = LANGS[lang].voice;
     home();
   });
-}
-
-/** Qual voz do aparelho narra e, se não for do gênero escolhido, como baixar uma. */
-function voiceNote(): string {
-  const v = audio.voiceInfo(lang);
-  if (!v) return '';
-  return `<p class="voice-note">${v.name ? esc(t('voiceUsing', { name: v.name })) : ''}${v.real ? '' : `<br>${esc(t('voiceTip'))}`}</p>`;
 }
 
 type Mode = 'penalty' | 'free' | 'cup';
@@ -699,7 +696,6 @@ function parentGate(ok: () => void) {
   }));
 }
 
-audio.onVoices(() => { if (ui.querySelector('.logo')) home(); });
 // compra restaurada ao abrir o app: atualiza a tela inicial (sem interromper uma partida)
 shop.onChange(() => { if (ui.querySelector('.logo')) home(); });
 void shop.init();

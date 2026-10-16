@@ -207,6 +207,16 @@ export const music = {
     level = x;
     if (ctx && out) out.gain.setTargetAtTime(0.22 + 0.2 * Math.min(1, x), ctx.currentTime, 0.4);
   },
+  /** Abaixa a música enquanto o narrador fala. */
+  duck(secs: number) {
+    if (!ctx || !out) return;
+    const t = ctx.currentTime;
+    const normal = t < boostUntil ? 0.5 : 0.22 + 0.2 * Math.min(1, level);
+    out.gain.cancelScheduledValues(t);
+    out.gain.setValueAtTime(out.gain.value, t);
+    out.gain.linearRampToValueAtTime(normal * 0.45, t + 0.1);
+    out.gain.setTargetAtTime(normal, t + secs, 0.3);
+  },
   /** Explosão de gol: prato, viradas e volume lá em cima por alguns segundos. */
   burst() {
     if (!ctx || !out || style === 'off') return;

@@ -1,0 +1,34 @@
+{
+ "pt": {
+  "male": "pt-BR-Chirp3-HD-Puck",
+  "female": "pt-BR-Chirp3-HD-Kore"
+ },
+ "en": {
+  "male": "en-US-Chirp3-HD-Puck",
+  "female": "en-US-Chirp3-HD-Kore"
+ },
+ "es": {
+  "male": "es-ES-Chirp3-HD-Puck",
+  "female": "es-ES-Chirp3-HD-Kore"
+ },
+ "de": {
+  "male": "de-DE-Chirp3-HD-Puck",
+  "female": "de-DE-Chirp3-HD-Kore"
+ },
+ "fr": {
+  "male": "fr-FR-Chirp3-HD-Puck",
+  "female": "fr-FR-Chirp3-HD-Kore"
+ },
+ "it": {
+  "male": "it-IT-Chirp3-HD-Puck",
+  "female": "it-IT-Chirp3-HD-Kore"
+ },
+ "zh": {
+  "male": "cmn-CN-Chirp3-HD-Puck",
+  "female": "cmn-CN-Chirp3-HD-Kore"
+ },
+ "ja": {
+  "male": "ja-JP-Chirp3-HD-Puck",
+  "female": "ja-JP-Chirp3-HD-Kore"
+ }
+}

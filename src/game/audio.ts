@@ -41,13 +41,13 @@ export function initAudio() {
   crowdGain.gain.value = 0.18;
   src.connect(lp).connect(crowdGain).connect(master);
   src.start();
-  onReady?.(ctx, master);
+  for (const fn of onReady) fn(ctx, master);
 }
 
-let onReady: ((c: AudioContext, out: GainNode) => void) | null = null;
-/** A música da torcida pluga aqui quando o áudio é liberado pelo primeiro toque. */
+const onReady: ((c: AudioContext, out: GainNode) => void)[] = [];
+/** Quem precisa do áudio (música, narração) pluga aqui; roda quando o primeiro toque libera o som. */
 export function whenAudioReady(fn: (c: AudioContext, out: GainNode) => void) {
-  onReady = fn;
+  onReady.push(fn);
   if (ctx && master) fn(ctx, master);
 }
 
@@ -237,23 +237,63 @@ export function unlockVoice() {
   } catch { /* sem voz */ }
 }
 
-/** Fala uma frase da narração e devolve o texto (também mostrado na tela). */
-export function call(lang: Lang, key: CallKey): string {
-  const lines = LANGS[lang].calls[key];
-  const text = lines[Math.floor(Math.random() * lines.length)];
-  if (voiceMode === 'off' || !enabled) return text;
+// ---------- narração gravada (vozes neurais geradas e guardadas no app: public/voice) ----------
+
+const clips = new Map<string, Promise<AudioBuffer | null>>();
+let speaking: AudioBufferSourceNode | null = null;
+let onSpeakFn: (secs: number) => void = () => {};
+/** Avisa quando o narrador começa a falar (para abaixar a música). */
+export function onSpeak(fn: (secs: number) => void) { onSpeakFn = fn; }
+
+function clipUrl(lang: Lang, v: 'male' | 'female', key: string, i: number) {
+  return `./voice/${lang}/${v}/${key}-${i}.mp3`;
+}
+function loadClip(url: string): Promise<AudioBuffer | null> {
+  if (!clips.has(url)) {
+    clips.set(url, (async () => {
+      if (!ctx) return null;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        return await ctx.decodeAudioData(await res.arrayBuffer());
+      } catch { return null; }
+    })());
+  }
+  return clips.get(url)!;
+}
+/** Carrega antes todas as falas do idioma e da voz escolhidos. */
+export function preloadVoice(lang: Lang) {
+  if (!ctx || voiceMode === 'off') return;
+  for (const [key, lines] of Object.entries(LANGS[lang].calls)) lines.forEach((_, i) => void loadClip(clipUrl(lang, voiceMode as 'male', key, i)));
+}
+
+function playClip(buf: AudioBuffer) {
+  if (!ctx || !master) return;
+  try { speaking?.stop(); } catch { /* já parou */ }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const g = ctx.createGain();
+  g.gain.value = 1.15;
+  src.connect(g).connect(master);
+  src.start();
+  speaking = src;
+  onSpeakFn(buf.duration);
+}
+
+/** Voz do sistema (reserva, se o áudio gravado não carregar). */
+function speakSystem(lang: Lang, key: CallKey, text: string) {
   const code = LANGS[lang].voice;
-  const { voice, pitch, rate } = pickVoice(code, voiceMode);
+  const { voice, pitch, rate } = pickVoice(code, voiceMode as 'male');
   const hype = key === 'goal' || key === 'corner' || key === 'champion';
   const p = Math.min(2, pitch * (hype ? 1.1 : 1));
   const r = rate * (hype ? 1.1 : 1);
   if (native) {
     void TextToSpeech.stop().catch(() => {}).then(() =>
       TextToSpeech.speak({ text, lang: code, rate: r, pitch: p, volume: 1, voice: voice?.index, category: 'playback' })).catch(() => {});
-    return text;
+    return;
   }
   const s = synth();
-  if (!s) return text;
+  if (!s) return;
   try {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = code;
@@ -261,11 +301,25 @@ export function call(lang: Lang, key: CallKey): string {
     u.rate = r;
     u.pitch = p;
     u.volume = 1;
-    // interromper a fala anterior e falar logo em seguida pode fazer o iPhone ignorar a nova
     const busy = s.speaking || s.pending;
     if (busy) s.cancel();
     s.resume();
     if (busy) setTimeout(() => s.speak(u), 80); else s.speak(u);
   } catch { /* sem voz */ }
+}
+
+/** Fala uma frase da narração e devolve o texto (também mostrado na tela). */
+export function call(lang: Lang, key: CallKey): string {
+  const lines = LANGS[lang].calls[key];
+  const i = Math.floor(Math.random() * lines.length);
+  const text = lines[i];
+  if (voiceMode === 'off' || !enabled) return text;
+  const asked = performance.now();
+  const v = voiceMode;
+  void (ctx ? loadClip(clipUrl(lang, v, key, i)) : Promise.resolve(null)).then((buf) => {
+    if (voiceMode !== v) return;
+    if (buf) { if (performance.now() - asked < 700) playClip(buf); } // atrasada demais: deixa passar
+    else speakSystem(lang, key, text);
+  });
   return text;
 }

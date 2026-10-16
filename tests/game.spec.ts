@@ -158,6 +158,18 @@ test('Torcida e música: escolhe o ritmo e as cores do time do coração', async
   expect(errors).toEqual([]);
 });
 
+test('narração gravada: escolher a narradora toca o áudio dela no idioma do jogo', async ({ page }) => {
+  const clips: string[] = [];
+  page.on('response', (r) => { if (r.url().includes('/voice/') && r.ok()) clips.push(r.url().split('/voice/')[1]); });
+  await page.goto('/');
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.lang', 'pt'); });
+  await page.reload();
+  await page.click('[data-voice=female]');
+  await expect.poll(() => clips.some((c) => /^pt\/female\/goal-\d\.mp3$/.test(c)), { timeout: 10_000 }).toBe(true);
+  // ao escolher, as outras falas da narradora já são carregadas
+  await expect.poll(() => clips.filter((c) => c.startsWith('pt/female/')).length, { timeout: 10_000 }).toBeGreaterThan(20);
+});
+
 test('propaganda do Esconde-Esconde só abre com a conta certa', async ({ page }) => {
   await open(page);
   await page.evaluate(() => { (window as unknown as { opened: string[] }).opened = []; window.open = ((u: string) => { (window as unknown as { opened: string[] }).opened.push(u); return null; }) as typeof window.open; });
