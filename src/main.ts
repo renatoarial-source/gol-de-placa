@@ -15,6 +15,7 @@ import { BOOT_COLORS, CELEBRATIONS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS
 import { STICKERS, apply as applyProgress, emptyState, ensureDay, needOf, type Ev, type State as ProgressState } from './game/progress';
 import { FREE_TEAM, store as shop } from './game/store';
 import * as audio from './game/audio';
+import { onMatchFinished } from './game/rating';
 import { MUSIC_STYLES, music, type MusicStyle } from './game/music';
 
 // ---------- preferências ----------
@@ -541,6 +542,7 @@ async function single(id: number, m: 'penalty' | 'free', r: Role) {
   guard(id);
   const won = n >= 3;
   track({ t: 'match', won, perfect: n === 5, role: r });
+  onMatchFinished(won);
   if (won) confetti();
   audio.call(lang, won ? 'win' : 'lose');
   const stars = n >= 5 ? 3 : n >= 4 ? 2 : n >= 3 ? 1 : 0;
@@ -624,6 +626,7 @@ async function cup(id: number) {
   confetti();
   audio.call(lang, 'champion');
   track({ t: 'cup', diff });
+  onMatchFinished(true);
   show(`
     ${resultCard('🏆', 'champion', `${myTeam.badge} ${teamName(myTeam, lang)}`)}
     <button class="btn big" data-go="again">${t('again')}</button>
@@ -743,6 +746,7 @@ async function duoMatch(id: number) {
   }
   draw();
   track({ t: 'twoPlayers' });
+  onMatchFinished(true);
   const champ = players[winner === 'a' ? 0 : 1];
   confetti();
   audio.call(lang, 'champion');

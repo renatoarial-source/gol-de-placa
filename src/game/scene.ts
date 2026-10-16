@@ -529,7 +529,7 @@ export class Pitch {
     this.showcaseBody = b;
     // o boneco fica na parte de cima da tela; embaixo vêm as opções
     this.camera.position.set(0, 1.6, 13.2);
-    this.camera.lookAt(0, -0.9, 6);
+    this.camera.lookAt(0, -0.45, 6);
     this.camera.fov = 52;
     this.camera.updateProjectionMatrix();
   }
@@ -787,6 +787,16 @@ export class Pitch {
     const p = new THREE.Vector3();
     if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), p)) return null;
     return { x: THREE.MathUtils.clamp(p.x, -HALF - 4, HALF + 4), y: THREE.MathUtils.clamp(p.y, -2, GOAL_H + 3) };
+  }
+
+  /** A bola já saiu do pé? (usado nos testes e nas capturas da loja) */
+  ballMoving(): boolean {
+    return this.lastSetup !== null && this.ball.position.distanceTo(new THREE.Vector3(this.lastSetup.sx, BALL_R * 1.5, this.lastSetup.sz)) > 0.3;
+  }
+
+  /** Quanto do caminho até o gol a bola já percorreu (0 = no pé, 1 = na linha). */
+  ballProgress(): number {
+    return this.lastSetup ? 1 - this.ball.position.z / this.lastSetup.sz : 0;
   }
 
   /** Onde um ponto do campo aparece na tela (usado nos testes para mirar). */

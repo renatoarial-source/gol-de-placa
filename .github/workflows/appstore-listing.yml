@@ -1,0 +1,87 @@
+name: App Store listing
+
+# Preenche a página da versão no App Store Connect (nome, subtítulo, descrição,
+# palavras-chave, URLs, categorias, copyright e capturas nos 8 idiomas) a partir do
+# store/LISTING.md. Não envia o app para revisão.
+# Uso: GitHub → Actions → "App Store listing" → Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão no App Store Connect (igual à do "Publish to stores")'
+        required: true
+        default: '1.0.0'
+
+permissions:
+  contents: read
+
+jobs:
+  listing:
+    name: Fill App Store listing
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check secrets
+        run: |
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_BASE64; do
+            [ -n "${!v}" ] || { echo "::error::Falta o secret $v (ver PUBLICAR.md)"; exit 1; }
+          done
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Screenshots (iPhone 1290x2796, iPad 2064x2752)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run build
+          npx vite preview --port 4173 &
+          for i in $(seq 30); do curl -sf http://localhost:4173 >/dev/null && break; sleep 1; done
+          STORES=appstore,ipad node store/screenshots.mjs
+          node store/appstore-metadata.mjs
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: App Store Connect API key
+        run: |
+          ASC_KEY_ID=$(echo "$ASC_KEY_ID" | tr -d '[:space:]')
+          ASC_ISSUER_ID=$(echo "$ASC_ISSUER_ID" | tr -d '[:space:]')
+          # Aceita o conteúdo do arquivo .p8 colado direto ou em base64.
+          if printf '%s' "$ASC_KEY_P8_BASE64" | grep -q "BEGIN PRIVATE KEY"; then
+            KEY=$(printf '%s\n' "$ASC_KEY_P8_BASE64")
+          else
+            KEY=$(echo "$ASC_KEY_P8_BASE64" | base64 --decode)
+          fi
+          jq -n --arg id "$ASC_KEY_ID" --arg iss "$ASC_ISSUER_ID" --arg key "$KEY" \
+            '{key_id: $id, issuer_id: $iss, key: $key, duration: 1200, in_house: false}' > "$RUNNER_TEMP/asc.json"
+
+      - name: Upload listing (fastlane deliver)
+        # roda dentro de store/ para o deliver achar a pasta fastlane/metadata e não perguntar nada
+        working-directory: store
+        run: |
+          gem install fastlane --no-document
+          fastlane deliver \
+            --api_key_path "$RUNNER_TEMP/asc.json" \
+            --app_identifier com.arial.goldeplaca \
+            --platform ios \
+            --app_version "${{ inputs.version }}" \
+            --metadata_path fastlane/metadata \
+            --screenshots_path fastlane/screenshots \
+            --overwrite_screenshots true \
+            --skip_binary_upload true \
+            --skip_app_version_update false \
+            --submit_for_review false \
+            --run_precheck_before_submit false \
+            --automatic_release true \
+            --force true

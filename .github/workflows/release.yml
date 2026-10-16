@@ -1,0 +1,199 @@
+name: Publish to stores
+
+# Publicação manual: GitHub → Actions → "Publish to stores" → Run workflow.
+# Os passos de cada loja só rodam se os secrets daquela loja estiverem cadastrados
+# (ver PUBLICAR.md).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão (ex.: 1.0.0)'
+        required: true
+        default: '1.0.0'
+      android:
+        description: 'Enviar para a Google Play'
+        type: boolean
+        default: true
+      play_track:
+        description: 'Faixa da Google Play'
+        type: choice
+        options: [internal, alpha, beta, production]
+        default: internal
+      ios:
+        description: 'Enviar para o App Store Connect (TestFlight)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck && npm test
+      # os testes de ponta a ponta já rodaram no envio do código (Build apps)
+
+  google-play:
+    name: Google Play
+    needs: tests
+    if: inputs.android
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_BASE64: ${{ secrets.GOL_KEYSTORE_BASE64 }}
+      PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check secrets
+        run: |
+          [ -n "$KEYSTORE_BASE64" ] || { echo "::error::Falta o secret GOL_KEYSTORE_BASE64 (ver PUBLICAR.md)"; exit 1; }
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci && npm run build && npx cap sync android
+
+      - name: Build signed AAB
+        working-directory: android
+        env:
+          VERSION_NAME: ${{ inputs.version }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.GOL_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.GOL_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.GOL_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
+          # Número de build sempre crescente (minutos desde 1970)
+          export VERSION_CODE=$(( $(date +%s) / 60 ))
+          echo "versionCode=$VERSION_CODE versionName=$VERSION_NAME"
+          ./gradlew bundleRelease --no-daemon
+          cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/GolDePlaca-$VERSION_NAME.aab"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gol-play-${{ inputs.version }}
+          path: GolDePlaca-*.aab
+
+      # O primeiro envio de um app novo precisa ser feito à mão no Play Console;
+      # depois disso este passo envia automaticamente.
+      - name: Upload to Google Play
+        if: env.PLAY_JSON != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.arial.goldeplaca
+          releaseFiles: GolDePlaca-*.aab
+          track: ${{ inputs.play_track }}
+          # vai direto para a revisão do Google e é liberado aos testadores quando aprovado
+          status: completed
+          whatsNewDirectory: store/whatsnew
+
+  app-store:
+    name: App Store Connect (TestFlight)
+    # um envio de iPhone por vez (Gelada, Esconde-Esconde e Gol de Placa): a assinatura automática
+    # da Apple falha se dois apps pedem certificado ao mesmo tempo
+    concurrency:
+      group: apple-signing
+      cancel-in-progress: false
+    needs: tests
+    if: inputs.ios
+    runs-on: macos-15
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check secrets
+        run: |
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_BASE64 APPLE_TEAM_ID; do
+            [ -n "${!v}" ] || { echo "::error::Falta o secret $v (ver PUBLICAR.md)"; exit 1; }
+          done
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci && npm run build && npx cap sync ios
+
+      - name: App Store Connect API key
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          # Aceita o conteúdo do arquivo .p8 colado direto (-----BEGIN PRIVATE KEY-----) ou em base64.
+          ASC_KEY_ID=$(echo "$ASC_KEY_ID" | tr -d '[:space:]')
+          ASC_ISSUER_ID=$(echo "$ASC_ISSUER_ID" | tr -d '[:space:]')
+          echo "APPLE_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d '[:space:]')" >> "$GITHUB_ENV"
+          if printf '%s' "$ASC_KEY_P8_BASE64" | grep -q "BEGIN PRIVATE KEY"; then
+            printf '%s\n' "$ASC_KEY_P8_BASE64" > "$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8"
+          else
+            echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8"
+          fi
+          echo "AUTH=-allowProvisioningUpdates -authenticationKeyPath $RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID" >> "$GITHUB_ENV"
+
+      # Assinatura automática gerenciada pela Apple (cloud signing): não precisa de
+      # certificado nem de Mac; a chave da API precisa ter papel Admin.
+      - name: Free development certificates
+        # cada build cria um certificado novo; sem isso a Apple bloqueia ao atingir o limite
+        run: node .github/scripts/free-dev-certs.mjs
+
+      - name: Archive
+        run: |
+          BUILD_NUMBER=$(( $(date +%s) / 60 ))
+          echo "build=$BUILD_NUMBER version=${{ inputs.version }}"
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/GolDePlaca.xcarchive" \
+            $AUTH \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="${{ inputs.version }}" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            archive
+
+      - name: Export and upload to App Store Connect
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/GolDePlaca.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            $AUTH
+          echo "Enviado. O build aparece no App Store Connect → TestFlight em alguns minutos."

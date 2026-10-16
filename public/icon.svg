@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#2fbf55"/>
+      <stop offset="0.55" stop-color="#14792f"/>
+      <stop offset="1" stop-color="#083a17"/>
+    </radialGradient>
+    <linearGradient id="trail" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd400" stop-opacity="0"/>
+      <stop offset="1" stop-color="#ffd400" stop-opacity="0.95"/>
+    </linearGradient>
+    <pattern id="net" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M0 0 H16 M0 0 V16" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2.2" fill="none"/>
+    </pattern>
+  </defs>
+  <rect width="512" height="512" rx="0" fill="url(#sky)"/>
+  <!-- gol com rede -->
+  <rect x="70" y="120" width="372" height="200" fill="url(#net)"/>
+  <path d="M70 324 V118 H442 V324" fill="none" stroke="#ffffff" stroke-width="18" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- rastro da bola (com curva) -->
+  <path d="M150 455 C 190 330, 300 200, 392 158" fill="none" stroke="url(#trail)" stroke-width="22" stroke-linecap="round"/>
+  <!-- bola no ângulo -->
+  <g transform="translate(392 156)">
+    <clipPath id="ballc"><circle r="44"/></clipPath>
+    <circle r="44" fill="#ffffff"/>
+    <g clip-path="url(#ballc)" fill="#1b1b1b">
+      <path d="M0 -16 L15 -5 L9 13 L-9 13 L-15 -5 Z"/>
+      <path d="M0 -50 L16 -38 L10 -26 L-10 -26 L-16 -38 Z"/>
+      <path d="M48 -16 L52 4 L38 12 L30 -2 L36 -18 Z" />
+      <path d="M-48 -16 L-52 4 L-38 12 L-30 -2 L-36 -18 Z"/>
+      <path d="M30 40 L14 50 L4 36 L16 26 L30 30 Z"/>
+      <path d="M-30 40 L-14 50 L-4 36 L-16 26 L-30 30 Z"/>
+    </g>
+    <circle r="44" fill="none" stroke="#1b1b1b" stroke-width="4"/>
+  </g>
+  <!-- brilho de impacto -->
+  <g stroke="#ffd400" stroke-width="7" stroke-linecap="round">
+    <path d="M440 108 L460 88"/><path d="M448 150 L476 148"/><path d="M420 90 L428 64"/>
+  </g>
+</svg>

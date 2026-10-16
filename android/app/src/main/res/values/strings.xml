@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gol de Placa</string>
+    <string name="title_activity_main">Gol de Placa</string>
+    <string name="package_name">com.arial.goldeplaca</string>
+    <string name="custom_url_scheme">com.arial.goldeplaca</string>
+</resources>
