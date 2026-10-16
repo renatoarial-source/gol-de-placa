@@ -47,14 +47,14 @@ jobs:
     if: inputs.android
     runs-on: ubuntu-latest
     env:
-      KEYSTORE_BASE64: ${{ secrets.GOL_KEYSTORE_BASE64 }}
+      KEYSTORE_BASE64: ${{ secrets.GELADA_KEYSTORE_BASE64 }}
       PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
     steps:
       - uses: actions/checkout@v5
 
       - name: Check secrets
         run: |
-          [ -n "$KEYSTORE_BASE64" ] || { echo "::error::Falta o secret GOL_KEYSTORE_BASE64 (ver PUBLICAR.md)"; exit 1; }
+          [ -n "$KEYSTORE_BASE64" ] || { echo "::error::Falta o secret GELADA_KEYSTORE_BASE64 (ver PUBLICAR.md)"; exit 1; }
 
       - uses: actions/setup-node@v5
         with:
@@ -72,9 +72,9 @@ jobs:
         working-directory: android
         env:
           VERSION_NAME: ${{ inputs.version }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.GOL_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.GOL_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.GOL_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.GELADA_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.GELADA_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.GELADA_KEY_PASSWORD }}
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
           export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/release.jks"

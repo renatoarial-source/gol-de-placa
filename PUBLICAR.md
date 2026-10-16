@@ -15,13 +15,17 @@ Identificador do app (Android e iOS): **`com.arial.goldeplaca`**
 | Build assinado + envio às lojas | Actions → **Publish to stores** |
 | Página da App Store (textos + capturas) | Actions → **App Store listing** |
 
-## Secrets (GitHub → Settings → Secrets and variables → Actions)
+## Onde roda
 
-| Secret | Para quê |
+Os workflows rodam na branch **`claude/gol-de-placa` do repositório `renatoarial-source/Arial`** (cópia deste
+repositório), porque os secrets da Apple e do Google já estão lá. Para publicar: Arial → Actions →
+**Publish to stores** → *Run workflow* → branch `claude/gol-de-placa`.
+
+| Secret (no repositório Arial) | Para quê |
 |---|---|
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64`, `APPLE_TEAM_ID` | Os mesmos do Gelada |
-| `PLAY_SERVICE_ACCOUNT_JSON` | O mesmo do Gelada (envio automático à Google Play) |
-| `GOL_KEYSTORE_BASE64`, `GOL_KEYSTORE_PASSWORD`, `GOL_KEY_ALIAS`, `GOL_KEY_PASSWORD` | Chave de upload só deste jogo: rode **Create Gol de Placa upload key** e copie cada `.txt` do artefato |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64`, `APPLE_TEAM_ID` | Assinatura na nuvem e envio ao App Store Connect |
+| `PLAY_SERVICE_ACCOUNT_JSON` | Envio automático à Google Play |
+| `GELADA_KEYSTORE_BASE64`, `GELADA_KEYSTORE_PASSWORD`, `GELADA_KEY_ALIAS`, `GELADA_KEY_PASSWORD` | Chave de upload do Android (a mesma do Gelada; o Google aceita a mesma chave de upload em apps diferentes) |
 
 ## Preço
 
