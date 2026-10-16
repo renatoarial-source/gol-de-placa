@@ -7,11 +7,12 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { LANGS, detectLang, fmt, uiText, type CallKey, type Lang, type UiKey } from './game/i18n';
 import { allTeams, findTeam, teamName, type Team } from './game/teams';
 import {
-  PENALTY_Z, aimResult, cpuKeeperTarget, cpuSaves, cpuShot, flightTime, freeKickSpot, isTopCorner, placeWall,
+  GOAL_H, GROUND_SHOT, HALF, PENALTY_Z, aimResult, cpuKeeperTarget, cpuSaves, cpuShot, flightTime, freeKickSpot, isTopCorner, placeWall,
   playerSaves, shootoutWinner, shotFromSwipe, wallHit,
   type Difficulty, type Kind, type Outcome, type Shootout, type Wall,
 } from './game/physics';
-import { BOOT_COLORS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Crowd, type Look, type Weather } from './game/scene';
+import { BOOT_COLORS, CELEBRATIONS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Celebration, type Crowd, type Look, type Weather } from './game/scene';
+import { STICKERS, apply as applyProgress, emptyState, ensureDay, needOf, type Ev, type State as ProgressState } from './game/progress';
 import { FREE_TEAM, store as shop } from './game/store';
 import * as audio from './game/audio';
 import { MUSIC_STYLES, music, type MusicStyle } from './game/music';
@@ -39,8 +40,8 @@ audio.whenAudioReady(() => audio.preloadVoice(lang));
 audio.onSpeak((secs) => music.duck(secs));
 let teamKind = store.get('teamKind', 'club') as 'nation' | 'club';
 let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
-const DEFAULT_LOOK: Look = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '' };
-let look: Look = (() => { try { return { ...DEFAULT_LOOK, ...JSON.parse(store.get('look', '{}')) }; } catch { return DEFAULT_LOOK; } })();
+const DEFAULT_LOOK: Look & { cel: Celebration } = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '', cel: 'jump' };
+let look: Look & { cel: Celebration } = (() => { try { return { ...DEFAULT_LOOK, ...JSON.parse(store.get('look', '{}')) }; } catch { return DEFAULT_LOOK; } })();
 audio.setSound(sound);
 audio.setNarration(voice);
 
@@ -58,6 +59,31 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const native = Capacitor.isNativePlatform();
 const rng = Math.random;
 const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+// ---------- figurinhas e desafios do dia ----------
+const today = () => new Date().toLocaleDateString('en-CA');
+let progress: ProgressState = (() => { try { return { ...emptyState(), ...JSON.parse(store.get('progress', '{}')) }; } catch { return emptyState(); } })();
+function freshProgress() { progress = ensureDay(progress, today(), unlocked()); }
+/** Registra um acontecimento: guarda, mostra figurinhas novas e desafios completados. */
+function track(ev: Ev) {
+  freshProgress();
+  const r = applyProgress(progress, ev);
+  progress = r.s;
+  store.set('progress', JSON.stringify(progress));
+  for (const id of r.done) toast('📅', t('dailyDone'), t(('ch_' + id) as UiKey, { n: needOf(id) }));
+  for (const id of r.stickers) toast(STICKERS.find((x) => x.id === id)!.e, t('newSticker'), t(('st_' + id) as UiKey));
+}
+let toastY = 0;
+function toast(icon: string, title: string, text: string) {
+  const d = document.createElement('div');
+  d.className = 'toast';
+  d.style.setProperty('--d', `${toastY * 0.6}s`);
+  toastY++;
+  d.innerHTML = `<span class="ti">${icon}</span><span><b>${esc(title)}</b>${esc(text)}</span>`;
+  document.body.appendChild(d);
+  setTimeout(() => audio.chime(), toastY * 600 - 600);
+  setTimeout(() => { d.remove(); toastY = Math.max(0, toastY - 1); }, 3600 + toastY * 600);
+}
 
 /** Clima, torcida e as cores das arquibancadas (time do coração, se escolhido). */
 function atmo(opp?: Team) {
@@ -102,6 +128,29 @@ const lock = (locked: boolean) => (locked ? ' <span class="lock">🔒</span>' : 
 
 // ---------- telas ----------
 
+function dailyCard(): string {
+  freshProgress();
+  const rows = progress.daily.map((d) => {
+    const need = needOf(d.id);
+    const ok = d.n >= need;
+    return `<li class="${ok ? 'ok' : ''}"><span>${ok ? '✅' : '⬜'}</span><span>${t(('ch_' + d.id) as UiKey, { n: need })}</span><b>${Math.min(d.n, need)}/${need}</b></li>`;
+  }).join('');
+  return `<div class="card daily"><b>${t('daily')}</b><ul>${rows}</ul></div>`;
+}
+
+function album() {
+  show(`
+    <h2>${t('album')}</h2>
+    <p class="sub">${t('albumCount', { n: progress.stickers.length, t: STICKERS.length })}</p>
+    <div class="album">${STICKERS.map((st) => {
+      const has = progress.stickers.includes(st.id);
+      return `<div class="sticker${has ? ' has' : ''}"><span class="se">${has ? st.e : '❔'}</span><span class="sn">${t(('st_' + st.id) as UiKey)}</span></div>`;
+    }).join('')}</div>
+    <button class="btn alt" data-go="back">${t('back')}</button>
+  `);
+  on('[data-go=back]', home);
+}
+
 function home() {
   run++;
   music.setIntensity(0.35);
@@ -116,6 +165,8 @@ function home() {
       <button class="btn alt" data-go="player">${t('myPlayer')}${lock(!unlocked())}</button>
       <button class="btn alt" data-go="fans">${t('fanTitle')}</button>
     </div>
+    <button class="btn alt" data-go="album">${t('album')} · ${progress.stickers.length}/${STICKERS.length}</button>
+    ${dailyCard()}
     ${unlocked() ? '' : `<button class="btn gold" data-go="full">${t('fullVersion')}</button>`}
     <div class="card">
       <label class="set">🌐 ${t('language')} <select id="lang">${langs}</select></label>
@@ -129,6 +180,7 @@ function home() {
   on('[data-go=play]', modes);
   on('[data-go=player]', () => (unlocked() ? builder() : unlock(home)));
   on('[data-go=fans]', fans);
+  on('[data-go=album]', album);
   on('[data-go=full]', () => unlock(home));
   on('[data-go=promo]', () => parentGate(() => window.open(Capacitor.getPlatform() === 'android' ? ESCONDE.android : ESCONDE.ios, '_blank')));
   on('[data-tg]', () => { sound = !sound; store.set('sound', sound ? '1' : '0'); audio.setSound(sound); home(); });
@@ -157,9 +209,11 @@ function modes() {
     <h2>${t('modeTitle')}</h2>
     ${(['penalty', 'free', 'cup'] as Mode[]).map((m) =>
       `<button class="mode" data-mode="${m}"><b>${t(m)}${lock(m === 'free' && !unlocked())}</b><span>${t((m + 'Desc') as UiKey)}</span></button>`).join('')}
+    <button class="mode" data-go="duo"><b>${t('twoPlayers')}${lock(!unlocked())}</b><span>${t('twoPlayersDesc')}</span></button>
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
   on('[data-go=back]', home);
+  on('[data-go=duo]', () => (unlocked() ? duoSetup() : unlock(modes)));
   on('[data-mode]', (el) => {
     const m = el.dataset.mode as Mode;
     if (m === 'free' && !unlocked()) unlock(modes);
@@ -242,12 +296,12 @@ function pickOpponent(exclude: string[] = []): Team {
 
 // ---------- placar: batedor x goleiro ----------
 
-interface Row { team: Team; icon: string; marks: boolean[] }
+interface Row { team: Team; icon: string; marks: boolean[]; label?: string }
 function board(rows: Row[], slots = Math.max(5, ...rows.map((r) => r.marks.length))) {
   hud.classList.remove('hidden');
   hud.innerHTML = `<button class="quit" aria-label="${t('menu')}">✕</button><div class="board">${rows.map((r) => {
     const dots = Array.from({ length: slots }, (_, i) => `<span class="dot${r.marks[i] === true ? ' g' : r.marks[i] === false ? ' m' : ''}"></span>`).join('');
-    return `<div class="line"><span class="t">${r.team.badge}</span><span class="ic">${r.icon}</span><span class="nm">${teamName(r.team, lang)}</span><span class="dots">${dots}</span><span class="sc">${r.marks.filter(Boolean).length}</span></div>`;
+    return `<div class="line"><span class="t">${r.team.badge}</span><span class="ic">${r.icon}</span><span class="nm">${esc(r.label ?? teamName(r.team, lang))}</span><span class="dots">${dots}</span><span class="sc">${r.marks.filter(Boolean).length}</span></div>`;
   }).join('')}</div>`;
   hud.querySelector('.quit')!.addEventListener('click', home);
 }
@@ -307,8 +361,20 @@ function waitSwipe(id: number): Promise<{ points: { x: number; y: number }[]; ms
   });
 }
 
-let firstKick = true;
-let firstKeep = true;
+// tutorial com a mãozinha: só nas primeiras vezes
+let tutKick = store.get('tutKick', '0') !== '1';
+let tutKeep = store.get('tutKeep', '0') !== '1';
+
+/** Mãozinha animada: arrasta de `from` até `to` (chute) ou toca em `from` (defesa). */
+function hand(from: { x: number; y: number }, to?: { x: number; y: number }): () => void {
+  const h = document.createElement('div');
+  h.className = `hand${to ? ' swipe' : ' tap'}`;
+  h.textContent = '👆';
+  h.style.setProperty('--x0', `${from.x}px`); h.style.setProperty('--y0', `${from.y}px`);
+  h.style.setProperty('--x1', `${(to ?? from).x}px`); h.style.setProperty('--y1', `${(to ?? from).y}px`);
+  document.body.appendChild(h);
+  return () => h.remove();
+}
 
 function react(outcome: Outcome, kickerIsMe: boolean, top: boolean) {
   const good = (outcome === 'goal') === kickerIsMe;
@@ -322,48 +388,71 @@ function react(outcome: Outcome, kickerIsMe: boolean, top: boolean) {
   haptic(outcome === 'goal' || outcome === 'save');
 }
 
-/** O jogador bate. Devolve se foi gol. */
-async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team): Promise<boolean> {
-  pitch.setup({ sx, sz, view: 'kick', kickerKit: myTeam.kit, keeperKit: opp.kit, wall, seed: Math.floor(rng() * 100), look: myLook() });
-  showHint(t('yourKick'), firstKick ? t('howKick') : '');
+/** No 2 jogadores, o goleiro escolhe antes onde vai pular (o batedor não vê). */
+interface Duo { kicker: Team; keeper: Team; keeperAt: { x: number; y: number } }
+
+/** O jogador bate. Devolve se foi gol. Com `duo`, o goleiro é a outra criança. */
+async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team, duo?: Duo): Promise<boolean> {
+  const kicker = duo?.kicker ?? myTeam;
+  pitch.setup({ sx, sz, view: 'kick', kickerKit: kicker.kit, keeperKit: (duo?.keeper ?? opp).kit, wall, seed: Math.floor(rng() * 100), look: duo ? undefined : myLook() });
+  pitch.kickerCelebration = !duo && unlocked() ? look.cel : 'jump';
+  showHint(t('yourKick'), tutKick ? t('tutKick') : '');
+  const unhand = tutKick ? hand(pitch.screenOf(sx, 0.1, sz), pitch.screenOf(HALF - 0.6, GOAL_H - 0.5, 0)) : () => {};
   music.setIntensity(0.75);
   audio.whistle();
   let shot = null;
-  while (!shot) {
-    const sw = await waitSwipe(id);
-    guard(id);
-    // a bola vai para o ponto do gol onde o dedo terminou o gesto
-    const end = sw.points[sw.points.length - 1];
-    const aim = pitch.goalPointAt(end.x, end.y) ?? { x: 0, y: 5 };
-    shot = shotFromSwipe({ ...sw, screenH: innerHeight }, sx, sz, kind, aim);
-  }
-  firstKick = false;
+  try {
+    while (!shot) {
+      const sw = await waitSwipe(id);
+      guard(id);
+      // a bola vai para o ponto do gol onde o dedo terminou o gesto
+      const end = sw.points[sw.points.length - 1];
+      const aim = pitch.goalPointAt(end.x, end.y) ?? { x: 0, y: 5 };
+      shot = shotFromSwipe({ ...sw, screenH: innerHeight }, sx, sz, kind, aim);
+    }
+  } finally { unhand(); }
+  if (tutKick) { tutKick = false; store.set('tutKick', '1'); }
   hint.classList.add('hidden');
   const aim = aimResult(shot, wall);
-  const keeperAt = cpuKeeperTarget(shot, kind, diff, rng);
   const s = shot;
-  const saves = aim === 'target' && cpuSaves(s, keeperAt, diff);
-  const outcome = await pitch.play({
+  // goleiro: a máquina lê o chute; no 2 jogadores, vai onde a outra criança escolheu
+  const keeperAt = duo ? duo.keeperAt : cpuKeeperTarget(s, kind, diff, rng);
+  const saves = aim === 'target' && cpuSaves(s, keeperAt, duo ? 'medium' : diff);
+  const play = {
     // quando defende, o goleiro vai na bola; quando não, pula onde tinha lido
     shot: s, runUp: 0.35, wallU: wallHit(s, wall), cpuKeeper: saves ? { x: s.tx, y: s.ty } : keeperAt,
-    decide: () => (aim !== 'target' ? aim : saves ? 'save' : 'goal'),
-    onKick: audio.kick,
-  });
+    decide: (): Outcome => (aim !== 'target' ? aim : saves ? 'save' : 'goal'),
+  };
+  const outcome = await pitch.play({ ...play, onKick: audio.kick });
   guard(id);
-  react(outcome, true, isTopCorner(s));
+  const top = isTopCorner(s);
+  react(outcome, true, top);
+  if (outcome === 'goal') track({ t: 'goal', corner: top, ground: s.ty <= GROUND_SHOT, curve: Math.abs(s.bend) > 0.8, free: kind === 'free', weather });
+  else if (outcome === 'post') track({ t: 'post' });
+  else track({ t: 'miss' });
   await sleep(1700);
   guard(id);
   callEl.classList.add('hidden');
+  // golaço: replay em câmera lenta, de lado
+  if (outcome === 'goal' && (top || Math.abs(s.bend) > 0.8 || kind === 'free')) {
+    callEl.innerHTML = `<b class="replay">⏪ ${t('replay')}</b>`;
+    callEl.classList.remove('hidden');
+    music.setIntensity(0.3);
+    await pitch.replay(play);
+    guard(id);
+    callEl.classList.add('hidden');
+  }
   return outcome === 'goal';
 }
 
 /** A máquina bate e o jogador defende tocando no gol. Devolve se a máquina fez gol. */
 async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team): Promise<boolean> {
   pitch.setup({ sx, sz, view: 'keep', kickerKit: opp.kit, keeperKit: myTeam.kit, wall, seed: Math.floor(rng() * 100), look: myLook() });
-  showHint(t('yourKeep'), firstKeep ? t('howKeep') : '');
+  pitch.kickerCelebration = CELEBRATIONS[Math.floor(rng() * CELEBRATIONS.length)];
+  showHint(t('yourKeep'), tutKeep ? t('tutKeep') : '');
+  const unhand = tutKeep ? hand(pitch.screenOf(-(HALF - 0.8), 1.2, 0)) : () => {};
   music.setIntensity(0.75);
-  firstKeep = false;
-  await sleep(900);
+  await sleep(tutKeep ? 2200 : 900);
   guard(id);
   audio.call(lang, 'ready');
   await sleep(700);
@@ -378,6 +467,7 @@ async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall
     if (!t0 || tap) return;
     const p = pitch.goalPointAt(e.clientX, e.clientY);
     if (!p) return;
+    unhand();
     const at = (performance.now() - t0) / 1000;
     tap = { ...p, t: at };
     // pulou no lugar certo e a tempo: as luvas vão na bola; senão, vai onde a criança tocou
@@ -398,13 +488,17 @@ async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall
       onFlightStart: (now) => { t0 = now; },
     });
     guard(id);
+    unhand();
+    if (tutKeep) { tutKeep = false; store.set('tutKeep', '1'); }
     hint.classList.add('hidden');
     react(outcome, false, isTopCorner(shot));
+    track(outcome === 'goal' ? { t: 'concede' } : outcome === 'save' ? { t: 'save' } : { t: 'miss' });
     await sleep(1700);
     guard(id);
     callEl.classList.add('hidden');
     return outcome === 'goal';
   } finally {
+    unhand();
     touch.removeEventListener('pointerdown', onTap);
     touch.classList.add('hidden');
   }
@@ -446,6 +540,7 @@ async function single(id: number, m: 'penalty' | 'free', r: Role) {
   const n = await duel(id, m, r, opp);
   guard(id);
   const won = n >= 3;
+  track({ t: 'match', won, perfect: n === 5, role: r });
   if (won) confetti();
   audio.call(lang, won ? 'win' : 'lose');
   const stars = n >= 5 ? 3 : n >= 4 ? 2 : n >= 3 ? 1 : 0;
@@ -498,6 +593,7 @@ async function cup(id: number) {
     await sleep(1800); guard(id);
     callEl.classList.add('hidden');
     const [won, ga, gb] = await shootout(id, opp);
+    if (won) track({ t: 'match', won, perfect: false, role: 'kicker' });
     guard(id);
     const score = `${myTeam.badge} ${ga} × ${gb} ${opp.badge}`;
     if (!won) {
@@ -527,6 +623,7 @@ async function cup(id: number) {
   }
   confetti();
   audio.call(lang, 'champion');
+  track({ t: 'cup', diff });
   show(`
     ${resultCard('🏆', 'champion', `${myTeam.badge} ${teamName(myTeam, lang)}`)}
     <button class="btn big" data-go="again">${t('again')}</button>
@@ -548,6 +645,114 @@ function confetti() {
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 5000);
   }
+}
+
+// ---------- 2 jogadores no mesmo celular ----------
+
+let duoNames: [string, string] = [store.get('p1', ''), store.get('p2', '')];
+let duoTeam2: Team = findTeam(store.get('team2', 'lions'));
+
+function duoSetup() {
+  const list = allTeams(teamKind);
+  if (duoTeam2.id === myTeam.id || duoTeam2.kind !== teamKind) duoTeam2 = list.find((x) => x.id !== myTeam.id)!;
+  show(`
+    <h2>${t('twoPlayers')}</h2>
+    <div class="card">
+      <div class="row">
+        <div><b>${myTeam.badge} ${t('p1')}</b><input id="p1" maxlength="12" value="${esc(duoNames[0])}" placeholder="${t('p1')}" autocomplete="off"></div>
+        <div><b>${duoTeam2.badge} ${t('p2')}</b><input id="p2" maxlength="12" value="${esc(duoNames[1])}" placeholder="${t('p2')}" autocomplete="off"></div>
+      </div>
+      <b>${t('p2team')}</b>
+      <div class="teams">${list.filter((x) => x.id !== myTeam.id).map((x) => `
+        <button class="team${x.id === duoTeam2.id ? ' on' : ''}" data-team2="${x.id}"><span class="b">${x.badge}</span><span class="n">${teamName(x, lang)}</span></button>`).join('')}</div>
+    </div>
+    <p class="sub">${t('twoPlayersDesc')}</p>
+    <button class="btn big" data-go="start">${t('start')}</button>
+    <button class="btn alt" data-go="back">${t('back')}</button>
+  `);
+  const names = () => {
+    duoNames = [($('p1') as HTMLInputElement).value.trim(), ($('p2') as HTMLInputElement).value.trim()];
+    store.set('p1', duoNames[0]); store.set('p2', duoNames[1]);
+  };
+  on('[data-team2]', (el) => { names(); duoTeam2 = findTeam(el.dataset.team2!); store.set('team2', duoTeam2.id); duoSetup(); });
+  on('[data-go=back]', () => { names(); modes(); });
+  on('[data-go=start]', () => {
+    names();
+    hideUi();
+    const id = ++run;
+    void quiet(duoMatch(id));
+  });
+}
+
+/** Tela cheia que esconde o jogo enquanto o celular passa de mão. */
+function cover(title: string, sub: string): Promise<void> {
+  return new Promise((ok) => {
+    show(`<div class="result card"><div class="big">📱</div><h2>${esc(title)}</h2><p class="sub">${esc(sub)}</p></div>
+      <button class="btn big" data-go="ok">${t('ready')}</button>`);
+    on('[data-go=ok]', () => { hideUi(); ok(); });
+  });
+}
+
+/** O goleiro toca no gol para escolher onde vai pular. */
+function pickDive(id: number): Promise<{ x: number; y: number }> {
+  touch.classList.remove('hidden');
+  return new Promise((resolve) => {
+    const onTap = (e: PointerEvent) => {
+      const p = pitch.goalPointAt(e.clientX, e.clientY);
+      if (!p || id !== run) return;
+      touch.removeEventListener('pointerdown', onTap);
+      touch.classList.add('hidden');
+      audio.chime();
+      resolve(p);
+    };
+    touch.addEventListener('pointerdown', onTap);
+  });
+}
+
+async function duoMatch(id: number) {
+  const players = [
+    { name: duoNames[0] || t('p1'), team: myTeam },
+    { name: duoNames[1] || t('p2'), team: duoTeam2 },
+  ];
+  pitch.setAtmosphere(atmo(duoTeam2));
+  const so: Shootout = { a: [], b: [] };
+  const draw = () => board([
+    { team: players[0].team, icon: '⚽', marks: so.a, label: players[0].name },
+    { team: players[1].team, icon: '⚽', marks: so.b, label: players[1].name },
+  ]);
+  let winner: 'a' | 'b' | null = null;
+  for (let turn = 0; !winner; turn++) {
+    const k = turn % 2; // 0: jogador 1 bate; 1: jogador 2 bate
+    const kicker = players[k], keeper = players[1 - k];
+    draw();
+    // 1) o goleiro escolhe escondido onde vai pular
+    await cover(t('pickKeep', { name: keeper.name }), t('pickKeepSub'));
+    guard(id);
+    pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: kicker.team.kit, keeperKit: keeper.team.kit, wall: null, seed: turn });
+    showHint(t('pickKeep', { name: keeper.name }), t('pickKeepSub'));
+    const at = await pickDive(id);
+    guard(id);
+    hint.classList.add('hidden');
+    // 2) passa o celular para o batedor
+    await cover(t('passKick', { name: kicker.name }), '');
+    guard(id);
+    const goal = await myKick(id, 'penalty', 0, PENALTY_Z, null, keeper.team, { kicker: kicker.team, keeper: keeper.team, keeperAt: at });
+    (k === 0 ? so.a : so.b).push(goal);
+    if (so.a.length === so.b.length) winner = shootoutWinner(so);
+    else if (so.a.length <= 5) winner = shootoutWinner(so); // pode acabar antes das 5
+  }
+  draw();
+  track({ t: 'twoPlayers' });
+  const champ = players[winner === 'a' ? 0 : 1];
+  confetti();
+  audio.call(lang, 'champion');
+  show(`
+    ${resultCard('🏆', 'win', `${players[0].team.badge} ${so.a.filter(Boolean).length} × ${so.b.filter(Boolean).length} ${players[1].team.badge}`, `<h2>${esc(t('winnerIs', { name: champ.name }))}</h2>`)}
+    <button class="btn big" data-go="again">${t('again')}</button>
+    <button class="btn alt" data-go="menu">${t('menu')}</button>
+  `, false);
+  on('[data-go=again]', () => { hideUi(); const nid = ++run; void quiet(duoMatch(nid)); });
+  on('[data-go=menu]', home);
 }
 
 // ---------- Torcida e música ----------
@@ -596,7 +801,7 @@ function fans() {
 function builder() {
   run++;
   hud.classList.add('hidden');
-  const draft: Look = { ...look };
+  const draft = { ...look };
   const keeperPreview = false;
   const refresh = () => pitch.showcase(draft, myTeam.kit, keeperPreview);
   const swatches = (key: 'skin' | 'hair' | 'boots', colors: string[]) =>
@@ -609,6 +814,7 @@ function builder() {
         <b>${t('hairStyle')}</b><div class="seg wrap">${HAIR_STYLES.map((h) => `<button data-style="${h}" class="${draft.style === h ? 'on' : ''}">${t(('hs_' + h) as UiKey)}</button>`).join('')}</div>
         <b>${t('hairColor')}</b>${swatches('hair', HAIR_COLORS)}
         <b>${t('boots')}</b>${swatches('boots', BOOT_COLORS)}
+        <b>${t('celebration')}</b><div class="seg wrap">${CELEBRATIONS.map((c) => `<button data-cel="${c}" class="${draft.cel === c ? 'on' : ''}">${t(('cel_' + c) as UiKey)}</button>`).join('')}</div>
         <div class="row">
           <div><b>${t('number')}</b><div class="num"><button data-n="-1">−</button><span>${draft.number}</span><button data-n="1">+</button></div></div>
           <div><b>${t('playerName')}</b><input id="pname" maxlength="10" value="${esc(draft.name)}" autocomplete="off"></div>
@@ -622,6 +828,8 @@ function builder() {
     on('[data-hair]', (el) => { draft.hair = Number(el.dataset.hair); render(); });
     on('[data-boots]', (el) => { draft.boots = Number(el.dataset.boots); render(); });
     on('[data-style]', (el) => { draft.style = el.dataset.style as Look['style']; render(); });
+    // escolher a comemoração mostra ela no boneco da vitrine
+    on('[data-cel]', (el) => { draft.cel = el.dataset.cel as Celebration; render(); pitch.kickerCelebration = draft.cel; pitch.celebrateShowcase(); });
     on('[data-n]', (el) => { draft.number = ((draft.number - 1 + Number(el.dataset.n) + 99) % 99) + 1; render(); });
     const input = $('pname') as HTMLInputElement;
     input.addEventListener('change', () => { draft.name = input.value.trim().slice(0, 10); refresh(); });

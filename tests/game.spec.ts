@@ -98,13 +98,13 @@ test('como goleiro (versão completa), com chuva e torcida pouca', async ({ page
 });
 
 test('falta (versão completa): cinco cobranças até o resultado', async ({ page }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(420_000);
   await open(page, true);
   await start(page, 'free', 'kicker');
   for (let i = 0; i < 5; i++) {
-    await expect(page.locator('#hint')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#hint')).toBeVisible({ timeout: 60_000 });
     await swipe(page, 10);
-    await expect(page.locator(marks)).toHaveCount(i + 1, { timeout: 30_000 });
+    await expect(page.locator(marks)).toHaveCount(i + 1, { timeout: 60_000 });
   }
   await expect(page.locator('.result')).toContainText('de 5', { timeout: 30_000 });
   await page.click('[data-go=menu]');
@@ -168,6 +168,75 @@ test('narração gravada: escolher a narradora toca o áudio dela no idioma do j
   await expect.poll(() => clips.some((c) => /^pt\/female\/goal-\d\.mp3$/.test(c)), { timeout: 10_000 }).toBe(true);
   // ao escolher, as outras falas da narradora já são carregadas
   await expect.poll(() => clips.filter((c) => c.startsWith('pt/female/')).length, { timeout: 10_000 }).toBeGreaterThan(20);
+});
+
+test('tutorial: na primeira cobrança aparece a mãozinha, que some ao chutar e não volta', async ({ page }) => {
+  await open(page);
+  await start(page, 'penalty', 'kicker');
+  await expect(page.locator('.hand.swipe')).toHaveCount(1);
+  await swipe(page, 30);
+  await expect(page.locator('.hand')).toHaveCount(0);
+  await expect(page.locator(marks)).toHaveCount(1, { timeout: 30_000 });
+  await expect(page.locator('#hint')).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('.hand')).toHaveCount(0);
+});
+
+test('primeiro gol dá figurinha e conta no desafio do dia; o álbum mostra', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => localStorage.setItem('gol.tutKick', '1'));
+  await expect(page.locator('.daily li')).toHaveCount(3);
+  await page.click('[data-go=album]');
+  await expect(page.locator('.sticker')).toHaveCount(18);
+  await expect(page.locator('.sticker.has')).toHaveCount(0);
+  await page.click('[data-go=back]');
+  await start(page, 'penalty', 'kicker');
+  // várias tentativas até sair um gol (o goleiro às vezes defende)
+  for (let i = 0; i < 5; i++) {
+    await expect(page.locator('#hint')).toBeVisible({ timeout: 40_000 });
+    const target = await page.evaluate((side) => (window as unknown as { __gol: { pitch: { screenOf(x: number, y: number, z: number): { x: number; y: number } } } }).__gol.pitch.screenOf(side, 0.5, 0), i % 2 ? 3.1 : -3.1);
+    const vp = page.viewportSize()!;
+    await page.mouse.move(vp.width / 2, vp.height * 0.9);
+    await page.mouse.down();
+    for (let k = 1; k <= 8; k++) { await page.mouse.move(vp.width / 2 + (target.x - vp.width / 2) * k / 8, vp.height * 0.9 + (target.y - vp.height * 0.9) * k / 8); await page.waitForTimeout(15); }
+    await page.mouse.up();
+    await expect(page.locator(marks)).toHaveCount(i + 1, { timeout: 40_000 });
+    if (await page.locator('#hud .line:first-child .dot.g').count()) break;
+  }
+  const p = await page.evaluate(() => JSON.parse(localStorage.getItem('gol.progress')!));
+  expect(p.stickers).toContain('first_goal');
+  expect(p.goals).toBeGreaterThan(0);
+});
+
+test('2 jogadores (versão completa): o goleiro escolhe escondido e o outro bate', async ({ page }) => {
+  await open(page, true);
+  await page.evaluate(() => localStorage.setItem('gol.tutKick', '1'));
+  await page.click('[data-go=play]');
+  await page.click('[data-go=duo]');
+  await page.fill('#p1', 'Ana');
+  await page.fill('#p2', 'Beto');
+  await page.click('[data-go=start]');
+  await expect(page.locator('.result')).toContainText('Beto, você é o goleiro');
+  await page.click('[data-go=ok]');
+  const vp = page.viewportSize()!;
+  await page.waitForTimeout(500);
+  const pt = await page.evaluate(() => (window as unknown as { __gol: { pitch: { screenOf(x: number, y: number, z: number): { x: number; y: number } } } }).__gol.pitch.screenOf(-2, 1, 0));
+  await page.mouse.click(pt.x, pt.y);
+  await expect(page.locator('.result')).toContainText('Ana bater');
+  await page.click('[data-go=ok]');
+  await swipe(page, 40);
+  await expect(page.locator('#hud .line').first()).toContainText('Ana');
+  await expect(page.locator('#hud .line:first-child .dot.g, #hud .line:first-child .dot.m')).toHaveCount(1, { timeout: 40_000 });
+  await expect(page.locator('.result')).toContainText('Ana, você é o goleiro', { timeout: 40_000 });
+  void vp;
+});
+
+test('Meu craque: escolhe a comemoração', async ({ page }) => {
+  await open(page, true);
+  await page.click('[data-go=player]');
+  await expect(page.locator('[data-cel]')).toHaveCount(6);
+  await page.click('[data-cel=flip]');
+  await page.click('[data-go=save]');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('gol.look')!).cel)).toBe('flip');
 });
 
 test('propaganda do Esconde-Esconde só abre com a conta certa', async ({ page }) => {

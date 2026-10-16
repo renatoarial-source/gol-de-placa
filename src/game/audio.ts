@@ -129,6 +129,20 @@ export function post() {
   }
 }
 
+/** Sininho das figurinhas e dos desafios completados. */
+export function chime() {
+  if (!ctx || !master) return;
+  const t = ctx.currentTime;
+  [1046.5, 1318.5, 1568].forEach((f, i) => {
+    const o = ctx!.createOscillator();
+    const g = ctx!.createGain();
+    o.type = 'triangle'; o.frequency.value = f;
+    env(g, t + i * 0.09, 0.22, 0.005, 0.5);
+    o.connect(g).connect(master!);
+    o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.6);
+  });
+}
+
 /** Torcida: 'cheer' no gol, 'ohh' no quase, 'clap' na defesa. */
 export function crowd(kind: 'cheer' | 'ohh' | 'clap') {
   if (!ctx || !master) return;

@@ -29,6 +29,8 @@ export const BOOT_COLORS = ['#161616', '#ffffff', '#ff3d00', '#ffd400', '#00c853
 /** "Meu craque": como o boneco da criança aparece. */
 export interface Look { skin: number; hair: number; style: HairStyle; boots: number; number: number; name: string }
 export type Weather = 'day' | 'night' | 'rain' | 'snow';
+export type Celebration = 'jump' | 'plane' | 'dance' | 'flip' | 'robot' | 'knee';
+export const CELEBRATIONS: Celebration[] = ['jump', 'plane', 'dance', 'flip', 'robot', 'knee'];
 export type Crowd = 'full' | 'half' | 'few';
 
 interface Body {
@@ -191,6 +193,12 @@ export class Pitch {
   private idle = 0;
   private spot = { sx: 0, sz: 11 };
   private keeperDiving = false;
+  /** Velocidade do tempo (0,35 no replay em câmera lenta). */
+  timeScale = 1;
+  /** Comemoração de quem bate, para o próximo gol. */
+  kickerCelebration: Celebration = 'jump';
+  private replayCam = false;
+  private lastSetup: Parameters<Pitch['setup']>[0] | null = null;
   private view: 'kick' | 'keep' = 'kick';
   /** Ao defender: câmera atrás do gol ('goal') ou atrás do cobrador ('kicker'). */
   keeperCam: 'goal' | 'kicker' = 'goal';
@@ -227,7 +235,7 @@ export class Pitch {
     const loop = (now: number) => {
       const dt = Math.min(0.05, (now - this.last) / 1000);
       this.last = now;
-      this.tick(dt);
+      this.tick(dt * this.timeScale);
       this.renderer.render(this.scene, this.camera);
       requestAnimationFrame(loop);
     };
@@ -537,6 +545,18 @@ export class Pitch {
     const { sx, sz } = this.spot;
     const d = Math.hypot(sx, sz);
     // goleiro: atrás do gol, de frente para o cobrador (a rede do fundo e do teto some para não tampar)
+    if (this.replayCam) {
+      // replay: de lado, rente ao gramado, perto do gol
+      this.camera.clearViewOffset();
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      const side = sx > 0 ? -1 : 1;
+      this.camera.position.set(side * 9, 1.5, Math.min(sz, 14) * 0.55);
+      this.camera.lookAt(0, 1.1, Math.min(sz, 14) * 0.25);
+      this.camera.fov = THREE.MathUtils.clamp(48 / Math.min(1, this.camera.aspect * 1.6), 48, 85);
+      this.camera.updateProjectionMatrix();
+      for (const m of this.netBack) m.visible = true;
+      return;
+    }
     const behindGoal = this.view === 'keep' && this.keeperCam === 'goal';
     for (const m of this.netBack) m.visible = !behindGoal;
     const w = window.innerWidth, h = window.innerHeight;
@@ -590,6 +610,7 @@ export class Pitch {
 
   /** Arruma a cena para uma cobrança. */
   setup(o: { sx: number; sz: number; view: 'kick' | 'keep'; kickerKit: Kit; keeperKit: Kit; wall: Wall | null; seed: number; look?: Look }) {
+    this.lastSetup = o;
     this.tweens = [];
     this.clearPlayers();
     this.spot = { sx: o.sx, sz: o.sz };
@@ -889,17 +910,85 @@ export class Pitch {
     return res;
   }
 
-  /** Comemoração: quem fez o gol pula; ou o goleiro levanta os braços. */
+  /** Mostra a comemoração escolhida no boneco da vitrine do "Meu craque". */
+  celebrateShowcase() {
+    if (!this.showcaseBody) return;
+    const k = this.kicker;
+    this.kicker = this.showcaseBody;
+    this.celebrate(true);
+    this.kicker = k;
+  }
+
+  /** Replay em câmera lenta da última cobrança, de outro ângulo. */
+  async replay(o: PlayOpts): Promise<void> {
+    if (!this.lastSetup) return;
+    this.setup(this.lastSetup);
+    this.replayCam = true;
+    this.placeCamera();
+    this.timeScale = 0.35;
+    try {
+      await this.play({ ...o, runUp: 0.35, onKick: undefined, onFlightStart: undefined });
+      await this.tween(0.5, () => {});
+    } finally {
+      this.timeScale = 1;
+      this.replayCam = false;
+      this.placeCamera();
+    }
+  }
+
+  /** Comemoração: quem fez o gol comemora do jeito escolhido; ou o goleiro levanta os braços. */
   celebrate(goal: boolean) {
     this.cheer = 2.5;
     const b = goal ? this.kicker : this.keeper;
     if (!b || (!goal && this.keeperMode === 'dive')) return; // goleiro que mergulhou fica no chão
+    const style: Celebration = goal ? this.kickerCelebration : 'jump';
     const y0 = b.root.position.y;
-    void this.tween(1.4, (q) => {
-      b.root.position.y = y0 + Math.abs(Math.sin(q * Math.PI * 3)) * 0.45;
-      b.armL.rotation.z = Math.PI * 0.85; b.armR.rotation.z = -Math.PI * 0.85;
-      b.armL.rotation.x = 0; b.armR.rotation.x = 0;
-    }).then(() => { if (b) resetPose(b); });
+    const p0 = b.root.position.clone();
+    const r0 = b.root.rotation.y;
+    const fwd = new THREE.Vector3(Math.sin(r0), 0, Math.cos(r0)); // para onde o boneco olha
+    const dur = style === 'knee' || style === 'plane' ? 1.8 : 1.5;
+    void this.tween(dur, (q) => {
+      const t = q * dur;
+      b.armL.rotation.set(0, 0, 0); b.armR.rotation.set(0, 0, 0);
+      if (style === 'jump') {
+        b.root.position.y = y0 + Math.abs(Math.sin(q * Math.PI * 3)) * 0.45;
+        b.armL.rotation.z = Math.PI * 0.85; b.armR.rotation.z = -Math.PI * 0.85;
+      } else if (style === 'plane') {
+        // aviãozinho: braços abertos, corre em curva inclinando o corpo
+        b.armL.rotation.z = Math.PI / 2; b.armR.rotation.z = -Math.PI / 2;
+        const a = q * Math.PI * 1.4;
+        b.root.position.set(p0.x + Math.sin(a) * 1.6, y0, p0.z + (1 - Math.cos(a)) * 1.6 * -Math.sign(fwd.z || 1));
+        b.root.rotation.y = r0 - a;
+        b.pose.rotation.z = Math.sin(t * 4) * 0.35;
+        b.legL.rotation.x = Math.sin(t * 14) * 0.7; b.legR.rotation.x = -Math.sin(t * 14) * 0.7;
+      } else if (style === 'dance') {
+        b.pose.position.x = Math.sin(t * 9) * 0.18;
+        b.pose.rotation.z = Math.sin(t * 9) * 0.12;
+        b.armL.rotation.z = Math.PI * (0.55 + 0.3 * Math.sin(t * 9)); b.armR.rotation.z = -Math.PI * (0.55 - 0.3 * Math.sin(t * 9));
+        b.legL.rotation.x = Math.max(0, Math.sin(t * 9)) * 0.6; b.legR.rotation.x = Math.max(0, -Math.sin(t * 9)) * 0.6;
+      } else if (style === 'flip') {
+        // cambalhota para trás no ar
+        const k = Math.min(1, t / 0.9);
+        b.root.position.y = y0 + Math.sin(Math.PI * k) * 1.2;
+        b.pose.rotation.x = -Math.PI * 2 * k;
+        b.pose.position.y = Math.sin(Math.PI * k) * 0.9;
+        b.pose.position.z = -Math.sin(Math.PI * 2 * k) * 0.9;
+        if (k >= 1) { b.armL.rotation.z = Math.PI * 0.85; b.armR.rotation.z = -Math.PI * 0.85; }
+      } else if (style === 'robot') {
+        // movimentos travados, em passos
+        const step = Math.floor(t / 0.25) % 4;
+        b.armL.rotation.x = [-1.5, 0, -1.5, -3][step]; b.armR.rotation.x = [0, -1.5, -3, -1.5][step];
+        b.pose.rotation.y = [0.4, -0.4, 0.4, -0.4][step];
+      } else {
+        // de joelhos deslizando na grama, braços para o céu
+        const k = Math.min(1, t / 0.9);
+        b.root.position.set(p0.x + fwd.x * 2.4 * (1 - (1 - k) * (1 - k)), y0, p0.z + fwd.z * 2.4 * (1 - (1 - k) * (1 - k)));
+        b.pose.position.y = -0.42;
+        b.legL.rotation.x = -1.4; b.legR.rotation.x = -1.4;
+        b.pose.rotation.x = -0.3;
+        b.armL.rotation.z = Math.PI * 0.8; b.armR.rotation.z = -Math.PI * 0.8;
+      }
+    }).then(() => { if (b) { resetPose(b); b.root.position.y = y0; } });
   }
 }
 
