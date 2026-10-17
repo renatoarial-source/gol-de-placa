@@ -314,6 +314,25 @@ test('Meu craque: dá para ser jogadora, com rabo de cavalo ou coquinhos', async
   expect(look).toMatchObject({ female: true, style: 'buns' });
 });
 
+test('futebol feminino: escolhido na tela do time, todo mundo em campo é jogadora', async ({ page }) => {
+  await open(page, true);
+  await page.click('[data-go=play]');
+  await page.click('[data-mode=free]');
+  await page.click('[data-role=kicker]');
+  await page.click('[data-womens="1"]');
+  await expect(page.locator('[data-womens="1"]')).toHaveClass(/on/);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('gol.look')!).female)).toBe(true);
+  await page.click('[data-go=start]');
+  await expect(page.locator('#hint')).toBeVisible({ timeout: 60_000 });
+  type B = { face: { female: boolean } };
+  const all = await page.evaluate(() => {
+    const p = (window as unknown as { __gol: { pitch: { kicker: B; keeper: B; wall: B[] } } }).__gol.pitch;
+    return [p.kicker, p.keeper, ...p.wall].map((b) => b.face.female);
+  });
+  expect(all.length).toBeGreaterThan(2);
+  expect(all.every(Boolean)).toBe(true);
+});
+
 test('Meu craque: escolhe a comemoração', async ({ page }) => {
   await open(page, true);
   await page.click('[data-go=player]');

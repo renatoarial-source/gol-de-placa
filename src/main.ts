@@ -106,6 +106,24 @@ function atmo(opp?: Team) {
 /** Sem a versão completa, só o time do download e o boneco padrão. */
 const unlocked = () => shop.isUnlocked();
 const myLook = () => (unlocked() ? look : undefined);
+/** Futebol masculino ou feminino: vale para todos em campo, em todas as modalidades. */
+function womensSeg() {
+  return `<div class="seg"><button data-womens="0" class="${look.female ? '' : 'on'}">${t('mens')}</button><button data-womens="1" class="${look.female ? 'on' : ''}">${t('womens')}</button></div>`;
+}
+function onWomens(again: () => void) {
+  on('[data-womens]', (el) => {
+    const w = el.dataset.womens === '1';
+    if (w === !!look.female) return;
+    // penteado combinando com a escolha (dá para trocar depois no Meu craque)
+    if (w && (look.style === 'short' || look.style === 'mohawk' || look.style === 'bald')) look.style = 'ponytail';
+    if (!w && (look.style === 'ponytail' || look.style === 'buns')) look.style = 'short';
+    look = { ...look, female: w };
+    store.set('look', JSON.stringify(look));
+    pitch.womens = w;
+    again();
+  });
+}
+pitch.womens = !!look.female;
 function enforceFree() {
   if (!unlocked()) { myTeam = findTeam(FREE_TEAM); teamKind = 'club'; }
 }
@@ -259,6 +277,7 @@ function match(m: Mode, r: Role) {
     `<div class="seg${cls}">${opts.map(([v, k]) => `<button data-${name}="${v}" class="${v === cur ? 'on' : ''}">${t(k)}</button>`).join('')}</div>`;
   show(`
     <h2>${t('teamTitle')}</h2>
+    ${womensSeg()}
     <div class="seg">
       <button data-kind="nation" class="${teamKind === 'nation' ? 'on' : ''}">${t('nations')}${lock(!full)}</button>
       <button data-kind="club" class="${teamKind === 'club' ? 'on' : ''}">${t('clubs')}</button>
@@ -281,6 +300,7 @@ function match(m: Mode, r: Role) {
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
   const again = () => match(m, r);
+  onWomens(again);
   on('[data-kind]', (el) => {
     if (!full) { if (el.dataset.kind === 'nation') unlock(again); return; }
     teamKind = el.dataset.kind as 'nation' | 'club'; store.set('teamKind', teamKind); again();
@@ -681,6 +701,7 @@ function duoSetup() {
   const [mine, other] = duoPick === 1 ? [duoTeam1, duoTeam2] : [duoTeam2, duoTeam1];
   show(`
     <h2>${t('twoPlayers')}</h2>
+    ${womensSeg()}
     <div class="card">
       <div class="row">
         <div><b>${duoTeam1.badge} ${t('p1')}</b><input id="p1" maxlength="12" value="${esc(duoNames[0])}" placeholder="${t('p1')}" autocomplete="off"></div>
@@ -702,6 +723,7 @@ function duoSetup() {
     duoNames = [($('p1') as HTMLInputElement).value.trim(), ($('p2') as HTMLInputElement).value.trim()];
     store.set('p1', duoNames[0]); store.set('p2', duoNames[1]);
   };
+  onWomens(() => { names(); duoSetup(); });
   on('[data-kind]', (el) => { names(); teamKind = el.dataset.kind as 'nation' | 'club'; store.set('teamKind', teamKind); duoSetup(); });
   on('[data-pick]', (el) => { names(); duoPick = el.dataset.pick === '2' ? 2 : 1; duoSetup(); });
   on('[data-duoteam]', (el) => {
@@ -900,6 +922,7 @@ function builder() {
       readNum();
       look = draft;
       store.set('look', JSON.stringify(look));
+      pitch.womens = !!look.female;
       home();
     });
     on('[data-go=back]', home);

@@ -138,10 +138,12 @@ function shirtTex(kit: Kit, color: string, number: number | null, name = ''): TH
 }
 
 /** Boneco de blocos virado para +z. */
-function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?: Look): Body {
+function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?: Look, womens = false): Body {
   const skin = SKINS[look ? look.skin : seed % SKINS.length];
   const hair = HAIRS[look ? look.hair : (seed * 7 + 3) % HAIRS.length];
-  const style: HairStyle = look ? look.style : (['short', 'short', 'curly', 'long', 'mohawk', 'bald'] as HairStyle[])[(seed * 5 + 1) % 6];
+  // futebol feminino: todas as jogadoras, com penteados de jogadora; masculino: os de sempre
+  const pool: HairStyle[] = womens ? ['ponytail', 'buns', 'long', 'ponytail', 'curly', 'long'] : ['short', 'short', 'curly', 'long', 'mohawk', 'bald'];
+  const style: HairStyle = look ? look.style : pool[(seed * 5 + 1) % 6];
   if (look) number = look.number;
   const shirt = keeper ? kit.keeper : kit.shirt;
   const shorts = keeper ? '#1b1b1b' : kit.shorts;
@@ -187,7 +189,7 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   const armR = arm(0.39);
   const bald = style === 'bald';
   const top = bald ? mSkin : mHair;
-  const female = !!look?.female;
+  const female = look ? !!look.female : womens;
   const faceHair = bald ? skin : hair;
   const mFace = new THREE.MeshLambertMaterial({ map: faceTex(skin, faceHair, 'calm', female) });
   const head = box(0.46, 0.46, 0.46, [mSkin, mSkin, top, mSkin, mFace, top], 1.8);
@@ -300,6 +302,8 @@ export class Pitch {
   private replayCam = false;
   private celebCam: { body: Body; fwd: THREE.Vector3; id: number } | null = null;
   private celebId = 0;
+  /** futebol feminino: todo mundo em campo é jogadora (escolhido no Meu craque e na tela do time) */
+  womens = false;
   private lastSetup: Parameters<Pitch['setup']>[0] | null = null;
   private view: 'kick' | 'keep' = 'kick';
   /** Ao defender: câmera atrás do gol ('goal') ou atrás do cobrador ('kicker'). */
@@ -727,7 +731,7 @@ export class Pitch {
 
     const dir = Math.atan2(-o.sx, -o.sz); // virado para o gol
     // o boneco da criança usa o "Meu craque" (batedor ou goleiro, conforme o papel)
-    this.kicker = makeBody(o.kickerKit, 7 + (o.seed % 4) * 2, o.seed, false, o.view === 'kick' ? o.look : undefined);
+    this.kicker = makeBody(o.kickerKit, 7 + (o.seed % 4) * 2, o.seed, false, o.view === 'kick' ? o.look : undefined, this.womens);
     // começa atrás e à esquerda da bola (chuta de pé direito)
     const d = Math.hypot(o.sx, o.sz);
     this.back = { x: o.sx / d, z: o.sz / d };
@@ -735,7 +739,7 @@ export class Pitch {
     this.kicker.root.rotation.y = dir;
     this.scene.add(this.kicker.root);
 
-    this.keeper = makeBody(o.keeperKit, 1, o.seed + 2, true, o.view === 'keep' ? o.look : undefined);
+    this.keeper = makeBody(o.keeperKit, 1, o.seed + 2, true, o.view === 'keep' ? o.look : undefined, this.womens);
     this.keeper.root.position.set(0, 0, 0.35);
     this.keeper.root.rotation.y = Math.atan2(o.sx, o.sz) * 0.5;
     this.keeper.armL.rotation.z = 0.5; this.keeper.armR.rotation.z = -0.5;
@@ -743,7 +747,7 @@ export class Pitch {
 
     if (o.wall) {
       for (let i = 0; i < o.wall.count; i++) {
-        const b = makeBody(o.keeperKit, [4, 5, 6, 8, 3][i], o.seed + 5 + i);
+        const b = makeBody(o.keeperKit, [4, 5, 6, 8, 3][i], o.seed + 5 + i, false, undefined, this.womens);
         b.root.position.set(o.wall.x + (i - (o.wall.count - 1) / 2) * PLAYER_W, 0, o.wall.z);
         b.root.rotation.y = Math.atan2(o.sx - o.wall.x, o.sz - o.wall.z);
         b.armL.rotation.x = -0.4; b.armR.rotation.x = -0.4;
