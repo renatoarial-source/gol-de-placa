@@ -302,6 +302,18 @@ test('clima aleatório: fica escolhido e cada partida sorteia dia, noite, chuva 
   expect(['day', 'night', 'rain', 'snow']).toContain(w);
 });
 
+test('Meu craque: dá para ser jogadora, com rabo de cavalo ou coquinhos', async ({ page }) => {
+  await open(page, true);
+  await page.click('[data-go=player]');
+  await page.click('[data-kind2=girl]');
+  await expect(page.locator('[data-kind2=girl]')).toHaveClass(/on/);
+  await expect(page.locator('[data-style=ponytail]')).toHaveClass(/on/); // cabelo curto vira rabo de cavalo
+  await page.click('[data-style=buns]');
+  await page.click('[data-go=save]');
+  const look = await page.evaluate(() => JSON.parse(localStorage.getItem('gol.look')!));
+  expect(look).toMatchObject({ female: true, style: 'buns' });
+});
+
 test('Meu craque: escolhe a comemoração', async ({ page }) => {
   await open(page, true);
   await page.click('[data-go=player]');

@@ -21,13 +21,15 @@ function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => 
 const lambert = (color: string | THREE.Texture) =>
   typeof color === 'string' ? new THREE.MeshLambertMaterial({ color }) : new THREE.MeshLambertMaterial({ map: color });
 
-export type HairStyle = 'short' | 'long' | 'mohawk' | 'curly' | 'bald';
-export const HAIR_STYLES: HairStyle[] = ['short', 'long', 'mohawk', 'curly', 'bald'];
+export type HairStyle = 'short' | 'long' | 'mohawk' | 'curly' | 'bald' | 'ponytail' | 'buns';
+export const HAIR_STYLES: HairStyle[] = ['short', 'long', 'ponytail', 'buns', 'curly', 'mohawk', 'bald'];
 export const SKIN_COLORS = SKINS;
 export const HAIR_COLORS = HAIRS;
 export const BOOT_COLORS = ['#161616', '#ffffff', '#ff3d00', '#ffd400', '#00c853', '#2979ff', '#e040fb'];
 /** "Meu craque": como o boneco da criança aparece. */
-export interface Look { skin: number; hair: number; style: HairStyle; boots: number; number: number; name: string }
+export interface Look { skin: number; hair: number; style: HairStyle; boots: number; number: number; name: string; female?: boolean }
+/** Expressão do rosto: concentrado antes do chute, feliz no gol, triste no erro, assustado no quase. */
+export type Mood = 'calm' | 'focus' | 'happy' | 'sad' | 'wow';
 export type Weather = 'day' | 'night' | 'rain' | 'snow';
 export type Celebration = 'jump' | 'plane' | 'dance' | 'flip' | 'robot' | 'knee';
 export const CELEBRATIONS: Celebration[] = ['jump', 'plane', 'dance', 'flip', 'robot', 'knee'];
@@ -38,8 +40,10 @@ interface Body {
   pose: THREE.Group; // inclinação (mergulho do goleiro)
   legL: THREE.Group; legR: THREE.Group; armL: THREE.Group; armR: THREE.Group;
   head: THREE.Mesh;
-  /** true enquanto uma animação (corrida, chute, comemoração) controla o corpo: a respiração não mexe nele */
-  busy?: boolean;
+  /** rosto (troca de expressão) */
+  face: { mat: THREE.MeshLambertMaterial; skin: string; hair: string; female: boolean; mood: Mood };
+  /** quantas animações (corrida, chute, comemoração) controlam o corpo agora; com 0 ele volta a respirar */
+  busy?: number;
   /** fase própria, para os bonecos não respirarem todos juntos */
   phase: number;
 }
@@ -53,17 +57,57 @@ function box(w: number, h: number, d: number, mat: THREE.Material | THREE.Materi
 }
 
 const faceCache = new Map<string, THREE.Texture>();
-function faceTex(skin: string, hair: string): THREE.Texture {
-  const k = skin + hair;
+/** Rosto desenhado num canvas: olhos, sobrancelhas, bochechas e boca mudam com a expressão. */
+function faceTex(skin: string, hair: string, mood: Mood = 'calm', female = false): THREE.Texture {
+  const k = `${skin}${hair}${mood}${female ? 'f' : 'm'}`;
   if (!faceCache.has(k)) {
     faceCache.set(k, canvasTex(128, 128, (g) => {
       g.fillStyle = skin; g.fillRect(0, 0, 128, 128);
       g.fillStyle = hair; g.fillRect(0, 0, 128, 22);
-      g.fillStyle = '#ffffff'; g.fillRect(30, 46, 22, 24); g.fillRect(76, 46, 22, 24);
-      g.fillStyle = '#1b1b1b'; g.fillRect(38, 52, 12, 16); g.fillRect(84, 52, 12, 16);
-      g.fillStyle = 'rgba(255,90,90,.35)'; g.fillRect(18, 78, 18, 10); g.fillRect(92, 78, 18, 10);
-      g.strokeStyle = '#3a1f12'; g.lineWidth = 6; g.lineCap = 'round';
-      g.beginPath(); g.arc(64, 82, 18, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke();
+      g.lineCap = 'round';
+      // olhos: no "feliz" viram arquinhos (^ ^); no "assustado" ficam bem abertos
+      if (mood === 'happy') {
+        g.strokeStyle = '#1b1b1b'; g.lineWidth = 7;
+        for (const x of [41, 87]) { g.beginPath(); g.arc(x, 62, 10, 1.15 * Math.PI, 1.85 * Math.PI); g.stroke(); }
+      } else {
+        const tall = mood === 'wow' ? 30 : mood === 'focus' ? 18 : 24;
+        const top = mood === 'focus' ? 52 : 46;
+        g.fillStyle = '#ffffff'; g.fillRect(30, top, 22, tall); g.fillRect(76, top, 22, tall);
+        g.fillStyle = '#1b1b1b';
+        const py = mood === 'sad' ? top + tall - 14 : top + (tall - 14) / 2;
+        g.fillRect(38, py, 12, 14); g.fillRect(84, py, 12, 14);
+      }
+      // sobrancelhas: bravas no "concentrado", caídas no "triste", lá em cima no "assustado"
+      g.strokeStyle = hair; g.lineWidth = 6;
+      const brow = (x1: number, y1: number, x2: number, y2: number) => { g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+      if (mood === 'focus') { brow(28, 40, 52, 47); brow(100, 40, 76, 47); }
+      else if (mood === 'sad') { brow(28, 44, 52, 36); brow(100, 44, 76, 36); }
+      else if (mood === 'wow') { brow(30, 32, 52, 30); brow(98, 32, 76, 30); }
+      else if (mood === 'happy') { brow(30, 40, 52, 36); brow(98, 40, 76, 36); }
+      else { brow(30, 38, 52, 38); brow(98, 38, 76, 38); }
+      // jogadora: cílios
+      if (female && mood !== 'happy') {
+        g.strokeStyle = '#1b1b1b'; g.lineWidth = 3;
+        for (const [x, d] of [[30, -1], [52, 1], [76, -1], [98, 1]] as const) { g.beginPath(); g.moveTo(x, (mood === 'focus' ? 52 : 46) + 2); g.lineTo(x + d * 6, (mood === 'focus' ? 52 : 46) - 5); g.stroke(); }
+      }
+      g.fillStyle = mood === 'happy' ? 'rgba(255,90,90,.55)' : 'rgba(255,90,90,.35)';
+      g.fillRect(16, 78, 20, 11); g.fillRect(92, 78, 20, 11);
+      // boca
+      const lip = female ? '#c2185b' : '#3a1f12';
+      if (mood === 'happy') {
+        // sorrisão de boca aberta, com língua
+        g.fillStyle = '#5a1010'; g.beginPath(); g.arc(64, 80, 22, 0, Math.PI); g.closePath(); g.fill();
+        g.fillStyle = '#ff6f7d'; g.beginPath(); g.arc(64, 96, 10, Math.PI, 2 * Math.PI); g.fill();
+        g.fillStyle = '#ffffff'; g.fillRect(48, 80, 32, 5);
+      } else if (mood === 'wow') {
+        g.fillStyle = '#5a1010'; g.beginPath(); g.ellipse(64, 92, 9, 12, 0, 0, Math.PI * 2); g.fill();
+      } else if (mood === 'sad') {
+        g.strokeStyle = lip; g.lineWidth = 6; g.beginPath(); g.arc(64, 104, 16, 1.2 * Math.PI, 1.8 * Math.PI); g.stroke();
+      } else if (mood === 'focus') {
+        g.strokeStyle = lip; g.lineWidth = 6; g.beginPath(); g.moveTo(54, 92); g.lineTo(74, 90); g.stroke();
+      } else {
+        g.strokeStyle = lip; g.lineWidth = 6; g.beginPath(); g.arc(64, 82, 18, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke();
+      }
     }));
   }
   return faceCache.get(k)!;
@@ -143,14 +187,44 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   const armR = arm(0.39);
   const bald = style === 'bald';
   const top = bald ? mSkin : mHair;
-  const head = box(0.46, 0.46, 0.46, [mSkin, mSkin, top, mSkin, lambert(faceTex(skin, bald ? skin : hair)), top], 1.8);
+  const female = !!look?.female;
+  const faceHair = bald ? skin : hair;
+  const mFace = new THREE.MeshLambertMaterial({ map: faceTex(skin, faceHair, 'calm', female) });
+  const head = box(0.46, 0.46, 0.46, [mSkin, mSkin, top, mSkin, mFace, top], 1.8);
   pose.add(head);
-  if (style === 'short' || style === 'long') pose.add(box(0.5, 0.1, 0.5, mHair, 2.06));
-  if (style === 'long') pose.add(box(0.5, 0.5, 0.1, mHair, 1.82, 0, -0.26));
-  if (style === 'mohawk') pose.add(box(0.12, 0.22, 0.48, mHair, 2.12));
-  if (style === 'curly') pose.add(box(0.62, 0.3, 0.6, mHair, 2.1, 0, -0.03));
+  // penteados de jogadora: presos na cabeça, para acompanhar quando ela vira o rosto
+  if (style === 'ponytail') {
+    head.add(box(0.5, 0.1, 0.5, mHair, 0.26));
+    head.add(box(0.5, 0.36, 0.08, mHair, 0.04, 0, -0.25));
+    const tail = box(0.14, 0.42, 0.12, mHair, -0.12, 0, -0.33);
+    tail.rotation.x = 0.25;
+    head.add(tail);
+  }
+  if (style === 'buns') {
+    head.add(box(0.5, 0.1, 0.5, mHair, 0.26));
+    head.add(box(0.5, 0.3, 0.08, mHair, 0.07, 0, -0.25));
+    head.add(box(0.16, 0.16, 0.16, mHair, 0.32, -0.18, -0.04));
+    head.add(box(0.16, 0.16, 0.16, mHair, 0.32, 0.18, -0.04));
+  }
+  // cabelo preso na cabeça (coordenadas da cabeça: o centro dela fica a 1,8 m), para virar junto com o rosto
+  if (style === 'short' || style === 'long') head.add(box(0.5, 0.1, 0.5, mHair, 0.26));
+  if (style === 'long') head.add(box(0.5, 0.5, 0.1, mHair, 0.02, 0, -0.26));
+  if (style === 'mohawk') head.add(box(0.12, 0.22, 0.48, mHair, 0.32));
+  if (style === 'curly') head.add(box(0.62, 0.3, 0.6, mHair, 0.3, 0, -0.03));
   pose.traverse((o) => { o.castShadow = false; });
-  return { root, pose, legL, legR, armL, armR, head, phase: (seed * 1.37) % (Math.PI * 2) };
+  return {
+    root, pose, legL, legR, armL, armR, head,
+    face: { mat: mFace, skin, hair: faceHair, female, mood: 'calm' },
+    phase: (seed * 1.37) % (Math.PI * 2),
+  };
+}
+
+/** Troca a expressão do rosto. */
+function setMood(b: Body | null, mood: Mood) {
+  if (!b || b.face.mood === mood) return;
+  b.face.mood = mood;
+  b.face.mat.map = faceTex(b.face.skin, b.face.hair, mood, b.face.female);
+  b.face.mat.needsUpdate = true;
 }
 
 /** Parado, mas vivo: respira, mexe o peso e olha em volta. Só corpo, braços e cabeça; nada fica acumulando. */
@@ -901,8 +975,9 @@ export class Pitch {
     const start = k.root.position.clone();
     const b = this.back;
     const target = new THREE.Vector3(s.sx + b.x * 0.45 - b.z * 0.28, 0, s.sz + b.z * 0.45 + b.x * 0.28);
-    k.busy = true;
+    k.busy = (k.busy ?? 0) + 1;
     k.head.rotation.set(0, 0, 0);
+    setMood(k, 'focus'); setMood(this.keeper, 'focus');
     const strides = Math.max(1, o.runUp * 4);
     await this.tween(o.runUp, (q) => {
       // acelera no começo e chega firme na bola
@@ -932,7 +1007,7 @@ export class Pitch {
       k.pose.position.y = 0.04 * Math.sin(Math.PI * q);
       k.armL.rotation.set(-0.2, 0, -0.6 - 0.3 * Math.sin(Math.PI * q));
       k.armR.rotation.set(-0.5 * Math.sin(Math.PI * q), 0, 0.5 * Math.sin(Math.PI * q));
-    }).then(() => easeToRest((d, fn) => this.tween(d, fn), k, 0.45)).then(() => { k.busy = false; });
+    }).then(() => easeToRest((d, fn) => this.tween(d, fn), k, 0.45)).then(() => { k.busy = (k.busy ?? 1) - 1; });
     o.onKick?.();
     for (const w of this.wall) {
       void this.tween(0.5, (q) => { w.root.position.y = WALL_JUMP * Math.sin(Math.PI * q); });
@@ -959,11 +1034,16 @@ export class Pitch {
     if (o.wallU !== null) {
       // bate na barreira e volta
       v.set(v.x * 0.3 + (Math.random() - 0.5) * 3, Math.abs(v.y) * 0.3 + 2, Math.abs(v.z) * 0.3);
+      this.lament(k, 'sad');
       await this.simulate(v, 0.9, false);
       return 'wall';
     }
     const res = o.decide();
     const rnd = Math.random;
+    // quem não se deu bem no lance reage: mãos na cabeça (batedor) ou cabeça baixa (goleiro)
+    if (res === 'goal') this.dejected(this.keeper);
+    else this.lament(k, res === 'save' ? 'sad' : 'wow');
+    if (res !== 'goal' && res !== 'save') setMood(this.keeper, 'happy');
     if (res === 'goal') {
       this.celebrate(true);
       await this.simulate(v, 1.1, true);
@@ -1019,14 +1099,42 @@ export class Pitch {
   }
 
   /** Comemoração: quem fez o gol comemora do jeito escolhido; ou o goleiro levanta os braços. */
+  /** Batedor que errou: "uuuh!" com as mãos na cabeça, olha para o céu e depois baixa a cabeça. */
+  private lament(b: Body | null, mood: Mood) {
+    if (!b) return;
+    setMood(b, mood);
+    b.busy = (b.busy ?? 0) + 1;
+    void this.tween(0.25, () => {}).then(() => this.tween(1.7, (q) => {
+      const up = smooth(Math.min(1, q * 4)); // as mãos sobem rápido
+      // com o braço para cima, girar em +x traz a mão para a frente, por cima da cabeça
+      b.armL.rotation.set(0.85 * up, 0, -2.85 * up);
+      b.armR.rotation.set(0.85 * up, 0, 2.85 * up);
+      b.head.rotation.x = q < 0.45 ? -0.35 * up : -0.35 + 0.75 * smooth((q - 0.45) / 0.55); // olha para cima, depois para baixo
+      b.head.rotation.y = q > 0.5 ? Math.sin((q - 0.5) * 18) * 0.25 * (1 - q) * 2 : 0; // balança a cabeça: "não acredito"
+      b.pose.rotation.x = -0.12 * up + (q > 0.5 ? 0.2 * smooth((q - 0.5) / 0.5) : 0);
+      b.pose.position.y = q < 0.3 ? -0.08 * Math.sin((q / 0.3) * Math.PI) : 0;
+    })).then(() => easeToRest((d, fn) => this.tween(d, fn), b, 0.45)).then(() => { b.busy = (b.busy ?? 1) - 1; });
+  }
+
+  /** Goleiro que sofreu o gol: rosto triste e cabeça baixa (no chão, se mergulhou). */
+  private dejected(b: Body | null) {
+    if (!b) return;
+    setMood(b, 'sad');
+    void this.tween(0.5, () => {}).then(() => this.tween(1.6, (q) => {
+      b.head.rotation.x = 0.5 * smooth(Math.min(1, q * 3));
+      if (!this.keeperDiving) { b.pose.rotation.x = 0.25 * smooth(Math.min(1, q * 3)); b.armL.rotation.z = -0.05; b.armR.rotation.z = 0.05; }
+    }));
+  }
+
   celebrate(goal: boolean) {
     this.cheer = 2.5;
     const b = goal ? this.kicker : this.keeper;
+    if (b) setMood(b, 'happy');
     if (!b || (!goal && this.keeperMode === 'dive')) return; // goleiro que mergulhou fica no chão
     const style: Celebration = goal ? this.kickerCelebration : 'jump';
     // gol da criança no jogo: primeiro ela vê a bola na rede, depois a câmera vira para o jogador comemorando de frente
     const front = goal && b === this.kicker && b !== this.showcaseBody && this.view === 'kick' && !this.replayCam;
-    b.busy = true;
+    b.busy = (b.busy ?? 0) + 1;
     void this.tween(front ? 0.45 : 0, () => {}).then(() => {
       const cam = front && this.kicker === b ? this.startCelebCam(b) : 0;
       this.runCelebration(b, style, cam);
@@ -1099,7 +1207,12 @@ export class Pitch {
         const u = smooth(q);
         const here = at(u), next = at(Math.min(1, u + 0.01));
         b.root.position.copy(here);
-        if (next.distanceTo(here) > 1e-4) b.root.rotation.y = Math.atan2(next.x - here.x, next.z - here.z);
+        if (next.distanceTo(here) > 1e-4) {
+          // meio caminho entre "para onde corre" e "de frente para a câmera": a criança vê o rosto e as asas
+          const along = Math.atan2(next.x - here.x, next.z - here.z);
+          const d = Math.atan2(Math.sin(along - r0), Math.cos(along - r0));
+          b.root.rotation.y = r0 + d * 0.45;
+        }
         const turn = Math.cos(u * Math.PI * 2); // de que lado é a curva agora
         b.pose.rotation.z = -turn * 0.4; // inclina para dentro da curva, como asa de avião
         b.pose.rotation.x = 0.15;
@@ -1156,7 +1269,7 @@ export class Pitch {
       if (!b) return;
       b.root.position.y = y0;
       // volta à posição neutra suavemente e só então volta a respirar; a câmera volta ao normal
-      void easeToRest((d, fn) => this.tween(d, fn), b, 0.35).then(() => { b.busy = false; this.endCelebCam(cam); });
+      void easeToRest((d, fn) => this.tween(d, fn), b, 0.35).then(() => { b.busy = (b.busy ?? 1) - 1; this.endCelebCam(cam); setMood(b, 'calm'); });
     });
   }
 }

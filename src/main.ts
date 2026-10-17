@@ -849,6 +849,7 @@ function builder() {
     show(`
       <h2>${t('myPlayer')}</h2>
       <div class="builder card">
+        <b>${t('playerKind')}</b><div class="seg"><button data-kind2="boy" class="${draft.female ? '' : 'on'}">${t('kind_boy')}</button><button data-kind2="girl" class="${draft.female ? 'on' : ''}">${t('kind_girl')}</button></div>
         <b>${t('skin')}</b>${swatches('skin', SKIN_COLORS)}
         <b>${t('hairStyle')}</b><div class="seg wrap">${HAIR_STYLES.map((h) => `<button data-style="${h}" class="${draft.style === h ? 'on' : ''}">${t(('hs_' + h) as UiKey)}</button>`).join('')}</div>
         <b>${t('hairColor')}</b>${swatches('hair', HAIR_COLORS)}
@@ -869,6 +870,14 @@ function builder() {
     on('[data-hair]', (el) => { draft.hair = Number(el.dataset.hair); render(); });
     on('[data-boots]', (el) => { draft.boots = Number(el.dataset.boots); render(); });
     on('[data-style]', (el) => { draft.style = el.dataset.style as Look['style']; render(); });
+    // jogadora: troca o rosto e, se o cabelo for curto, já sugere um rabo de cavalo (dá para trocar depois)
+    on('[data-kind2]', (el) => {
+      const girl = el.dataset.kind2 === 'girl';
+      if (girl && !draft.female && (draft.style === 'short' || draft.style === 'mohawk' || draft.style === 'bald')) draft.style = 'ponytail';
+      if (!girl && draft.female && (draft.style === 'ponytail' || draft.style === 'buns')) draft.style = 'short';
+      draft.female = girl;
+      render();
+    });
     // escolher a comemoração mostra ela no boneco da vitrine
     on('[data-cel]', (el) => { draft.cel = el.dataset.cel as Celebration; render(); pitch.kickerCelebration = draft.cel; pitch.celebrateShowcase(); });
     // número da camisa: a criança digita (1 a 99), sem redesenhar a tela
