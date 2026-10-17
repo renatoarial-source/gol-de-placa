@@ -230,6 +230,34 @@ test('2 jogadores (versão completa): o goleiro escolhe escondido e o outro bate
   void vp;
 });
 
+test('2 jogadores: cada um escolhe o time, entre seleções ou clubes', async ({ page }) => {
+  await open(page, true);
+  await page.click('[data-go=play]');
+  await page.click('[data-go=duo]');
+  await page.click('[data-kind=nation]');
+  await expect(page.locator('[data-kind=nation]')).toHaveClass(/on/);
+  // jogador 1: escolhe uma seleção que não é a atual
+  await page.click('[data-pick="1"]');
+  const t1 = page.locator('[data-duoteam]:not(.on)').nth(2);
+  const id1 = await t1.getAttribute('data-duoteam');
+  const badge1 = (await t1.locator('.b').textContent())!;
+  await t1.click();
+  await expect(page.locator(`[data-duoteam="${id1}"]`)).toHaveClass(/on/);
+  await expect(page.locator('.row b').first()).toContainText(badge1);
+  // jogador 2: a lista não oferece o time do jogador 1
+  await page.click('[data-pick="2"]');
+  await expect(page.locator(`[data-duoteam="${id1}"]`)).toHaveCount(0);
+  const t2 = page.locator('[data-duoteam]:not(.on)').first();
+  const badge2 = (await t2.locator('.b').textContent())!;
+  await t2.click();
+  await expect(page.locator('.row b').nth(1)).toContainText(badge2);
+  // a escolha fica guardada
+  await page.click('[data-go=back]');
+  await page.click('[data-go=duo]');
+  await expect(page.locator('.row b').first()).toContainText(badge1);
+  await expect(page.locator('.row b').nth(1)).toContainText(badge2);
+});
+
 test('Meu craque: escolhe a comemoração', async ({ page }) => {
   await open(page, true);
   await page.click('[data-go=player]');

@@ -653,21 +653,29 @@ function confetti() {
 // ---------- 2 jogadores no mesmo celular ----------
 
 let duoNames: [string, string] = [store.get('p1', ''), store.get('p2', '')];
+let duoTeam1: Team = findTeam(store.get('team1', myTeam.id));
 let duoTeam2: Team = findTeam(store.get('team2', 'lions'));
+let duoPick: 1 | 2 = 1; // de qual jogador é a lista de times aberta
 
 function duoSetup() {
   const list = allTeams(teamKind);
-  if (duoTeam2.id === myTeam.id || duoTeam2.kind !== teamKind) duoTeam2 = list.find((x) => x.id !== myTeam.id)!;
+  if (duoTeam1.kind !== teamKind) duoTeam1 = list.find((x) => x.id === myTeam.id) ?? list[0];
+  if (duoTeam2.id === duoTeam1.id || duoTeam2.kind !== teamKind) duoTeam2 = list.find((x) => x.id !== duoTeam1.id)!;
+  const [mine, other] = duoPick === 1 ? [duoTeam1, duoTeam2] : [duoTeam2, duoTeam1];
   show(`
     <h2>${t('twoPlayers')}</h2>
     <div class="card">
       <div class="row">
-        <div><b>${myTeam.badge} ${t('p1')}</b><input id="p1" maxlength="12" value="${esc(duoNames[0])}" placeholder="${t('p1')}" autocomplete="off"></div>
+        <div><b>${duoTeam1.badge} ${t('p1')}</b><input id="p1" maxlength="12" value="${esc(duoNames[0])}" placeholder="${t('p1')}" autocomplete="off"></div>
         <div><b>${duoTeam2.badge} ${t('p2')}</b><input id="p2" maxlength="12" value="${esc(duoNames[1])}" placeholder="${t('p2')}" autocomplete="off"></div>
       </div>
-      <b>${t('p2team')}</b>
-      <div class="teams">${list.filter((x) => x.id !== myTeam.id).map((x) => `
-        <button class="team${x.id === duoTeam2.id ? ' on' : ''}" data-team2="${x.id}"><span class="b">${x.badge}</span><span class="n">${teamName(x, lang)}</span></button>`).join('')}</div>
+      <div class="seg">
+        <button data-kind="nation" class="${teamKind === 'nation' ? 'on' : ''}">${t('nations')}</button>
+        <button data-kind="club" class="${teamKind === 'club' ? 'on' : ''}">${t('clubs')}</button>
+      </div>
+      <div class="seg">${([1, 2] as const).map((n) => `<button data-pick="${n}" class="${n === duoPick ? 'on' : ''}">${t(n === 1 ? 'p1team' : 'p2team')}</button>`).join('')}</div>
+      <div class="teams">${list.filter((x) => x.id !== other.id).map((x) => `
+        <button class="team${x.id === mine.id ? ' on' : ''}" data-duoteam="${x.id}"><span class="b">${x.badge}</span><span class="n">${teamName(x, lang)}</span></button>`).join('')}</div>
     </div>
     <p class="sub">${t('twoPlayersDesc')}</p>
     <button class="btn big" data-go="start">${t('start')}</button>
@@ -677,7 +685,14 @@ function duoSetup() {
     duoNames = [($('p1') as HTMLInputElement).value.trim(), ($('p2') as HTMLInputElement).value.trim()];
     store.set('p1', duoNames[0]); store.set('p2', duoNames[1]);
   };
-  on('[data-team2]', (el) => { names(); duoTeam2 = findTeam(el.dataset.team2!); store.set('team2', duoTeam2.id); duoSetup(); });
+  on('[data-kind]', (el) => { names(); teamKind = el.dataset.kind as 'nation' | 'club'; store.set('teamKind', teamKind); duoSetup(); });
+  on('[data-pick]', (el) => { names(); duoPick = el.dataset.pick === '2' ? 2 : 1; duoSetup(); });
+  on('[data-duoteam]', (el) => {
+    names();
+    const team = findTeam(el.dataset.duoteam!);
+    if (duoPick === 1) { duoTeam1 = team; store.set('team1', team.id); } else { duoTeam2 = team; store.set('team2', team.id); }
+    duoSetup();
+  });
   on('[data-go=back]', () => { names(); modes(); });
   on('[data-go=start]', () => {
     names();
@@ -714,7 +729,7 @@ function pickDive(id: number): Promise<{ x: number; y: number }> {
 
 async function duoMatch(id: number) {
   const players = [
-    { name: duoNames[0] || t('p1'), team: myTeam },
+    { name: duoNames[0] || t('p1'), team: duoTeam1 },
     { name: duoNames[1] || t('p2'), team: duoTeam2 },
   ];
   pitch.setAtmosphere(atmo(duoTeam2));
