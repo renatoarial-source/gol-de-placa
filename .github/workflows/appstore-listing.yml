@@ -11,6 +11,11 @@ on:
         description: 'Versão no App Store Connect (igual à do "Publish to stores")'
         required: true
         default: '1.0.0'
+      capturas:
+        description: 'Capturas: gerar agora (~1h30) ou usar as prontas da branch capturas-loja (~10 min)'
+        type: choice
+        options: [gerar, branch]
+        default: gerar
 
 permissions:
   contents: read
@@ -38,7 +43,18 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Screenshots prontas (branch capturas-loja)
+        if: inputs.capturas == 'branch'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+          npm ci
+          git fetch --depth 1 origin capturas-loja
+          git archive FETCH_HEAD store/screenshots | tar -x
+          ls store/screenshots/appstore store/screenshots/ipad
+          node store/appstore-metadata.mjs
+
       - name: Screenshots (iPhone 1290x2796, iPad 2064x2752)
+        if: inputs.capturas != 'branch'
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
           npm ci
