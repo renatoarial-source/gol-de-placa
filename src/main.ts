@@ -28,7 +28,11 @@ if (!(lang in LANGS)) lang = 'pt';
 let sound = store.get('sound', '1') === '1';
 let voice = store.get('voice', store.get('narration', '1') === '0' ? 'off' : 'male') as audio.Voice;
 let diff = store.get('diff', 'easy') as Difficulty;
-let weather = store.get('weather', 'day') as Weather;
+let weatherPick = store.get('weather', 'day') as Weather | 'random';
+let weather: Weather = weatherPick === 'random' ? 'day' : weatherPick;
+const WEATHERS: Weather[] = ['day', 'night', 'rain', 'snow'];
+/** No clima aleatório, cada partida sorteia o seu. */
+function rollWeather() { if (weatherPick === 'random') weather = WEATHERS[Math.floor(Math.random() * WEATHERS.length)]; }
 let crowd = store.get('crowd', 'full') as Crowd;
 let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
 let musicStyle = store.get('music', 'batucada') as MusicStyle;
@@ -244,8 +248,8 @@ function match(m: Mode, r: Role) {
   const full = unlocked();
   const list = allTeams(teamKind);
   if (full && myTeam.kind !== teamKind) myTeam = list[0];
-  const seg = <T extends string>(name: string, opts: [T, UiKey][], cur: T) =>
-    `<div class="seg">${opts.map(([v, k]) => `<button data-${name}="${v}" class="${v === cur ? 'on' : ''}">${t(k)}</button>`).join('')}</div>`;
+  const seg = <T extends string>(name: string, opts: [T, UiKey][], cur: T, cls = '') =>
+    `<div class="seg${cls}">${opts.map(([v, k]) => `<button data-${name}="${v}" class="${v === cur ? 'on' : ''}">${t(k)}</button>`).join('')}</div>`;
   show(`
     <h2>${t('teamTitle')}</h2>
     <div class="seg">
@@ -261,7 +265,7 @@ function match(m: Mode, r: Role) {
     </div>
     <div class="card">
       <b>${t('difficulty')}</b>${seg<Difficulty>('diff', [['easy', 'easy'], ['medium', 'medium'], ['hard', 'hard']], diff)}
-      <b>${t('weather')}</b>${seg<Weather>('weather', [['day', 'day'], ['night', 'night'], ['rain', 'rain'], ['snow', 'snow']], weather)}
+      <b>${t('weather')}</b>${seg<Weather | 'random'>('weather', [['day', 'day'], ['night', 'night'], ['rain', 'rain'], ['snow', 'snow'], ['random', 'randomWeather']], weatherPick, ' wrap')}
       <b>${t('crowd')}</b>${seg<Crowd>('crowd', [['full', 'crowdFull'], ['half', 'crowdHalf'], ['few', 'crowdFew']], crowd)}
       ${r === 'keeper' || m === 'cup' ? `<b>${t('keeperCam')}</b>${seg<'goal' | 'kicker'>('cam', [['goal', 'camGoal'], ['kicker', 'camKicker']], keeperCam)}` : ''}
     </div>
@@ -279,7 +283,11 @@ function match(m: Mode, r: Role) {
     myTeam = findTeam(el.dataset.team!); store.set('team', myTeam.id); again();
   });
   on('[data-diff]', (el) => { diff = el.dataset.diff as Difficulty; store.set('diff', diff); again(); });
-  on('[data-weather]', (el) => { weather = el.dataset.weather as Weather; store.set('weather', weather); again(); });
+  on('[data-weather]', (el) => {
+    weatherPick = el.dataset.weather as Weather | 'random';
+    if (weatherPick !== 'random') weather = weatherPick;
+    store.set('weather', weatherPick); again();
+  });
   on('[data-crowd]', (el) => { crowd = el.dataset.crowd as Crowd; store.set('crowd', crowd); again(); });
   on('[data-cam]', (el) => { keeperCam = el.dataset.cam as 'goal' | 'kicker'; pitch.keeperCam = keeperCam; store.set('keeperCam', keeperCam); again(); });
   on('[data-go=back]', () => (m === 'cup' ? modes() : role(m)));
@@ -515,6 +523,7 @@ function spotFor(kind: Kind) {
 
 /** Devolve quantas cobranças a criança venceu (gols como batedor, defesas como goleiro). */
 async function duel(id: number, kind: Kind, r: Role, opp: Team): Promise<number> {
+  rollWeather();
   pitch.setAtmosphere(atmo(opp));
   const mine: boolean[] = [];
   const draw = () => {
@@ -559,6 +568,7 @@ async function single(id: number, m: 'penalty' | 'free', r: Role) {
 /** Disputa de pênaltis da Copa: a criança bate pelo time dela e defende as cobranças da máquina,
  * alternando. 5 para cada lado e, se empatar, morte súbita. Devolve [venceu, gols dela, gols da máquina]. */
 async function shootout(id: number, opp: Team): Promise<[boolean, number, number]> {
+  rollWeather();
   pitch.setAtmosphere(atmo(opp));
   const so: Shootout = { a: [], b: [] };
   const draw = () => board([{ team: myTeam, icon: '⚽', marks: so.a }, { team: opp, icon: '⚽', marks: so.b }]);
@@ -732,6 +742,7 @@ async function duoMatch(id: number) {
     { name: duoNames[0] || t('p1'), team: duoTeam1 },
     { name: duoNames[1] || t('p2'), team: duoTeam2 },
   ];
+  rollWeather();
   pitch.setAtmosphere(atmo(duoTeam2));
   const so: Shootout = { a: [], b: [] };
   const draw = () => board([

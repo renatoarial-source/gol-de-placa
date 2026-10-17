@@ -258,6 +258,19 @@ test('2 jogadores: cada um escolhe o time, entre seleções ou clubes', async ({
   await expect(page.locator('.row b').nth(1)).toContainText(badge2);
 });
 
+test('clima aleatório: fica escolhido e cada partida sorteia dia, noite, chuva ou neve', async ({ page }) => {
+  await open(page, true);
+  await page.click('[data-go=play]');
+  await page.click('[data-mode=penalty]');
+  await page.click('[data-role=kicker]');
+  await page.click('[data-weather=random]');
+  await expect(page.locator('[data-weather=random]')).toHaveClass(/on/);
+  expect(await page.evaluate(() => localStorage.getItem('gol.weather'))).toBe('random');
+  await page.click('[data-go=start]');
+  const w = await page.evaluate(() => (window as unknown as { __gol: { pitch: { weather: string } } }).__gol.pitch.weather);
+  expect(['day', 'night', 'rain', 'snow']).toContain(w);
+});
+
 test('Meu craque: escolhe a comemoração', async ({ page }) => {
   await open(page, true);
   await page.click('[data-go=player]');
