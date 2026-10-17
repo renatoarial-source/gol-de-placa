@@ -12,7 +12,7 @@ import {
   type Difficulty, type Kind, type Outcome, type Shootout, type Wall,
 } from './game/physics';
 import { BOOT_COLORS, BUILDS, CELEBRATIONS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Celebration, type Crowd, type Look, type Weather } from './game/scene';
-import { STICKERS, apply as applyProgress, emptyState, ensureDay, needOf, type Ev, type State as ProgressState } from './game/progress';
+import { STICKERS, apply as applyProgress, emptyState, ensureDay, findSticker, needOf, type Ev, type State as ProgressState, type Sticker } from './game/progress';
 import { FREE_TEAM, store as shop } from './game/store';
 import * as audio from './game/audio';
 import { onMatchFinished } from './game/rating';
@@ -91,14 +91,22 @@ function applyStadium() {
   pitch.setStadium(s);
 }
 /** Registra um acontecimento: guarda, mostra figurinhas novas e desafios completados. */
+/** Nome da figurinha no idioma: as 18 primeiras têm nome próprio; as metas e os times usam modelos. */
+function stickerName(st: Sticker): string {
+  if (st.base) return t(('st_' + st.id) as UiKey);
+  if (st.team) return t('sk_team', { team: teamName(findTeam(st.team), lang) });
+  const single = st.n === 1 && (st.k === 'wins' || st.k === 'keeperWins');
+  return t((single ? `sk_${st.k}_1` : `sk_${st.k}`) as UiKey, { n: st.n ?? 0 });
+}
 function track(ev: Ev) {
   freshProgress();
   const r = applyProgress(progress, ev);
   progress = r.s;
   store.set('progress', JSON.stringify(progress));
   for (const id of r.done) toast('📅', t('dailyDone'), t(('ch_' + id) as UiKey, { n: needOf(id) }));
-  for (const id of r.stickers) toast(STICKERS.find((x) => x.id === id)!.e, t('newSticker'), t(('st_' + id) as UiKey));
-  gc.report(r.stickers, ev.t === 'goal' ? progress.goals : undefined);
+  for (const id of r.stickers) { const st = findSticker(id); if (st) toast(st.e, t('newSticker'), stickerName(st)); }
+  // só as 18 primeiras são conquistas no Game Center
+  gc.report(r.stickers.filter((id) => findSticker(id)?.base), ev.t === 'goal' ? progress.goals : undefined);
 }
 let toastY = 0;
 function toast(icon: string, title: string, text: string) {
@@ -201,7 +209,7 @@ function album() {
     <p class="sub">${t('albumCount', { n: progress.stickers.length, t: STICKERS.length })}</p>
     <div class="album">${STICKERS.map((st) => {
       const has = progress.stickers.includes(st.id);
-      return `<div class="sticker${has ? ' has' : ''}"><span class="se">${has ? st.e : '❔'}</span><span class="sn">${t(('st_' + st.id) as UiKey)}</span></div>`;
+      return `<div class="sticker${has ? ' has' : ''}"><span class="se">${has ? st.e : '❔'}</span><span class="sn">${stickerName(st)}</span></div>`;
     }).join('')}</div>
     ${rewardsCard()}
     ${gc.available ? '<button class="btn alt" data-go="gc">🏆 Game Center</button>' : ''}
@@ -649,7 +657,7 @@ async function single(id: number, m: 'penalty' | 'free', r: Role) {
   const n = await duel(id, m, r, opp);
   guard(id);
   const won = n >= 3;
-  track({ t: 'match', won, perfect: n === 5, role: r });
+  track({ t: 'match', won, perfect: n === 5, role: r, team: myTeam.id });
   onMatchFinished(won);
   if (won) confetti();
   audio.call(lang, won ? 'win' : 'lose');
@@ -704,7 +712,7 @@ async function cup(id: number) {
     await sleep(1800); guard(id);
     callEl.classList.add('hidden');
     const [won, ga, gb] = await shootout(id, opp);
-    if (won) track({ t: 'match', won, perfect: false, role: 'kicker' });
+    if (won) track({ t: 'match', won, perfect: false, role: 'kicker', team: myTeam.id });
     guard(id);
     const score = `${myTeam.badge} ${ga} × ${gb} ${opp.badge}`;
     if (!won) {
@@ -734,7 +742,7 @@ async function cup(id: number) {
   }
   confetti();
   audio.call(lang, 'champion');
-  track({ t: 'cup', diff });
+  track({ t: 'cup', diff, team: myTeam.id });
   onMatchFinished(true);
   show(`
     ${resultCard('🏆', 'champion', `${myTeam.badge} ${teamName(myTeam, lang)}`)}
@@ -1038,7 +1046,7 @@ async function eventMatch(id: number, ev: CupEvent) {
   guard(id);
   const sc = addMatch(readScore(ev), ga, won);
   store.set('event', JSON.stringify(sc));
-  track({ t: 'match', won, perfect: false, role: 'kicker' });
+  track({ t: 'match', won, perfect: false, role: 'kicker', team: eventTeam?.id });
   onMatchFinished(won);
   if (won) confetti();
   audio.call(lang, won ? 'win' : 'lose');
@@ -1233,7 +1241,7 @@ function parentGate(ok: () => void) {
 // compra restaurada ao abrir o app: atualiza a tela inicial (sem interromper uma partida)
 shop.onChange(() => { if (ui.querySelector('.logo')) home(); });
 void shop.init();
-void gc.start(progress.stickers, progress.goals);
+void gc.start(progress.stickers.filter((id) => findSticker(id)?.base), progress.goals);
 home();
 
 // ganchos para os testes automáticos

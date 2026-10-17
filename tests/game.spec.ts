@@ -205,7 +205,7 @@ test('primeiro gol dá figurinha e conta no desafio do dia; o álbum mostra', as
   await page.evaluate(() => localStorage.setItem('gol.tutKick', '1'));
   await expect(page.locator('.daily li')).toHaveCount(3);
   await page.click('[data-go=album]');
-  await expect(page.locator('.sticker')).toHaveCount(18);
+  await expect(page.locator('.sticker')).toHaveCount(100);
   await expect(page.locator('.sticker.has')).toHaveCount(0);
   await page.click('[data-go=back]');
   await start(page, 'penalty', 'kicker');
@@ -426,4 +426,16 @@ test('evento Pênaltis da Copa só aparece nas datas e guarda o placar da vez', 
   await expect(page.locator('[data-eteam=AR]')).toHaveClass(/\bon\b/);
   await page.click('[data-go=start]');
   await expect(page.locator('#hud .line').first()).toContainText('🇦🇷', { timeout: 10_000 });
+});
+
+test('álbum com 100 figurinhas, todas com nome, inclusive as de time', async ({ page }) => {
+  await open(page);
+  await page.click('[data-go=album]');
+  await expect(page.locator('.sticker')).toHaveCount(100);
+  await expect(page.locator('.sub').first()).toContainText('0 de 100');
+  const names = await page.locator('.sticker .sn').allInnerTexts();
+  expect(names.filter((n) => !n.trim() || /undefined|\{/.test(n))).toEqual([]);
+  expect(names).toContain('Vitória com Brasil');
+  expect(names).toContain('10 gols');
+  expect(names).toContain('Primeira vitória');
 });
