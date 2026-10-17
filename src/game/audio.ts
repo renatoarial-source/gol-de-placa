@@ -41,7 +41,70 @@ export function initAudio() {
   crowdGain.gain.value = 0.18;
   src.connect(lp).connect(crowdGain).connect(master);
   src.start();
+  void loadCrowd(ctx, master);
   for (const fn of onReady) fn(ctx, master);
+}
+
+// ---------- torcida gravada (Pixabay Content License; ver public/sfx/LEIA-ME.txt) ----------
+
+const SFX = {
+  fundo: './sfx/torcida-fundo.mp3',
+  cheer: ['./sfx/torcida-gol.mp3', './sfx/torcida-gol2.mp3'],
+  ohh: ['./sfx/torcida-uhh.mp3'],
+  clap: ['./sfx/torcida-aplauso.mp3'],
+};
+const sfx = new Map<string, AudioBuffer>();
+let crowdBed: GainNode | null = null;
+let crowdSize = 1; // lotado 1, média 0.6, pouca 0.3
+
+async function loadCrowd(c: AudioContext, out: GainNode) {
+  const get = async (url: string) => {
+    try {
+      const r = await fetch(url);
+      if (r.ok) sfx.set(url, await c.decodeAudioData(await r.arrayBuffer()));
+    } catch { /* fica com a torcida sintetizada */ }
+  };
+  await Promise.all([SFX.fundo, ...SFX.cheer, ...SFX.ohh, ...SFX.clap].map(get));
+  const bed = sfx.get(SFX.fundo);
+  if (!bed || !crowdGain) return;
+  // torcida de fundo gravada, em loop; o murmúrio sintetizado sai de cena
+  const s = c.createBufferSource();
+  s.buffer = bed; s.loop = true;
+  crowdBed = c.createGain();
+  crowdBed.gain.setValueAtTime(0, c.currentTime);
+  crowdBed.gain.linearRampToValueAtTime(0.55 * crowdSize, c.currentTime + 1.5);
+  s.connect(crowdBed).connect(out);
+  s.start();
+  crowdGain.gain.setTargetAtTime(0, c.currentTime, 0.5);
+}
+
+/** Tamanho da torcida (lotado, média, pouca): muda o volume do fundo e das reações. */
+export function setCrowdSize(size: 'full' | 'half' | 'few') {
+  crowdSize = size === 'full' ? 1 : size === 'half' ? 0.6 : 0.3;
+  if (ctx && crowdBed) crowdBed.gain.setTargetAtTime(0.55 * crowdSize, ctx.currentTime, 0.4);
+}
+
+/** Toca uma reação gravada; devolve false se ainda não carregou (aí usa a sintetizada). */
+function crowdClip(kind: 'cheer' | 'ohh' | 'clap'): boolean {
+  if (!ctx || !master) return false;
+  const list = SFX[kind].map((u) => sfx.get(u)).filter((b): b is AudioBuffer => !!b);
+  if (!list.length) return false;
+  const s = ctx.createBufferSource();
+  s.buffer = list[Math.floor(Math.random() * list.length)];
+  s.playbackRate.value = 0.96 + Math.random() * 0.08; // cada reação um pouco diferente
+  const g = ctx.createGain();
+  g.gain.value = (kind === 'cheer' ? 1 : kind === 'ohh' ? 0.85 : 0.75) * (0.45 + 0.55 * crowdSize);
+  s.connect(g).connect(master);
+  s.start();
+  // no gol, a torcida de fundo cresce junto e volta devagar
+  if (kind === 'cheer' && crowdBed) {
+    const t = ctx.currentTime;
+    crowdBed.gain.cancelScheduledValues(t);
+    crowdBed.gain.setValueAtTime(crowdBed.gain.value, t);
+    crowdBed.gain.linearRampToValueAtTime(0.9 * crowdSize, t + 0.3);
+    crowdBed.gain.setTargetAtTime(0.55 * crowdSize, t + 2.5, 1.2);
+  }
+  return true;
 }
 
 const onReady: ((c: AudioContext, out: GainNode) => void)[] = [];
@@ -146,6 +209,7 @@ export function chime() {
 /** Torcida: 'cheer' no gol, 'ohh' no quase, 'clap' na defesa. */
 export function crowd(kind: 'cheer' | 'ohh' | 'clap') {
   if (!ctx || !master) return;
+  if (crowdClip(kind)) return;
   const t = ctx.currentTime;
   const n = ctx.createBufferSource();
   n.buffer = noiseBuffer(ctx, 3);

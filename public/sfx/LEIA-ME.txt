@@ -1,0 +1,16 @@
+Sons de torcida gravados (recortados, filtrados e com volume ajustado para o jogo).
+Todos baixados da Pixabay em 17/10/2026, sob a Pixabay Content License
+(https://pixabay.com/service/license-summary/): uso livre, inclusive comercial e em apps,
+sem atribuição obrigatória; não pode ser revendido/redistribuído sozinho.
+
+torcida-fundo.mp3   <- "Soccer Stadium 10" (freesound_community)
+                       https://pixabay.com/sound-effects/city-soccer-stadium-10-6709/
+                       (primeiros 22 s, filtro passa-baixa para não dar para entender palavras, loop sem emenda)
+torcida-gol.mp3     <- "Crowd Cheering in Stadium" (vishiv)
+                       https://pixabay.com/sound-effects/people-crowd-cheering-in-stadium-435357/
+torcida-gol2.mp3    <- "Crazy Soccer Crowd Cheering" (freesound_community / Kinoton)
+                       https://pixabay.com/sound-effects/people-crazy-soccer-crowd-cheering-72194/
+torcida-uhh.mp3     <- "Crowd Disappointment Reaction" (universfield)
+                       https://pixabay.com/sound-effects/people-crowd-disappointment-reaction-352718/
+torcida-aplauso.mp3 <- "large crowd applause & noise" (flutie8211)
+                       https://pixabay.com/sound-effects/people-large-crowd-applause-amp-noise-493922/

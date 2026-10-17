@@ -92,6 +92,7 @@ function toast(icon: string, title: string, text: string) {
 
 /** Clima, torcida e as cores das arquibancadas (time do coração, se escolhido). */
 function atmo(opp?: Team) {
+  audio.setCrowdSize(crowd);
   const teams = [myTeam.kit.shirt, opp?.kit.shirt ?? '#ffffff'];
   return {
     weather, crowd,
