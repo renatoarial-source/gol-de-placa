@@ -13,10 +13,10 @@ const APP = '6823608331'; // Gol de Placa: Pênalti e Falta
 const PREFIX = 'com.arial.goldeplaca.';
 const LEADERBOARD = 'com.arial.goldeplaca.goals';
 
-// figurinha → pontos (total até 1000)
+// figurinha → pontos (até 100 cada, total até 1000)
 const ACHIEVEMENTS = {
   first_goal: 10, corner: 20, ground: 20, curve: 25, free_goal: 30, first_save: 10, three_saves: 50, post: 20,
-  perfect_kick: 75, perfect_keep: 75, cup: 100, cup_hard: 150, rain: 25, snow: 25, night: 25, two_players: 20,
+  perfect_kick: 75, perfect_keep: 75, cup: 100, cup_hard: 100, rain: 25, snow: 25, night: 25, two_players: 20,
   daily: 50, fifty: 100,
 };
 // idioma do jogo → locales da App Store
@@ -40,7 +40,7 @@ function sticker(lang, id) {
   return m[1].replace(/\\'/g, "'");
 }
 const total = Object.values(ACHIEVEMENTS).reduce((a, b) => a + b, 0);
-if (total > 1000) throw new Error(`pontos demais: ${total}`);
+if (total > 1000 || Object.values(ACHIEVEMENTS).some((p) => p > 100)) throw new Error(`pontos fora do limite (total ${total})`);
 for (const lang of Object.keys(LOCALES)) for (const id of Object.keys(ACHIEVEMENTS)) {
   const n = sticker(lang, id);
   if ([...n].length > 30) throw new Error(`nome longo (${lang} ${id}): ${n}`);
