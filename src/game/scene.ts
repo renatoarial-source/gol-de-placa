@@ -964,8 +964,11 @@ export class Pitch {
         b.root.position.y = y0 + Math.abs(Math.sin(q * Math.PI * 3)) * 0.45;
         b.armL.rotation.z = Math.PI * 0.85; b.armR.rotation.z = -Math.PI * 0.85;
       } else if (style === 'plane') {
-        // aviãozinho: braços abertos, corre em curva inclinando o corpo
-        b.armL.rotation.z = Math.PI / 2; b.armR.rotation.z = -Math.PI / 2;
+        // aviãozinho: braços abertos batendo como asas, corre em curva inclinando o corpo
+        const flap = Math.sin(t * 11) * 0.45;
+        // (o braço esquerdo fica em x negativo: para abrir para fora ele gira no sentido negativo)
+        b.armL.rotation.z = -Math.PI / 2 - flap; b.armR.rotation.z = Math.PI / 2 + flap;
+        b.armL.rotation.x = Math.sin(t * 11 + 1) * 0.25; b.armR.rotation.x = Math.sin(t * 11 + 1) * 0.25;
         const a = q * Math.PI * 1.4;
         b.root.position.set(p0.x + Math.sin(a) * 1.6, y0, p0.z + (1 - Math.cos(a)) * 1.6 * -Math.sign(fwd.z || 1));
         b.root.rotation.y = r0 - a;

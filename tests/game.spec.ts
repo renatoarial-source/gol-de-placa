@@ -115,11 +115,29 @@ test('Meu craque: escolhe cabelo, número e nome e salva', async ({ page }) => {
   await open(page, true);
   await page.click('[data-go=player]');
   await page.click('[data-style=mohawk]');
-  await page.click('[data-n="1"]');
+  await page.fill('#pnum', '50');
   await page.fill('#pname', 'Arial');
   await page.click('[data-go=save]');
   const look = await page.evaluate(() => JSON.parse(localStorage.getItem('gol.look')!));
-  expect(look).toMatchObject({ style: 'mohawk', number: 11, name: 'Arial' });
+  expect(look).toMatchObject({ style: 'mohawk', number: 50, name: 'Arial' });
+});
+
+test('Meu craque: número aceita só 1 a 99 e tocar nas opções não joga a tela para o topo', async ({ page }) => {
+  await open(page, true);
+  await page.click('[data-go=player]');
+  await page.locator('#pnum').click();
+  await page.keyboard.type('7a0');
+  await expect(page.locator('#pnum')).toHaveValue('70');
+  await page.fill('#pnum', '0');
+  await page.locator('#pname').click(); // sai do campo: número inválido volta ao último válido
+  await expect(page.locator('#pnum')).toHaveValue('70');
+  const screen = page.locator('.screen');
+  await screen.evaluate((el) => { el.scrollTop = el.scrollHeight; });
+  const before = await screen.evaluate((el) => el.scrollTop);
+  expect(before).toBeGreaterThan(0);
+  await page.locator('[data-cel]').last().click();
+  const after = await page.locator('.screen').evaluate((el) => el.scrollTop);
+  expect(Math.abs(after - before)).toBeLessThan(5);
 });
 
 test('Copa na versão do download: disputa alternando bater e defender', async ({ page }) => {

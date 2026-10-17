@@ -837,6 +837,8 @@ function builder() {
   const swatches = (key: 'skin' | 'hair' | 'boots', colors: string[]) =>
     `<div class="swatches">${colors.map((c, i) => `<button class="sw${draft[key] === i ? ' on' : ''}" data-${key}="${i}" style="background:${c}" aria-label="${i + 1}"></button>`).join('')}</div>`;
   const render = () => {
+    // redesenhar não pode jogar a tela para o topo a cada toque
+    const keepY = ui.querySelector('.screen')?.scrollTop ?? 0;
     show(`
       <h2>${t('myPlayer')}</h2>
       <div class="builder card">
@@ -846,25 +848,40 @@ function builder() {
         <b>${t('boots')}</b>${swatches('boots', BOOT_COLORS)}
         <b>${t('celebration')}</b><div class="seg wrap">${CELEBRATIONS.map((c) => `<button data-cel="${c}" class="${draft.cel === c ? 'on' : ''}">${t(('cel_' + c) as UiKey)}</button>`).join('')}</div>
         <div class="row">
-          <div><b>${t('number')}</b><div class="num"><button data-n="-1">−</button><span>${draft.number}</span><button data-n="1">+</button></div></div>
+          <div><b>${t('number')}</b><input id="pnum" class="numin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${draft.number}" autocomplete="off" aria-label="${t('number')}"></div>
           <div><b>${t('playerName')}</b><input id="pname" maxlength="10" value="${esc(draft.name)}" autocomplete="off"></div>
         </div>
       </div>
       <button class="btn big" data-go="save">${t('saveLook')}</button>
       <button class="btn alt" data-go="back">${t('back')}</button>
     `, false);
-    ui.querySelector('.screen')!.classList.add('bottom');
+    const screen = ui.querySelector('.screen')!;
+    screen.classList.add('bottom');
+    screen.scrollTop = keepY;
     on('[data-skin]', (el) => { draft.skin = Number(el.dataset.skin); render(); });
     on('[data-hair]', (el) => { draft.hair = Number(el.dataset.hair); render(); });
     on('[data-boots]', (el) => { draft.boots = Number(el.dataset.boots); render(); });
     on('[data-style]', (el) => { draft.style = el.dataset.style as Look['style']; render(); });
     // escolher a comemoração mostra ela no boneco da vitrine
     on('[data-cel]', (el) => { draft.cel = el.dataset.cel as Celebration; render(); pitch.kickerCelebration = draft.cel; pitch.celebrateShowcase(); });
-    on('[data-n]', (el) => { draft.number = ((draft.number - 1 + Number(el.dataset.n) + 99) % 99) + 1; render(); });
+    // número da camisa: a criança digita (1 a 99), sem redesenhar a tela
+    const num = $('pnum') as HTMLInputElement;
+    const readNum = () => {
+      const n = Number(num.value.replace(/\D/g, ''));
+      if (n >= 1 && n <= 99) { draft.number = n; return true; }
+      return false;
+    };
+    num.addEventListener('focus', () => num.select());
+    num.addEventListener('input', () => {
+      num.value = num.value.replace(/\D/g, '').slice(0, 2);
+      if (readNum()) refresh();
+    });
+    num.addEventListener('blur', () => { if (!readNum()) num.value = String(draft.number); });
     const input = $('pname') as HTMLInputElement;
     input.addEventListener('change', () => { draft.name = input.value.trim().slice(0, 10); refresh(); });
     on('[data-go=save]', () => {
       draft.name = input.value.trim().slice(0, 10);
+      readNum();
       look = draft;
       store.set('look', JSON.stringify(look));
       home();

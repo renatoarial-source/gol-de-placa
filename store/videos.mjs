@@ -451,7 +451,7 @@ const VIDEOS = {
       await take.caption('Chuteira e número 👟', 'mid pop');
       await take.tap('[data-boots="4"]');
       await take.wait(250);
-      for (let i = 0; i < 2; i++) { await take.tap('[data-n="1"]'); await take.wait(120); }
+      await take.tap('#pnum'); await take.page.keyboard.type('12', { delay: 140 }); await take.page.locator('#pnum').blur();
       await take.wait(300);
       await take.caption('E a COMEMORAÇÃO! 🎉', 'mid pop');
       for (const [cel, txt] of [['plane', 'Aviãozinho ✈️'], ['flip', 'Cambalhota 🤸'], ['dance', 'Dancinha 💃']]) {

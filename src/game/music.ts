@@ -55,8 +55,13 @@ const chocalho = (t: number, v: number) => hiss(t, 'bandpass', 6500, v, 0.05, 1.
 const tamborim = (t: number, v: number) => tone(t, 980, 860, v, 0.06, 'triangle');
 const bumbo = (t: number, v: number) => tone(t, 120, 45, v, 0.3);
 const prato = (t: number, v: number) => hiss(t, 'highpass', 6000, v, 0.9);
+/** Palmas da arquibancada: muita gente batendo junto, cada uma um pouco fora do tempo e num tom. */
 function palma(t: number, v: number) {
-  for (let i = 0; i < 3; i++) hiss(t + i * 0.011, 'bandpass', 1300, v * (i === 2 ? 1 : 0.6), 0.06, 1.5);
+  for (let i = 0; i < 7; i++) {
+    const dt = Math.random() * 0.03;
+    hiss(t + dt, 'bandpass', 1000 + Math.random() * 1400, v * (0.5 + Math.random() * 0.5), 0.05 + Math.random() * 0.04, 0.9);
+  }
+  hiss(t, 'highpass', 2500, v * 0.35, 0.04); // o "estalo" de cima
 }
 
 /** Metais: duas ondas dente-de-serra levemente desafinadas com filtro que "abre" no ataque. */
@@ -99,16 +104,34 @@ function coro(t: number, freqs: number[], dur: number, v: number) {
   g.gain.linearRampToValueAtTime(v, t + 0.08);
   g.gain.setValueAtTime(v, t + dur * 0.7);
   g.gain.linearRampToValueAtTime(0, t + dur);
-  for (const [fq, q] of [[480, 4], [850, 5]]) {
+  // vibrato lento e um pouco diferente em cada voz: soa como muita gente cantando, não como um teclado
+  const lfo = ctx!.createOscillator();
+  const lfoAmt = ctx!.createGain();
+  lfo.frequency.value = 5.2; lfoAmt.gain.value = 6;
+  lfo.connect(lfoAmt); lfo.start(t); lfo.stop(t + dur + 0.02);
+  // formantes da vogal "ô" (mais abertos que antes, para a voz passar e ser ouvida)
+  for (const [fq, q, amp] of [[450, 1.6, 1], [800, 2, 0.7], [2600, 3, 0.15]]) {
     const f = ctx!.createBiquadFilter();
     f.type = 'bandpass'; f.frequency.value = fq; f.Q.value = q;
-    f.connect(g);
-    for (const base of freqs) for (const d of [0.993, 1, 1.008]) {
+    const fg = ctx!.createGain();
+    fg.gain.value = amp;
+    f.connect(fg).connect(g);
+    for (const base of freqs) for (const d of [0.985, 0.996, 1, 1.007, 1.016]) {
       const o = ctx!.createOscillator();
       o.type = 'sawtooth'; o.frequency.value = base * d;
-      o.connect(f); o.start(t); o.stop(t + dur + 0.02);
+      lfoAmt.connect(o.frequency);
+      o.connect(f); o.start(t + Math.random() * 0.04); o.stop(t + dur + 0.02);
     }
   }
+  // respiração/"ar" da multidão junto com o canto
+  const n = ctx!.createBufferSource();
+  n.buffer = noise;
+  const nf = ctx!.createBiquadFilter();
+  nf.type = 'bandpass'; nf.frequency.value = 700; nf.Q.value = 0.8;
+  const ng = ctx!.createGain();
+  ng.gain.value = 0.25;
+  n.connect(nf).connect(ng).connect(g);
+  n.start(t, Math.random() * 1.5); n.stop(t + dur + 0.02);
   g.connect(out!);
 }
 
@@ -153,13 +176,13 @@ function play(s: number, t: number, dur16: number) {
       }
     }
   } else if (style === 'palmas') {
-    if ([0, 6, 12].includes(st)) palma(t, 0.35 * v); // palmas 3-3-2
+    if ([0, 6, 12].includes(st)) palma(t, 0.9 * v); // palmas 3-3-2
     if (st === 0 || st === 8) bumbo(t, 0.5 * v);
     if (hot && st % 4 === 2) caixa(t, 0.12 * v);
     // "ô, ô, ô ... ôôô"
-    if (bar % 2 === 0 && [0, 4, 8].includes(st)) coro(t, [N('C4'), N('G4')], dur16 * 3, 0.07 * v);
-    if (bar % 2 === 1 && [0, 2, 4].includes(st)) coro(t, [N('D4'), N('A4')], dur16 * 1.6, 0.07 * v);
-    if (bar % 2 === 1 && st === 6) coro(t, [N('C4'), N('G4'), N('E4')], dur16 * 6, 0.08 * v);
+    if (bar % 2 === 0 && [0, 4, 8].includes(st)) coro(t, [N('C4'), N('G4')], dur16 * 3, 0.12 * v);
+    if (bar % 2 === 1 && [0, 2, 4].includes(st)) coro(t, [N('D4'), N('A4')], dur16 * 1.6, 0.12 * v);
+    if (bar % 2 === 1 && st === 6) coro(t, [N('C4'), N('G4'), N('E4')], dur16 * 6, 0.11 * v);
   }
 }
 
