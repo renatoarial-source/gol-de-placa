@@ -37,7 +37,14 @@ interface Body {
   root: THREE.Group; // posição no campo
   pose: THREE.Group; // inclinação (mergulho do goleiro)
   legL: THREE.Group; legR: THREE.Group; armL: THREE.Group; armR: THREE.Group;
+  head: THREE.Mesh;
+  /** true enquanto uma animação (corrida, chute, comemoração) controla o corpo: a respiração não mexe nele */
+  busy?: boolean;
+  /** fase própria, para os bonecos não respirarem todos juntos */
+  phase: number;
 }
+
+const smooth = (q: number) => q * q * (3 - 2 * q);
 
 function box(w: number, h: number, d: number, mat: THREE.Material | THREE.Material[], y = 0, x = 0, z = 0) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -143,14 +150,31 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   if (style === 'mohawk') pose.add(box(0.12, 0.22, 0.48, mHair, 2.12));
   if (style === 'curly') pose.add(box(0.62, 0.3, 0.6, mHair, 2.1, 0, -0.03));
   pose.traverse((o) => { o.castShadow = false; });
-  return { root, pose, legL, legR, armL, armR };
+  return { root, pose, legL, legR, armL, armR, head, phase: (seed * 1.37) % (Math.PI * 2) };
 }
 
-function resetPose(b: Body) {
-  b.pose.position.set(0, 0, 0);
-  b.pose.rotation.set(0, 0, 0);
-  b.legL.rotation.set(0, 0, 0); b.legR.rotation.set(0, 0, 0);
-  b.armL.rotation.set(0, 0, 0); b.armR.rotation.set(0, 0, 0);
+/** Parado, mas vivo: respira, mexe o peso e olha em volta. Só corpo, braços e cabeça; nada fica acumulando. */
+function breathe(b: Body, t: number, armOpen = 0.08) {
+  const p = b.phase;
+  b.pose.position.y = Math.sin(t * 2.1 + p) * 0.012;
+  b.pose.rotation.z = Math.sin(t * 0.9 + p) * 0.025;
+  // braços levemente afastados do corpo (o esquerdo abre girando no sentido negativo)
+  b.armL.rotation.z = -armOpen - Math.sin(t * 2.1 + p) * 0.03;
+  b.armR.rotation.z = armOpen + Math.sin(t * 2.1 + p) * 0.03;
+  b.head.rotation.y = Math.sin(t * 0.45 + p * 2) * 0.22;
+  b.head.rotation.x = Math.sin(t * 0.7 + p) * 0.05;
+}
+
+/** Volta suavemente à posição neutra (sem o "tranco" de zerar tudo de uma vez). */
+function easeToRest(tween: (d: number, fn: (k: number) => void) => Promise<void>, b: Body, dur = 0.3) {
+  const parts = [b.pose, b.legL, b.legR, b.armL, b.armR, b.head];
+  const from = parts.map((o) => o.rotation.clone());
+  const py = b.pose.position.clone();
+  return tween(dur, (q) => {
+    const e = smooth(q);
+    parts.forEach((o, i) => o.rotation.set(from[i].x * (1 - e), from[i].y * (1 - e), from[i].z * (1 - e)));
+    b.pose.position.set(py.x * (1 - e), py.y * (1 - e), py.z * (1 - e));
+  });
 }
 
 interface Tween { t: number; dur: number; fn: (k: number) => void; done: () => void }
@@ -667,12 +691,31 @@ export class Pitch {
       tw.fn(k);
       if (k < 1) this.tweens.push(tw); else tw.done();
     }
-    // goleiro balança enquanto espera
     this.idle += dt;
-    if (this.keeper && !this.keeperDiving) {
-      this.keeper.pose.position.x = Math.sin(this.idle * 3) * 0.12;
-      this.keeper.pose.position.y = Math.abs(Math.sin(this.idle * 6)) * 0.04;
+    const T = this.idle;
+    // goleiro esperando: agachado, braços prontos, passa o peso de um pé para o outro e olha a bola
+    const gk = this.keeper;
+    if (gk && !this.keeperDiving && !gk.busy) {
+      const sway = Math.sin(T * 1.7 + gk.phase);
+      gk.pose.position.x = sway * 0.13;
+      gk.pose.position.y = -0.06 + Math.abs(Math.sin(T * 3.4 + gk.phase)) * 0.035;
+      gk.pose.rotation.z = -sway * 0.05;
+      gk.pose.rotation.x = 0.12;
+      gk.armL.rotation.set(-0.35, 0, -0.55 - Math.sin(T * 3.4) * 0.05);
+      gk.armR.rotation.set(-0.35, 0, 0.55 + Math.sin(T * 3.4) * 0.05);
+      gk.legL.rotation.z = -0.08; gk.legR.rotation.z = 0.08;
     }
+    if (gk && !this.keeperDiving) {
+      // a cabeça segue a bola
+      const dx = this.bp.x - gk.root.position.x, dz = this.bp.z - gk.root.position.z;
+      const yaw = Math.atan2(dx, dz) - gk.root.rotation.y;
+      const want = Math.max(-0.8, Math.min(0.8, Math.atan2(Math.sin(yaw), Math.cos(yaw))));
+      gk.head.rotation.y += (want - gk.head.rotation.y) * Math.min(1, dt * 8);
+    }
+    // batedor, barreira e o boneco da vitrine respiram enquanto esperam
+    if (this.kicker && !this.kicker.busy) breathe(this.kicker, T);
+    for (const w of this.wall) if (!w.busy) breathe(w, T, -0.25);
+    if (this.showcaseBody && !this.showcaseBody.busy) breathe(this.showcaseBody, T);
     // torcida: balança sempre, faz a "ola" de tempos em tempos e pula no gol
     this.cheer = Math.max(0, this.cheer - dt);
     const arr = this.crowd.instanceMatrix.array as Float32Array;
@@ -852,15 +895,38 @@ export class Pitch {
     const start = k.root.position.clone();
     const b = this.back;
     const target = new THREE.Vector3(s.sx + b.x * 0.45 - b.z * 0.28, 0, s.sz + b.z * 0.45 + b.x * 0.28);
+    k.busy = true;
+    k.head.rotation.set(0, 0, 0);
+    const strides = Math.max(1, o.runUp * 4);
     await this.tween(o.runUp, (q) => {
-      k.root.position.lerpVectors(start, target, q);
-      const w = Math.sin(q * Math.PI * 2 * Math.max(1, o.runUp * 4));
-      k.legL.rotation.x = w * 0.7; k.legR.rotation.x = -w * 0.7;
-      k.armL.rotation.x = -w * 0.6; k.armR.rotation.x = w * 0.6;
+      // acelera no começo e chega firme na bola
+      k.root.position.lerpVectors(start, target, q < 0.35 ? (q * q) / 0.7 : 0.175 + (q - 0.35) * (0.825 / 0.65));
+      const ph = q * Math.PI * 2 * strides;
+      const w = Math.sin(ph);
+      k.legL.rotation.x = w * 0.75; k.legR.rotation.x = -w * 0.75;
+      k.armL.rotation.set(-w * 0.7, 0, -0.12); k.armR.rotation.set(w * 0.7, 0, 0.12);
+      k.pose.position.y = Math.abs(Math.cos(ph)) * 0.07; // sobe e desce a cada passada
+      k.pose.rotation.x = 0.16 * Math.min(1, q * 3); // corpo inclinado para a frente
+      k.pose.rotation.z = Math.sin(ph) * 0.04;
+      // última passada: puxa a perna do chute para trás
+      if (q > 0.82) { const e = (q - 0.82) / 0.18; k.legR.rotation.x = 0.9 * e; k.legL.rotation.x = -0.2 * e; }
     });
-    // chute: perna direita vai à frente
-    k.legL.rotation.x = 0.3;
-    void this.tween(0.25, (q) => { k.legR.rotation.x = -1.4 * Math.sin(Math.PI * q); });
+    // chute: perna de apoio firme, perna direita vem de trás e acompanha o movimento; braços abrem para equilibrar
+    k.legL.rotation.x = 0.25;
+    // golpe rápido: o pé chega na bola e só então ela sai
+    await this.tween(0.09, (q) => {
+      k.legR.rotation.x = 0.9 - 1.5 * q;
+      k.armL.rotation.set(-0.2, 0, -0.6 * q);
+      k.pose.rotation.x = 0.16 - 0.1 * q;
+    });
+    // acompanha o movimento depois do chute e volta ao normal
+    void this.tween(0.36, (q) => {
+      k.legR.rotation.x = -0.6 - 1.0 * Math.sin((Math.PI / 2) * Math.min(1, q * 2)) * (q < 0.5 ? 1 : 1 - (q - 0.5));
+      k.pose.rotation.x = 0.06 - 0.22 * Math.sin(Math.PI * q);
+      k.pose.position.y = 0.04 * Math.sin(Math.PI * q);
+      k.armL.rotation.set(-0.2, 0, -0.6 - 0.3 * Math.sin(Math.PI * q));
+      k.armR.rotation.set(-0.5 * Math.sin(Math.PI * q), 0, 0.5 * Math.sin(Math.PI * q));
+    }).then(() => easeToRest((d, fn) => this.tween(d, fn), k, 0.45)).then(() => { k.busy = false; });
     o.onKick?.();
     for (const w of this.wall) {
       void this.tween(0.5, (q) => { w.root.position.y = WALL_JUMP * Math.sin(Math.PI * q); });
@@ -957,6 +1023,7 @@ export class Pitch {
     const r0 = b.root.rotation.y;
     const fwd = new THREE.Vector3(Math.sin(r0), 0, Math.cos(r0)); // para onde o boneco olha
     const dur = style === 'knee' || style === 'plane' ? 1.8 : 1.5;
+    b.busy = true;
     void this.tween(dur, (q) => {
       const t = q * dur;
       b.armL.rotation.set(0, 0, 0); b.armR.rotation.set(0, 0, 0);
@@ -1001,7 +1068,12 @@ export class Pitch {
         b.pose.rotation.x = -0.3;
         b.armL.rotation.z = Math.PI * 0.8; b.armR.rotation.z = -Math.PI * 0.8;
       }
-    }).then(() => { if (b) { resetPose(b); b.root.position.y = y0; } });
+    }).then(() => {
+      if (!b) return;
+      b.root.position.y = y0;
+      // volta à posição neutra suavemente e só então volta a respirar
+      void easeToRest((d, fn) => this.tween(d, fn), b, 0.35).then(() => { b.busy = false; });
+    });
   }
 }
 
