@@ -18,6 +18,11 @@ import * as audio from './game/audio';
 import { onMatchFinished } from './game/rating';
 import * as gc from './game/gamecenter';
 import { MUSIC_STYLES, music, type MusicStyle } from './game/music';
+import {
+  KITS, STADIUMS, addMatch, bracket, emptyScore, eventFor, findStadium, kitUnlocked, nextReward, specialKit, stadiumUnlocked,
+  type CupEvent, type EventScore,
+} from './game/rewards';
+import { NATIONS } from './game/teams';
 
 // ---------- preferências ----------
 const store = {
@@ -70,6 +75,19 @@ const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 const today = () => new Date().toLocaleDateString('en-CA');
 let progress: ProgressState = (() => { try { return { ...emptyState(), ...JSON.parse(store.get('progress', '{}')) }; } catch { return emptyState(); } })();
 function freshProgress() { progress = ensureDay(progress, today(), unlocked()); }
+
+// ---------- prêmios das figurinhas: uniformes e estádios ----------
+let kitPick = store.get('kit', '');
+let stadiumPick = store.get('stadium', 'classic');
+/** Seleção do evento "Pênaltis da Copa" (só durante a partida do evento). */
+let eventTeam: Team | null = null;
+const me = () => eventTeam ?? myTeam;
+/** Uniforme de quem joga: o da seleção no evento; senão o especial escolhido ou o do time. */
+const myKit = () => (eventTeam ? eventTeam.kit : specialKit(kitPick, progress.stickers.length) ?? myTeam.kit);
+function applyStadium() {
+  const s = findStadium(stadiumUnlocked(stadiumPick, progress.stickers.length) ? stadiumPick : 'classic');
+  pitch.setStadium(s);
+}
 /** Registra um acontecimento: guarda, mostra figurinhas novas e desafios completados. */
 function track(ev: Ev) {
   freshProgress();
@@ -95,11 +113,11 @@ function toast(icon: string, title: string, text: string) {
 /** Clima, torcida e as cores das arquibancadas (time do coração, se escolhido). */
 function atmo(opp?: Team) {
   audio.setCrowdSize(crowd);
-  const teams = [myTeam.kit.shirt, opp?.kit.shirt ?? '#ffffff'];
+  const teams = [myKit().shirt, opp?.kit.shirt ?? '#ffffff'];
   return {
     weather, crowd,
     colors: heart ? [...heart, ...heart, ...heart, ...teams] : teams,
-    flag: heart ?? [myTeam.kit.shirt, myTeam.kit.shorts] as [string, string],
+    flag: heart ?? [myKit().shirt, myKit().shorts] as [string, string],
   };
 }
 
@@ -133,7 +151,8 @@ enforceFree();
 // a tela de abertura sorteia o clima a cada vez que o jogo abre (as partidas seguem a escolha do Clima)
 weather = WEATHERS[Math.floor(Math.random() * WEATHERS.length)];
 pitch.setAtmosphere(atmo());
-pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myTeam.kit, keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
+applyStadium();
+pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myKit(), keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
 
 // Cada partida tem um número; ao sair para o menu, as esperas antigas são abandonadas.
 let run = 0;
@@ -174,19 +193,58 @@ function album() {
       const has = progress.stickers.includes(st.id);
       return `<div class="sticker${has ? ' has' : ''}"><span class="se">${has ? st.e : '❔'}</span><span class="sn">${t(('st_' + st.id) as UiKey)}</span></div>`;
     }).join('')}</div>
+    ${rewardsCard()}
     ${gc.available ? '<button class="btn alt" data-go="gc">🏆 Game Center</button>' : ''}
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
   on('[data-go=gc]', () => void gc.open());
+  on('[data-kit]', (el) => {
+    const id = el.dataset.kit!;
+    if (id && !kitUnlocked(id, progress.stickers.length)) return;
+    kitPick = id; store.set('kit', kitPick); album();
+  });
+  on('[data-stadium]', (el) => {
+    const id = el.dataset.stadium!;
+    if (!stadiumUnlocked(id, progress.stickers.length)) return;
+    stadiumPick = id; store.set('stadium', stadiumPick); applyStadium(); album();
+  });
   on('[data-go=back]', home);
+}
+
+/** Uniformes e estádios que as figurinhas liberam. */
+function rewardsCard(): string {
+  const n = progress.stickers.length;
+  const nx = nextReward(n);
+  const kitBtn = (id: string, e: string, need: number, shirt: string, shorts: string) => {
+    const open = need <= n;
+    return `<button class="reward${kitPick === id ? ' on' : ''}${open ? '' : ' locked'}" data-kit="${id}">
+      <span class="kit" style="background:${shirt};box-shadow:inset 0 -4px 0 ${shorts}"></span>
+      <span class="n">${e} ${t(('kit_' + (id || 'team')) as UiKey)}</span>${open ? '' : `<span class="need">🔒 ${need}</span>`}</button>`;
+  };
+  return `<div class="card rewards">
+    <b>${t('rewardsTitle')}</b>
+    ${nx ? `<p class="sub">${t('nextReward', { n: nx.left, e: nx.e })}</p>` : ''}
+    <b>${t('kits')}</b>
+    <div class="rewardgrid">${kitBtn('', '🛡️', 0, myTeam.kit.shirt, myTeam.kit.shorts)}${KITS.map((k) => kitBtn(k.id, k.e, k.need, k.kit.shirt, k.kit.shorts)).join('')}</div>
+    <b>${t('stadiums')}</b>
+    <div class="rewardgrid">${STADIUMS.map((s) => {
+      const open = s.need <= n;
+      return `<button class="reward${stadiumPick === s.id ? ' on' : ''}${open ? '' : ' locked'}" data-stadium="${s.id}">
+        <span class="kit" style="background:linear-gradient(${s.seatA} 50%, ${s.seatB} 50%);box-shadow:inset 0 -4px 0 ${s.ground}"></span>
+        <span class="n">${s.e} ${t(('sd_' + s.id) as UiKey)}</span>${open ? '' : `<span class="need">🔒 ${s.need}</span>`}</button>`;
+    }).join('')}</div>
+  </div>`;
 }
 
 function home() {
   run++;
   music.setIntensity(0.35);
+  eventTeam = null;
+  pitch.womens = !!look.female;
   enforceFree();
   hud.classList.add('hidden'); hint.classList.add('hidden'); callEl.classList.add('hidden'); touch.classList.add('hidden');
-  pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myTeam.kit, keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
+  pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myKit(), keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
+  const ev = eventFor(today());
   const langs = (Object.keys(LANGS) as Lang[]).map((l) => `<option value="${l}"${l === lang ? ' selected' : ''}>${LANGS[l].name}</option>`).join('');
   show(`
     <div class="logo"><span class="ball">⚽</span><h1>GOL DE<br>PLACA</h1><p>${t('tagline')}</p></div>
@@ -195,6 +253,7 @@ function home() {
       <button class="btn alt" data-go="player">${t('myPlayer')}${lock(!unlocked())}</button>
       <button class="btn alt" data-go="fans">${t('fanTitle')}</button>
     </div>
+    ${ev ? `<button class="mode event" data-go="event"><b>${t('eventTitle')}</b><span>${t('eventDesc')}</span></button>` : ''}
     <button class="btn alt" data-go="album">${t('album')} · ${progress.stickers.length}/${STICKERS.length}</button>
     ${dailyCard()}
     ${unlocked() ? '' : `<button class="btn gold" data-go="full">${t('fullVersion')}</button>`}
@@ -211,6 +270,7 @@ function home() {
   on('[data-go=player]', () => (unlocked() ? builder() : unlock(home)));
   on('[data-go=fans]', fans);
   on('[data-go=album]', album);
+  on('[data-go=event]', () => ev && eventScreen(ev));
   on('[data-go=full]', () => unlock(home));
   on('[data-go=promo]', () => parentGate(() => window.open(Capacitor.getPlatform() === 'android' ? ESCONDE.android : ESCONDE.ios, '_blank')));
   on('[data-tg]', () => { sound = !sound; store.set('sound', sound ? '1' : '0'); audio.setSound(sound); home(); });
@@ -240,10 +300,12 @@ function modes() {
     ${(['penalty', 'free', 'cup'] as Mode[]).map((m) =>
       `<button class="mode" data-mode="${m}"><b>${t(m)}${lock(m === 'free' && !unlocked())}</b><span>${t((m + 'Desc') as UiKey)}</span></button>`).join('')}
     <button class="mode" data-go="duo"><b>${t('twoPlayers')}${lock(!unlocked())}</b><span>${t('twoPlayersDesc')}</span></button>
+    <button class="mode" data-go="tour"><b>${t('tournament')}${lock(!unlocked())}</b><span>${t('tournamentDesc')}</span></button>
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
   on('[data-go=back]', home);
   on('[data-go=duo]', () => (unlocked() ? duoSetup() : unlock(modes)));
+  on('[data-go=tour]', () => (unlocked() ? tourSetup() : unlock(modes)));
   on('[data-mode]', (el) => {
     const m = el.dataset.mode as Mode;
     if (m === 'free' && !unlocked()) unlock(modes);
@@ -429,8 +491,8 @@ interface Duo { kicker: Team; keeper: Team; keeperAt: { x: number; y: number } }
 
 /** O jogador bate. Devolve se foi gol. Com `duo`, o goleiro é a outra criança. */
 async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team, duo?: Duo): Promise<boolean> {
-  const kicker = duo?.kicker ?? myTeam;
-  pitch.setup({ sx, sz, view: 'kick', kickerKit: kicker.kit, keeperKit: (duo?.keeper ?? opp).kit, wall, seed: Math.floor(rng() * 100), look: duo ? undefined : myLook() });
+  const kickerKit = duo?.kicker.kit ?? myKit();
+  pitch.setup({ sx, sz, view: 'kick', kickerKit, keeperKit: (duo?.keeper ?? opp).kit, wall, seed: Math.floor(rng() * 100), look: duo ? undefined : myLook() });
   pitch.kickerCelebration = !duo && unlocked() ? look.cel : 'jump';
   showHint(t('yourKick'), tutKick ? t('tutKick') : '');
   const unhand = tutKick ? hand(pitch.screenOf(sx, 0.1, sz), pitch.screenOf(HALF - 0.6, GOAL_H - 0.5, 0)) : () => {};
@@ -483,7 +545,7 @@ async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall
 
 /** A máquina bate e o jogador defende tocando no gol. Devolve se a máquina fez gol. */
 async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team): Promise<boolean> {
-  pitch.setup({ sx, sz, view: 'keep', kickerKit: opp.kit, keeperKit: myTeam.kit, wall, seed: Math.floor(rng() * 100), look: myLook() });
+  pitch.setup({ sx, sz, view: 'keep', kickerKit: opp.kit, keeperKit: myKit(), wall, seed: Math.floor(rng() * 100), look: myLook() });
   pitch.kickerCelebration = CELEBRATIONS[Math.floor(rng() * CELEBRATIONS.length)];
   showHint(t('yourKeep'), tutKeep ? t('tutKeep') : '');
   const unhand = tutKeep ? hand(pitch.screenOf(-(HALF - 0.8), 1.2, 0)) : () => {};
@@ -598,7 +660,7 @@ async function shootout(id: number, opp: Team): Promise<[boolean, number, number
   rollWeather();
   pitch.setAtmosphere(atmo(opp));
   const so: Shootout = { a: [], b: [] };
-  const draw = () => board([{ team: myTeam, icon: '⚽', marks: so.a }, { team: opp, icon: '⚽', marks: so.b }]);
+  const draw = () => board([{ team: me(), icon: '⚽', marks: so.a }, { team: opp, icon: '⚽', marks: so.b }]);
   const score = (w: 'a' | 'b'): [boolean, number, number] => [w === 'a', so.a.filter(Boolean).length, so.b.filter(Boolean).length];
   let sudden = false;
   for (;;) {
@@ -766,13 +828,12 @@ function pickDive(id: number): Promise<{ x: number; y: number }> {
   });
 }
 
-async function duoMatch(id: number) {
-  const players = [
-    { name: duoNames[0] || t('p1'), team: duoTeam1 },
-    { name: duoNames[1] || t('p2'), team: duoTeam2 },
-  ];
+interface DuoPlayer { name: string; team: Team }
+
+/** Uma disputa de pênaltis entre duas crianças, passando o celular. Devolve quem venceu e o placar. */
+async function duoGame(id: number, players: [DuoPlayer, DuoPlayer]): Promise<{ winner: 0 | 1; a: number; b: number }> {
   rollWeather();
-  pitch.setAtmosphere(atmo(duoTeam2));
+  pitch.setAtmosphere(atmo(players[1].team));
   const so: Shootout = { a: [], b: [] };
   const draw = () => board([
     { team: players[0].team, icon: '⚽', marks: so.a, label: players[0].name },
@@ -800,17 +861,184 @@ async function duoMatch(id: number) {
     else if (so.a.length <= 5) winner = shootoutWinner(so); // pode acabar antes das 5
   }
   draw();
+  return { winner: winner === 'a' ? 0 : 1, a: so.a.filter(Boolean).length, b: so.b.filter(Boolean).length };
+}
+
+async function duoMatch(id: number) {
+  const players: [DuoPlayer, DuoPlayer] = [
+    { name: duoNames[0] || t('p1'), team: duoTeam1 },
+    { name: duoNames[1] || t('p2'), team: duoTeam2 },
+  ];
+  const r = await duoGame(id, players);
+  guard(id);
   track({ t: 'twoPlayers' });
   onMatchFinished(true);
-  const champ = players[winner === 'a' ? 0 : 1];
+  const champ = players[r.winner];
   confetti();
   audio.call(lang, 'champion');
   show(`
-    ${resultCard('🏆', 'win', `${players[0].team.badge} ${so.a.filter(Boolean).length} × ${so.b.filter(Boolean).length} ${players[1].team.badge}`, `<h2>${esc(t('winnerIs', { name: champ.name }))}</h2>`)}
+    ${resultCard('🏆', 'win', `${players[0].team.badge} ${r.a} × ${r.b} ${players[1].team.badge}`, `<h2>${esc(t('winnerIs', { name: champ.name }))}</h2>`)}
     <button class="btn big" data-go="again">${t('again')}</button>
     <button class="btn alt" data-go="menu">${t('menu')}</button>
   `, false);
   on('[data-go=again]', () => { hideUi(); const nid = ++run; void quiet(duoMatch(nid)); });
+  on('[data-go=menu]', home);
+}
+
+// ---------- torneio de amigos: mata-mata de 4 no mesmo celular ----------
+
+let tourNames: string[] = [0, 1, 2, 3].map((i) => store.get('tp' + (i + 1), ''));
+let tourShift = Number(store.get('tourShift', '0')) || 0;
+const tourTeams = () => {
+  const list = allTeams(teamKind);
+  return [0, 1, 2, 3].map((i) => list[(tourShift + i * 3) % list.length]);
+};
+const tourName = (i: number) => tourNames[i] || t(('p' + (i + 1)) as UiKey);
+
+function tourSetup() {
+  const teams = tourTeams();
+  show(`
+    <h2>${t('tournament')}</h2>
+    ${womensSeg()}
+    <div class="card">
+      <div class="tourgrid">${[0, 1, 2, 3].map((i) => `
+        <div><b>${teams[i].badge} ${t(('p' + (i + 1)) as UiKey)}</b><input id="tp${i}" maxlength="12" value="${esc(tourNames[i])}" placeholder="${t(('p' + (i + 1)) as UiKey)}" autocomplete="off"></div>`).join('')}</div>
+      <div class="seg">
+        <button data-kind="nation" class="${teamKind === 'nation' ? 'on' : ''}">${t('nations')}</button>
+        <button data-kind="club" class="${teamKind === 'club' ? 'on' : ''}">${t('clubs')}</button>
+      </div>
+      <button class="btn alt" data-go="shuffle">${t('shuffleTeams')}</button>
+    </div>
+    <p class="sub">${t('tournamentInfo')}</p>
+    <button class="btn big" data-go="start">${t('start')}</button>
+    <button class="btn alt" data-go="back">${t('back')}</button>
+  `);
+  const names = () => {
+    tourNames = [0, 1, 2, 3].map((i) => ($('tp' + i) as HTMLInputElement).value.trim());
+    tourNames.forEach((n, i) => store.set('tp' + (i + 1), n));
+  };
+  onWomens(() => { names(); tourSetup(); });
+  on('[data-kind]', (el) => { names(); teamKind = el.dataset.kind as 'nation' | 'club'; store.set('teamKind', teamKind); tourSetup(); });
+  on('[data-go=shuffle]', () => { names(); tourShift = (tourShift + 1 + Math.floor(rng() * 5)) % 60; store.set('tourShift', String(tourShift)); tourSetup(); });
+  on('[data-go=back]', () => { names(); modes(); });
+  on('[data-go=start]', () => { names(); const id = ++run; void quiet(tournament(id)); });
+}
+
+/** Tela do chaveamento: mostra os jogos e quem já passou. */
+function bracketScreen(players: DuoPlayer[], games: [number, number][], won: (number | null)[], next: number): Promise<void> {
+  const row = (g: [number, number], i: number) => {
+    const label = i === 2 ? t('final') : t(i === 0 ? 'semi1' : 'semi2');
+    const p = (k: number) => `<span class="${won[i] === k ? 'w' : won[i] !== null ? 'l' : ''}">${players[k].team.badge} ${esc(players[k].name)}</span>`;
+    return `<li class="${i === next ? 'now' : ''}"><small>${label}</small>${p(g[0])}<i>×</i>${p(g[1])}</li>`;
+  };
+  return new Promise((ok) => {
+    show(`
+      <h2>${t('tournament')}</h2>
+      <ul class="bracket card">${games.map(row).join('')}${games.length < 3 ? `<li><small>${t('final')}</small><span>?</span><i>×</i><span>?</span></li>` : ''}</ul>
+      <p class="sub">${esc(t('tourNext', { a: players[games[next][0]].name, b: players[games[next][1]].name }))}</p>
+      <button class="btn big" data-go="next">${t('start')}</button>
+      <button class="btn alt" data-go="menu">${t('menu')}</button>
+    `);
+    on('[data-go=next]', () => { hideUi(); ok(); });
+    on('[data-go=menu]', home);
+  });
+}
+
+async function tournament(id: number) {
+  const teams = tourTeams();
+  const players: DuoPlayer[] = [0, 1, 2, 3].map((i) => ({ name: tourName(i), team: teams[i] }));
+  const won: (number | null)[] = [null, null, null];
+  for (let g = 0; g < 3; g++) {
+    const games = bracket(won[0], won[1]);
+    await bracketScreen(players, games, won, g);
+    guard(id);
+    const [x, y] = games[g];
+    const r = await duoGame(id, [players[x], players[y]]);
+    guard(id);
+    won[g] = r.winner === 0 ? x : y;
+    if (g < 2) {
+      audio.call(lang, 'win');
+      await new Promise<void>((next) => {
+        show(`
+          ${resultCard('🎉', 'win', `${players[x].team.badge} ${r.a} × ${r.b} ${players[y].team.badge}`, `<h2>${esc(t('winnerIs', { name: players[won[g]!].name }))}</h2>`)}
+          <button class="btn big" data-go="next">${t('next')}</button>
+          <button class="btn alt" data-go="menu">${t('menu')}</button>
+        `, false);
+        on('[data-go=next]', () => { hideUi(); next(); });
+        on('[data-go=menu]', home);
+      });
+      guard(id);
+    }
+  }
+  track({ t: 'twoPlayers' });
+  onMatchFinished(true);
+  const champ = players[won[2]!];
+  confetti();
+  audio.call(lang, 'champion');
+  show(`
+    ${resultCard('🏆', 'champion', `${champ.team.badge} ${esc(champ.name)}`, `<h2>${esc(t('tourChamp', { name: champ.name }))}</h2>`)}
+    <button class="btn big" data-go="again">${t('again')}</button>
+    <button class="btn alt" data-go="menu">${t('menu')}</button>
+  `, false);
+  on('[data-go=again]', () => { const nid = ++run; void quiet(tournament(nid)); });
+  on('[data-go=menu]', home);
+}
+
+// ---------- evento "Pênaltis da Copa" (só nas datas especiais) ----------
+
+const readScore = (ev: CupEvent): EventScore => {
+  try {
+    const s = JSON.parse(store.get('event', 'null')) as EventScore | null;
+    return s && s.id === ev.id ? { ...emptyScore(ev.id), ...s } : emptyScore(ev.id);
+  } catch { return emptyScore(ev.id); }
+};
+let eventPick = store.get('eventTeam', 'BR');
+
+function eventScreen(ev: CupEvent) {
+  const sc = readScore(ev);
+  const until = new Date(ev.to + 'T12:00:00').toLocaleDateString(LANGS[lang].voice, { day: 'numeric', month: 'long' });
+  show(`
+    <h2>${t('eventTitle')}</h2>
+    <p class="sub">${t('eventUntil', { d: until })}</p>
+    <div class="card event-score">
+      <b>${t('eventScore')}</b>
+      <div class="nums"><span><b>${sc.goals}</b>${t('goals')}</span><span><b>${sc.wins}</b>${t('eventWins')}</span><span><b>${sc.best}</b>${t('eventBest')}</span></div>
+    </div>
+    <p class="sub">${t('eventPick')}</p>
+    <div class="teams">${NATIONS.map((x) => `<button class="team${x.id === eventPick ? ' on' : ''}" data-eteam="${x.id}"><span class="b">${x.badge}</span><span class="n">${teamName(x, lang)}</span></button>`).join('')}</div>
+    <p class="sub">${t('eventInfo')}</p>
+    <button class="btn big" data-go="start">${t('start')}</button>
+    <button class="btn alt" data-go="back">${t('back')}</button>
+  `);
+  on('[data-eteam]', (el) => { eventPick = el.dataset.eteam!; store.set('eventTeam', eventPick); eventScreen(ev); });
+  on('[data-go=back]', home);
+  on('[data-go=start]', () => { hideUi(); const id = ++run; void quiet(eventMatch(id, ev)); });
+}
+
+async function eventMatch(id: number, ev: CupEvent) {
+  eventTeam = findTeam(eventPick);
+  if (eventTeam.kind !== 'nation') eventTeam = NATIONS[0];
+  if (ev.womens) pitch.womens = true;
+  const opp = NATIONS.filter((x) => x.id !== eventTeam!.id)[Math.floor(rng() * (NATIONS.length - 1))];
+  callEl.innerHTML = `<b>${t('eventTitle')}</b><span>${eventTeam.badge} × ${opp.badge}</span>`;
+  callEl.classList.remove('hidden');
+  await sleep(1800); guard(id);
+  callEl.classList.add('hidden');
+  const [won, ga, gb] = await shootout(id, opp);
+  guard(id);
+  const sc = addMatch(readScore(ev), ga, won);
+  store.set('event', JSON.stringify(sc));
+  track({ t: 'match', won, perfect: false, role: 'kicker' });
+  onMatchFinished(won);
+  if (won) confetti();
+  audio.call(lang, won ? 'win' : 'lose');
+  show(`
+    ${resultCard(won ? '🏆' : '😢', won ? 'win' : 'lose', `${eventTeam.badge} ${ga} × ${gb} ${opp.badge}`,
+      `<div class="sub">${t('eventScore')}: ${sc.goals} ${t('goals')} · ${sc.wins} ${t('eventWins')}${sc.streak > 1 ? ` · 🔥 ${sc.streak}` : ''}</div>`)}
+    <button class="btn big" data-go="again">${t('again')}</button>
+    <button class="btn alt" data-go="menu">${t('menu')}</button>
+  `, false);
+  on('[data-go=again]', () => { hideUi(); const nid = ++run; void quiet(eventMatch(nid, ev)); });
   on('[data-go=menu]', home);
 }
 
@@ -862,7 +1090,7 @@ function builder() {
   hud.classList.add('hidden');
   const draft = { ...look };
   const keeperPreview = false;
-  const refresh = () => pitch.showcase(draft, myTeam.kit, keeperPreview);
+  const refresh = () => pitch.showcase(draft, myKit(), keeperPreview);
   const swatches = (key: 'skin' | 'hair' | 'boots', colors: string[]) =>
     `<div class="swatches">${colors.map((c, i) => `<button class="sw${draft[key] === i ? ' on' : ''}" data-${key}="${i}" style="background:${c}" aria-label="${i + 1}"></button>`).join('')}</div>`;
   const render = () => {

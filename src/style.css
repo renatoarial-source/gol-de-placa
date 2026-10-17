@@ -153,3 +153,33 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .sticker .se { font-size: 36px; } .sticker .sn { font-size: 12px; font-weight: 700; line-height: 1.15; }
 #call b.replay { font-size: clamp(26px, 8vw, 38px); color: #fff; background: #e8261c; padding: 4px 14px; border-radius: 10px; text-shadow: none; }
 .row input { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: #fff; font: 700 16px var(--font); padding: 0 10px; }
+
+/* prêmios das figurinhas */
+.rewards .sub { margin: 0; }
+.rewardgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.reward { position: relative; display: grid; justify-items: center; gap: 4px; padding: 10px 2px 8px; border-radius: 14px; border: 2px solid transparent;
+  background: rgba(255, 255, 255, .07); color: var(--text); font: 600 12px var(--font); cursor: pointer; min-width: 0; }
+.reward .kit { width: 34px; height: 26px; border-radius: 8px; border: 1px solid var(--line); }
+.reward .n { width: 100%; text-align: center; line-height: 1.15; overflow-wrap: anywhere; }
+.reward.on { border-color: var(--yellow); background: rgba(255, 212, 0, .16); }
+.reward.locked { opacity: .45; cursor: default; }
+.reward .need { position: absolute; top: 2px; right: 4px; font-size: 11px; }
+
+/* evento da Copa */
+.mode.event { background: linear-gradient(135deg, #1f4fc4, #0b6b3a); border-color: var(--yellow); }
+.mode.event span { color: #fff; }
+.event-score .nums { display: flex; justify-content: space-around; text-align: center; }
+.event-score .nums span { display: grid; color: var(--muted); font-size: 13px; }
+.event-score .nums b { font-size: 30px; color: var(--yellow); }
+
+/* torneio de amigos */
+.tourgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tourgrid input { width: 100%; box-sizing: border-box; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: #fff; font: 700 16px var(--font); padding: 0 10px; }
+.bracket { list-style: none; margin: 0; }
+.bracket li { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; padding: 8px; border-radius: 12px; background: rgba(255, 255, 255, .06); }
+.bracket li small { grid-column: 1 / -1; color: var(--muted); font-weight: 700; }
+.bracket li i { font-style: normal; color: var(--muted); }
+.bracket li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.bracket li span:last-child { text-align: right; }
+.bracket li.now { outline: 2px solid var(--yellow); }
+.bracket .w { color: var(--yellow); } .bracket .l { opacity: .45; text-decoration: line-through; }

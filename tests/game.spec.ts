@@ -358,3 +358,57 @@ test('propaganda do Esconde-Esconde só abre com a conta certa', async ({ page }
   await page.click(`.modal [data-a="${c * d}"]`);
   expect(await page.evaluate(() => (window as unknown as { opened: string[] }).opened)).toEqual(['https://apps.apple.com/app/id6819893974']);
 });
+
+test('torneio de amigos (versão completa): 4 nomes, chaveamento e a semifinal 1 começa', async ({ page }) => {
+  await open(page, true);
+  await page.click('[data-go=play]');
+  await page.click('[data-go=tour]');
+  for (const [i, n] of ['Ana', 'Beto', 'Caio', 'Duda'].entries()) await page.fill(`#tp${i}`, n);
+  await page.click('[data-go=start]');
+  await expect(page.locator('.bracket li')).toHaveCount(3);
+  await expect(page.locator('.bracket li.now')).toContainText('Ana');
+  await expect(page.locator('.bracket li.now')).toContainText('Beto');
+  await expect(page.locator('.sub')).toContainText('Ana × Beto');
+  await page.click('[data-go=next]');
+  await expect(page.locator('.result')).toContainText('Beto, você é o goleiro');
+});
+
+test('torneio de amigos pede a versão completa no download', async ({ page }) => {
+  await open(page);
+  await page.click('[data-go=play]');
+  await expect(page.locator('[data-go=tour]')).toContainText('🔒');
+  await page.click('[data-go=tour]');
+  await expect(page.locator('.unlock')).toBeVisible();
+});
+
+test('prêmios das figurinhas: uniforme e estádio liberam com figurinhas', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => localStorage.setItem('gol.progress', JSON.stringify({ stickers: ['first_goal', 'corner', 'ground'], goals: 3 })));
+  await page.reload();
+  await page.click('[data-go=album]');
+  await expect(page.locator('.rewards')).toContainText('Faltam 1 figurinhas');
+  await expect(page.locator('[data-kit=gold]')).not.toHaveClass(/locked/);
+  await expect(page.locator('[data-kit=stripes]')).toHaveClass(/locked/);
+  await page.click('[data-kit=stripes]'); // trancado: não escolhe
+  await expect(page.locator('[data-kit=stripes]')).not.toHaveClass(/\bon\b/);
+  await page.click('[data-kit=gold]');
+  await expect(page.locator('[data-kit=gold]')).toHaveClass(/\bon\b/);
+  await page.click('[data-stadium=beach]');
+  await expect(page.locator('[data-stadium=beach]')).toHaveClass(/\bon\b/);
+  expect(await page.evaluate(() => [localStorage.getItem('gol.kit'), localStorage.getItem('gol.stadium')])).toEqual(['gold', 'beach']);
+});
+
+test('evento Pênaltis da Copa só aparece nas datas e guarda o placar da vez', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-20T12:00:00'));
+  await open(page);
+  await expect(page.locator('[data-go=event]')).toHaveCount(0);
+  await page.clock.setFixedTime(new Date('2026-11-20T12:00:00'));
+  await page.reload();
+  await page.click('[data-go=event]');
+  await expect(page.locator('h2')).toContainText('Pênaltis da Copa');
+  await expect(page.locator('[data-eteam]')).toHaveCount(16);
+  await page.click('[data-eteam=AR]');
+  await expect(page.locator('[data-eteam=AR]')).toHaveClass(/\bon\b/);
+  await page.click('[data-go=start]');
+  await expect(page.locator('#hud .line').first()).toContainText('🇦🇷', { timeout: 10_000 });
+});

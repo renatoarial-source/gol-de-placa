@@ -287,6 +287,9 @@ export class Pitch {
   private fall: THREE.Points | null = null;
   private weather: Weather = 'day';
   private snowCover!: THREE.Mesh;
+  private seatA = new THREE.MeshLambertMaterial({ color: '#8a96a3' });
+  private seatB = new THREE.MeshLambertMaterial({ color: '#5b6672' });
+  private groundMat = new THREE.MeshLambertMaterial({ color: '#3a8a35' });
   private sky!: THREE.Mesh;
   private flags: THREE.Mesh[] = [];
   private showcaseBody: Body | null = null;
@@ -413,7 +416,7 @@ export class Pitch {
     this.snowCover.rotation.x = -Math.PI / 2;
     this.snowCover.position.set(0, 0.006, Z0 + D / 2);
     this.scene.add(this.snowCover);
-    const outer = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), lambert('#3a8a35'));
+    const outer = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), this.groundMat);
     outer.rotation.x = -Math.PI / 2;
     outer.position.y = -0.01;
     this.scene.add(outer);
@@ -455,8 +458,8 @@ export class Pitch {
   }
 
   private buildStands() {
-    const grey = lambert('#8a96a3');
-    const dark = lambert('#5b6672');
+    const grey = this.seatA;
+    const dark = this.seatB;
     // arquibancadas atrás do gol, atrás do batedor e dos lados; cada cadeira pode ter um torcedor
     const stands: { g: THREE.Group; w: number }[] = [];
     const stand = (x: number, z: number, w: number, ry: number) => {
@@ -568,6 +571,13 @@ export class Pitch {
       this.scene.add(lamp);
       this.lamps.push(lamp);
     }
+  }
+
+  /** Estádio: cores das arquibancadas e do chão em volta do gramado. */
+  setStadium(o: { seatA: string; seatB: string; ground: string }) {
+    this.seatA.color.set(o.seatA);
+    this.seatB.color.set(o.seatB);
+    this.groundMat.color.set(o.ground);
   }
 
   /** Clima e torcida da partida. colors: cores das camisas dos dois times, para a torcida. */
