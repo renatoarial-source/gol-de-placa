@@ -16,7 +16,7 @@ Categoria: **Jogos → Esportes** (Play e App Store), categoria secundária **Fa
 - **Título:** Gol de Placa: Pênalti e Falta
 - **Subtítulo (App Store):** Pênaltis e faltas para craques
 - **Descrição curta (Play):** Pênaltis e faltas em 3D: bata no ângulo ou seja o goleiro! ⚽🧤
-- **Palavras-chave (App Store):** futebol,pênalti,falta,goleiro,gol,copa,crianças,família,seleção,chute,bola,torcida
+- **Palavras-chave (App Store):** futebol,goleiro,copa,crianças,família,seleção,chute,bola,torcida,esporte,cobrança,3d,time,campeonato
 
 **Descrição completa**
 
@@ -59,7 +59,7 @@ O download já inclui o pênalti como batedor, a Copa, o clima e a torcida. Uma 
 - **Title:** Gol de Placa: Penalty Kicks
 - **Subtitle:** Penalties and free kicks
 - **Short description:** 3D penalties and free kicks: hit the top corner or be the keeper! ⚽🧤
-- **Keywords:** soccer,football,penalty,free kick,goalkeeper,goal,cup,kids,family,shootout,ball
+- **Keywords:** soccer,football,goalkeeper,goal,cup,kids,family,shootout,ball,sports,striker,keeper,3d,team,shot
 
 **Description**
 
@@ -102,7 +102,7 @@ The download includes penalties as the kicker, the Cup, weather and fans. A sing
 - **Título:** Gol de Placa: Penaltis
 - **Subtítulo:** Penales y tiros libres
 - **Descripción corta:** Penales y tiros libres en 3D: ¡clávala al ángulo o sé el portero! ⚽🧤
-- **Palabras clave:** fútbol,penal,penalti,tiro libre,portero,gol,copa,niños,familia,pelota
+- **Palabras clave:** fútbol,portero,copa,niños,familia,pelota,deporte,tanda,selección,balón,disparo,falta,3d,equipo
 
 **Descripción**
 
@@ -145,7 +145,7 @@ La descarga incluye los penales como pateador, la Copa, el clima y la hinchada. 
 - **Titel:** Gol de Placa: Elfmeter
 - **Untertitel:** Elfmeter und Freistöße
 - **Kurzbeschreibung:** Elfmeter und Freistöße in 3D: Triff in den Winkel oder halte! ⚽🧤
-- **Schlüsselwörter:** fußball,elfmeter,freistoß,torwart,tor,pokal,kinder,familie,schießen,ball
+- **Schlüsselwörter:** fußball,torwart,tor,pokal,kinder,familie,schießen,ball,sport,schuss,mannschaft,keeper,3d,spiel
 
 **Beschreibung**
 
@@ -188,7 +188,7 @@ Im Download enthalten: Elfmeter als Schütze, Pokal, Wetter und Fans. Ein einmal
 - **Titre :** Gol de Placa : Penalty
 - **Sous-titre :** Penaltys et coups francs
 - **Description courte :** Penaltys et coups francs en 3D : en pleine lucarne ou dans les buts ! ⚽🧤
-- **Mots-clés :** football,penalty,coup franc,gardien,but,coupe,enfants,famille,tir,ballon
+- **Mots-clés :** football,foot,gardien,but,coupe,enfants,famille,tir,ballon,sport,équipe,tirs au but,buteur,3d
 
 **Description**
 
@@ -231,7 +231,7 @@ Le téléchargement inclut les penaltys en tant que tireur, la Coupe, la météo
 - **Titolo:** Gol de Placa: Rigori
 - **Sottotitolo:** Rigori e punizioni
 - **Descrizione breve:** Rigori e punizioni in 3D: tira nel sette o para tutto! ⚽🧤
-- **Parole chiave:** calcio,rigore,punizione,portiere,gol,coppa,bambini,famiglia,tiro,pallone
+- **Parole chiave:** calcio,portiere,coppa,bambini,famiglia,tiro,pallone,sport,squadra,nazionale,attaccante,3d,gioco
 
 **Descrizione**
 
@@ -274,7 +274,7 @@ Il download include i rigori come tiratore, la Coppa, il meteo e i tifosi. Un ac
 - **标题：** Gol de Placa：点球大战
 - **副标题：** 点球和任意球
 - **简短说明：** 3D 点球和任意球：射进死角，或者当守门员！⚽🧤
-- **关键词：** 足球,点球,任意球,守门员,进球,杯赛,儿童,家庭,射门,球队
+- **关键词：** 足球,守门员,进球,杯赛,儿童,家庭,射门,球队,体育,国家队,门将,3D,运动,休闲,比赛
 
 **说明**
 
@@ -317,7 +317,7 @@ Il download include i rigori come tiratore, la Coppa, il meteo e i tifosi. Un ac
 - **タイトル：** Gol de Placa：PK戦
 - **サブタイトル：** PKとフリーキック
 - **短い説明：** 3DのPKとフリーキック：すみに決めるか、キーパーで止めよう！⚽🧤
-- **キーワード：** サッカー,PK,フリーキック,キーパー,ゴール,カップ,子ども,家族,シュート,ボール
+- **キーワード：** サッカー,キーパー,ゴール,カップ,子ども,家族,シュート,ボール,スポーツ,代表,ストライカー,3D,チーム,蹴る
 
 **説明**
 
