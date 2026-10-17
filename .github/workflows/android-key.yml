@@ -1,0 +1,47 @@
+name: Create Android upload key
+
+# Rode UMA vez: GitHub → Actions → "Create Android upload key" → Run workflow.
+# Baixe o artefato (fica disponível por 1 dia), guarde o arquivo em local seguro
+# e cadastre os 4 secrets indicados no arquivo SECRETS.txt (ver PUBLICAR.md).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keygen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Generate keystore
+        run: |
+          mkdir out
+          PASS=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24)
+          keytool -genkeypair -v -storetype JKS \
+            -keystore out/gol-upload.jks -alias gol \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$PASS" -keypass "$PASS" \
+            -dname "CN=Gol de Placa, O=Arial, C=BR" >/dev/null 2>&1
+          {
+            echo "Cadastre em GitHub → gol-de-placa → Settings → Secrets and variables → Actions:"
+            echo
+            echo "GOL_KEYSTORE_BASE64 = conteúdo do arquivo gol-upload.jks.base64.txt"
+            echo "GOL_KEYSTORE_PASSWORD = $PASS"
+            echo "GOL_KEY_ALIAS = gol"
+            echo "GOL_KEY_PASSWORD = $PASS"
+            echo
+            echo "Guarde gol-upload.jks e esta senha em local seguro (ex.: gerenciador de senhas)."
+            echo "Depois, apague este artefato no GitHub."
+          } > out/SECRETS.txt
+          base64 -w0 out/gol-upload.jks > out/gol-upload.jks.base64.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gol-android-upload-key
+          path: out/
+          retention-days: 1

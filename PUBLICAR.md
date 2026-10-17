@@ -25,7 +25,7 @@ repositório), porque os secrets da Apple e do Google já estão lá. Para publi
 |---|---|
 | `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64`, `APPLE_TEAM_ID` | Assinatura na nuvem e envio ao App Store Connect |
 | `PLAY_SERVICE_ACCOUNT_JSON` | Envio automático à Google Play |
-| `GELADA_KEYSTORE_BASE64`, `GELADA_KEYSTORE_PASSWORD`, `GELADA_KEY_ALIAS`, `GELADA_KEY_PASSWORD` | Chave de upload do Android (a mesma do Gelada; o Google aceita a mesma chave de upload em apps diferentes) |
+| `GOL_KEYSTORE_BASE64`, `GOL_KEYSTORE_PASSWORD`, `GOL_KEY_ALIAS`, `GOL_KEY_PASSWORD` | Chave de upload do Android, própria do Gol: gere com Actions → "Create Android upload key" e cadastre o que vier no SECRETS.txt |
 
 ## Preço
 
