@@ -11,7 +11,7 @@ import {
   playerSaves, shootoutWinner, shotFromSwipe, wallHit,
   type Difficulty, type Kind, type Outcome, type Shootout, type Wall,
 } from './game/physics';
-import { BOOT_COLORS, CELEBRATIONS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Celebration, type Crowd, type Look, type Weather } from './game/scene';
+import { BOOT_COLORS, BUILDS, CELEBRATIONS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Celebration, type Crowd, type Look, type Weather } from './game/scene';
 import { STICKERS, apply as applyProgress, emptyState, ensureDay, needOf, type Ev, type State as ProgressState } from './game/progress';
 import { FREE_TEAM, store as shop } from './game/store';
 import * as audio from './game/audio';
@@ -51,8 +51,10 @@ audio.whenAudioReady(() => audio.preloadVoice(lang));
 audio.onSpeak((secs) => music.duck(secs));
 let teamKind = store.get('teamKind', 'club') as 'nation' | 'club';
 let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
-const DEFAULT_LOOK: Look & { cel: Celebration } = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '', cel: 'jump' };
-let look: Look & { cel: Celebration } = (() => { try { return { ...DEFAULT_LOOK, ...JSON.parse(store.get('look', '{}')) }; } catch { return DEFAULT_LOOK; } })();
+/** Comemoração escolhida no Meu craque: uma fixa ou 'random' (uma diferente a cada gol). */
+type CelChoice = Celebration | 'random';
+const DEFAULT_LOOK: Look & { cel: CelChoice } = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '', cel: 'jump', build: 'normal' };
+let look: Look & { cel: CelChoice } = (() => { try { return { ...DEFAULT_LOOK, ...JSON.parse(store.get('look', '{}')) }; } catch { return DEFAULT_LOOK; } })();
 audio.setSound(sound);
 audio.setNarration(voice);
 
@@ -124,6 +126,14 @@ function atmo(opp?: Team) {
 /** Sem a versão completa, só o time do download e o boneco padrão. */
 const unlocked = () => shop.isUnlocked();
 const myLook = () => (unlocked() ? look : undefined);
+let lastCel: Celebration | null = null;
+/** Comemoração do próximo gol: a escolhida ou, no aleatório, uma diferente da última. */
+function celFor(c: CelChoice): Celebration {
+  if (c !== 'random') return c;
+  const pool = CELEBRATIONS.filter((x) => x !== lastCel);
+  lastCel = pool[Math.floor(rng() * pool.length)];
+  return lastCel;
+}
 /** Futebol masculino ou feminino: vale para todos em campo, em todas as modalidades. */
 function womensSeg() {
   return `<div class="seg"><button data-womens="0" class="${look.female ? '' : 'on'}">${t('mens')}</button><button data-womens="1" class="${look.female ? 'on' : ''}">${t('womens')}</button></div>`;
@@ -493,7 +503,7 @@ interface Duo { kicker: Team; keeper: Team; keeperAt: { x: number; y: number } }
 async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team, duo?: Duo): Promise<boolean> {
   const kickerKit = duo?.kicker.kit ?? myKit();
   pitch.setup({ sx, sz, view: 'kick', kickerKit, keeperKit: (duo?.keeper ?? opp).kit, wall, seed: Math.floor(rng() * 100), look: duo ? undefined : myLook() });
-  pitch.kickerCelebration = !duo && unlocked() ? look.cel : 'jump';
+  pitch.kickerCelebration = !duo && unlocked() ? celFor(look.cel) : 'jump';
   showHint(t('yourKick'), tutKick ? t('tutKick') : '');
   const unhand = tutKick ? hand(pitch.screenOf(sx, 0.1, sz), pitch.screenOf(HALF - 0.6, GOAL_H - 0.5, 0)) : () => {};
   music.setIntensity(0.75);
@@ -1104,7 +1114,8 @@ function builder() {
         <b>${t('hairStyle')}</b><div class="seg wrap">${HAIR_STYLES.map((h) => `<button data-style="${h}" class="${draft.style === h ? 'on' : ''}">${t(('hs_' + h) as UiKey)}</button>`).join('')}</div>
         <b>${t('hairColor')}</b>${swatches('hair', HAIR_COLORS)}
         <b>${t('boots')}</b>${swatches('boots', BOOT_COLORS)}
-        <b>${t('celebration')}</b><div class="seg wrap">${CELEBRATIONS.map((c) => `<button data-cel="${c}" class="${draft.cel === c ? 'on' : ''}">${t(('cel_' + c) as UiKey)}</button>`).join('')}</div>
+        <b>${t('body')}</b><div class="seg wrap">${BUILDS.map((b) => `<button data-build="${b}" class="${(draft.build ?? 'normal') === b ? 'on' : ''}">${t(('body_' + b) as UiKey)}</button>`).join('')}</div>
+        <b>${t('celebration')}</b><div class="seg wrap">${[...CELEBRATIONS, 'random' as const].map((c) => `<button data-cel="${c}" class="${draft.cel === c ? 'on' : ''}">${t(('cel_' + c) as UiKey)}</button>`).join('')}</div>
         <div class="row">
           <div><b>${t('number')}</b><input id="pnum" class="numin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${draft.number}" autocomplete="off" aria-label="${t('number')}"></div>
           <div><b>${t('playerName')}</b><input id="pname" maxlength="10" value="${esc(draft.name)}" autocomplete="off"></div>
@@ -1129,7 +1140,8 @@ function builder() {
       render();
     });
     // escolher a comemoração mostra ela no boneco da vitrine
-    on('[data-cel]', (el) => { draft.cel = el.dataset.cel as Celebration; render(); pitch.kickerCelebration = draft.cel; pitch.celebrateShowcase(); });
+    on('[data-cel]', (el) => { draft.cel = el.dataset.cel as CelChoice; render(); pitch.kickerCelebration = celFor(draft.cel); pitch.celebrateShowcase(); });
+    on('[data-build]', (el) => { draft.build = el.dataset.build as Look['build']; render(); });
     // número da camisa: a criança digita (1 a 99), sem redesenhar a tela
     const num = $('pnum') as HTMLInputElement;
     const readNum = () => {

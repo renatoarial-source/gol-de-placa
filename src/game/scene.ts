@@ -21,13 +21,26 @@ function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => 
 const lambert = (color: string | THREE.Texture) =>
   typeof color === 'string' ? new THREE.MeshLambertMaterial({ color }) : new THREE.MeshLambertMaterial({ map: color });
 
-export type HairStyle = 'short' | 'long' | 'mohawk' | 'curly' | 'bald' | 'ponytail' | 'buns';
-export const HAIR_STYLES: HairStyle[] = ['short', 'long', 'ponytail', 'buns', 'curly', 'mohawk', 'bald'];
+export type HairStyle = 'short' | 'long' | 'mohawk' | 'curly' | 'bald' | 'ponytail' | 'buns' | 'braids' | 'spiky';
+export const HAIR_STYLES: HairStyle[] = ['short', 'long', 'ponytail', 'buns', 'braids', 'curly', 'spiky', 'mohawk', 'bald'];
+/** Tipo de corpo: cada jogador em campo sai de um jeito (o "Meu craque" escolhe o seu). */
+export type Build = 'normal' | 'tall' | 'short' | 'slim' | 'chubby' | 'round' | 'square';
+export const BUILDS: Build[] = ['normal', 'tall', 'short', 'slim', 'chubby', 'round', 'square'];
+/** Escala do corpo (largura, altura, profundidade), barriga e tamanho da cabeça de cada tipo. */
+const BUILD_SHAPE: Record<Build, { sx: number; sy: number; sz: number; belly: number; head: number }> = {
+  normal: { sx: 1, sy: 1, sz: 1, belly: 0, head: 1 },
+  tall: { sx: 0.95, sy: 1.14, sz: 0.95, belly: 0, head: 1 },
+  short: { sx: 1.02, sy: 0.84, sz: 1.02, belly: 0, head: 1.06 },
+  slim: { sx: 0.8, sy: 1.05, sz: 0.85, belly: 0, head: 0.95 },
+  chubby: { sx: 1.2, sy: 0.97, sz: 1.2, belly: 0.1, head: 1.04 },
+  round: { sx: 1.36, sy: 0.9, sz: 1.36, belly: 0.16, head: 1.08 },
+  square: { sx: 1.18, sy: 1, sz: 1.05, belly: 0, head: 1.14 },
+};
 export const SKIN_COLORS = SKINS;
 export const HAIR_COLORS = HAIRS;
 export const BOOT_COLORS = ['#161616', '#ffffff', '#ff3d00', '#ffd400', '#00c853', '#2979ff', '#e040fb'];
 /** "Meu craque": como o boneco da criança aparece. */
-export interface Look { skin: number; hair: number; style: HairStyle; boots: number; number: number; name: string; female?: boolean }
+export interface Look { skin: number; hair: number; style: HairStyle; boots: number; number: number; name: string; female?: boolean; build?: Build }
 /** Expressão do rosto: concentrado antes do chute, feliz no gol, triste no erro, assustado no quase. */
 export type Mood = 'calm' | 'focus' | 'happy' | 'sad' | 'wow';
 export type Weather = 'day' | 'night' | 'rain' | 'snow';
@@ -142,8 +155,13 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   const skin = SKINS[look ? look.skin : seed % SKINS.length];
   const hair = HAIRS[look ? look.hair : (seed * 7 + 3) % HAIRS.length];
   // futebol feminino: todas as jogadoras, com penteados de jogadora; masculino: os de sempre
-  const pool: HairStyle[] = womens ? ['ponytail', 'buns', 'long', 'ponytail', 'curly', 'long'] : ['short', 'short', 'curly', 'long', 'mohawk', 'bald'];
-  const style: HairStyle = look ? look.style : pool[(seed * 5 + 1) % 6];
+  const pool: HairStyle[] = womens
+    ? ['ponytail', 'buns', 'long', 'braids', 'ponytail', 'curly', 'long']
+    : ['short', 'short', 'curly', 'long', 'mohawk', 'bald', 'spiky'];
+  const style: HairStyle = look ? look.style : pool[(seed * 5 + 1) % pool.length];
+  // corpo: o do "Meu craque" é o escolhido; os outros variam (metade normal, o resto de todo tipo)
+  const build: Build = look ? look.build ?? 'normal' : seed % 2 === 0 ? 'normal' : BUILDS[1 + ((seed * 3 + 1) % (BUILDS.length - 1))];
+  const shape = BUILD_SHAPE[build];
   if (look) number = look.number;
   const shirt = keeper ? kit.keeper : kit.shirt;
   const shorts = keeper ? '#1b1b1b' : kit.shorts;
@@ -194,6 +212,8 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   const mFace = new THREE.MeshLambertMaterial({ map: faceTex(skin, faceHair, 'calm', female) });
   const head = box(0.46, 0.46, 0.46, [mSkin, mSkin, top, mSkin, mFace, top], 1.8);
   pose.add(head);
+  // barriguinha dos mais cheinhos (na frente da camisa)
+  if (shape.belly) pose.add(box(0.5, 0.42, shape.belly, mShirt, 1.18, 0, 0.16 + shape.belly / 2));
   // penteados de jogadora: presos na cabeça, para acompanhar quando ela vira o rosto
   if (style === 'ponytail') {
     head.add(box(0.5, 0.1, 0.5, mHair, 0.26));
@@ -213,6 +233,28 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   if (style === 'long') head.add(box(0.5, 0.5, 0.1, mHair, 0.02, 0, -0.26));
   if (style === 'mohawk') head.add(box(0.12, 0.22, 0.48, mHair, 0.32));
   if (style === 'curly') head.add(box(0.62, 0.3, 0.6, mHair, 0.3, 0, -0.03));
+  // trancinhas: duas tranças caindo dos lados
+  if (style === 'braids') {
+    head.add(box(0.5, 0.1, 0.5, mHair, 0.26));
+    for (const x of [-0.27, 0.27]) {
+      head.add(box(0.08, 0.3, 0.1, mHair, 0.02, x, -0.08));
+      head.add(box(0.1, 0.12, 0.12, mHair, -0.18, x, -0.08));
+      head.add(box(0.07, 0.16, 0.08, mHair, -0.32, x, -0.08));
+    }
+  }
+  // espetado: pontinhas para cima
+  if (style === 'spiky') {
+    head.add(box(0.5, 0.08, 0.5, mHair, 0.26));
+    for (const [x, z] of [[-0.15, 0.12], [0.05, 0.14], [0.17, 0.02], [-0.06, -0.05], [-0.18, -0.16], [0.1, -0.17]]) {
+      const sp = box(0.1, 0.18, 0.1, mHair, 0.36, x, z);
+      sp.rotation.z = -x * 1.4;
+      sp.rotation.x = z * 1.4;
+      head.add(sp);
+    }
+  }
+  // tipo de corpo: escala o boneco a partir dos pés (chão continua no 0) e mantém a cabeça "de cubo"
+  pose.scale.set(shape.sx, shape.sy, shape.sz);
+  head.scale.set(shape.head / shape.sx, shape.head / shape.sy, shape.head / shape.sz);
   pose.traverse((o) => { o.castShadow = false; });
   return {
     root, pose, legL, legR, armL, armR, head,
@@ -644,8 +686,9 @@ export class Pitch {
     this.scene.add(b.root);
     this.showcaseBody = b;
     // o boneco fica na parte de cima da tela; embaixo vêm as opções
-    this.camera.position.set(0, 1.6, 13.2);
-    this.camera.lookAt(0, -0.45, 6);
+    // enquadramento: o boneco inteiro (até o mais alto) na parte de cima, com os pés acima do painel
+    this.camera.position.set(0, 5.9, 15.6);
+    this.camera.lookAt(0, -2.5, 6);
     this.camera.fov = 52;
     this.camera.updateProjectionMatrix();
   }

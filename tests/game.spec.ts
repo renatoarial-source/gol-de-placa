@@ -336,10 +336,25 @@ test('futebol feminino: escolhido na tela do time, todo mundo em campo é jogado
 test('Meu craque: escolhe a comemoração', async ({ page }) => {
   await open(page, true);
   await page.click('[data-go=player]');
-  await expect(page.locator('[data-cel]')).toHaveCount(6);
+  await expect(page.locator('[data-cel]')).toHaveCount(7); // 6 comemorações + aleatória
   await page.click('[data-cel=flip]');
   await page.click('[data-go=save]');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('gol.look')!).cel)).toBe('flip');
+});
+
+test('Meu craque: corpo, cabelos novos e comemoração aleatória ficam salvos', async ({ page }) => {
+  await open(page, true);
+  await page.click('[data-go=player]');
+  await expect(page.locator('[data-build]')).toHaveCount(7);
+  await expect(page.locator('[data-style=braids]')).toHaveText('Trancinhas');
+  await expect(page.locator('[data-style=spiky]')).toHaveText('Espetado');
+  await page.click('[data-build=round]');
+  await page.click('[data-style=spiky]');
+  await page.click('[data-cel=random]');
+  await expect(page.locator('[data-cel=random]')).toHaveClass(/on/);
+  await page.click('[data-go=save]');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('gol.look')!));
+  expect([saved.build, saved.style, saved.cel]).toEqual(['round', 'spiky', 'random']);
 });
 
 test('propaganda do Esconde-Esconde só abre com a conta certa', async ({ page }) => {

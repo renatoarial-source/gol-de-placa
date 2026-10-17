@@ -464,9 +464,22 @@ const EXTRA2 = {
   ja: { rewardsTitle: '🎁 シールのごほうび', nextReward: 'つぎのごほうび {e} まであと {n} 枚', kits: '👕 ユニフォーム', stadiums: '🏟️ スタジアム', kit_team: 'チームのユニフォーム', kit_gold: 'ゴールド', kit_stripes: 'ストライプ', kit_galaxy: 'ギャラクシー', kit_neon: 'ネオン', kit_melon: 'スイカ', kit_fire: 'ファイヤー', sd_classic: 'クラシック', sd_beach: 'ビーチアリーナ', sd_forest: 'フォレストアリーナ', sd_neon: 'ネオンアリーナ', sd_golden: 'ゴールドスタジアム', tournament: '🏆 友だちトーナメント', tournamentDesc: '4人のトーナメント、スマホを回して', tournamentInfo: '準決勝と決勝：毎試合1人がけって、もう1人が止めるよ。決勝で勝った人がチャンピオン！', p3: 'プレイヤー 3', p4: 'プレイヤー 4', shuffleTeams: '🎲 チームをかえる', semi1: '準決勝 1', semi2: '準決勝 2', tourNext: 'いま：{a} × {b}', tourChamp: '{name} がトーナメント優勝！', eventTitle: '🏆 カップPK', eventDesc: '期間限定の特別イベント！', eventUntil: '{d}まで', eventScore: 'イベントのスコア', eventWins: '勝', eventBest: '連勝（記録）', eventPick: '代表チームをえらぼう', eventInfo: 'PK戦：けって、止めよう。ゴールはぜんぶイベントのスコアに入るよ！' },
 } satisfies Record<Lang, Record<string, string>>;
 
+
+// ---------- cabelos novos, corpos variados e comemoração aleatória ----------
+const EXTRA3 = {
+  pt: {"hs_braids": "Trancinhas", "hs_spiky": "Espetado", "cel_random": "🎲 Aleatória", "body": "Corpo", "body_normal": "Normal", "body_tall": "Alto", "body_short": "Baixinho", "body_slim": "Magrinho", "body_chubby": "Cheinho", "body_round": "Redondo", "body_square": "Quadradão"},
+  en: {"hs_braids": "Braids", "hs_spiky": "Spiky", "cel_random": "🎲 Random", "body": "Body", "body_normal": "Regular", "body_tall": "Tall", "body_short": "Short", "body_slim": "Slim", "body_chubby": "Chubby", "body_round": "Round", "body_square": "Boxy"},
+  es: {"hs_braids": "Trencitas", "hs_spiky": "De punta", "cel_random": "🎲 Al azar", "body": "Cuerpo", "body_normal": "Normal", "body_tall": "Alto", "body_short": "Bajito", "body_slim": "Flaquito", "body_chubby": "Rellenito", "body_round": "Redondo", "body_square": "Cuadrado"},
+  de: {"hs_braids": "Zöpfchen", "hs_spiky": "Stachelig", "cel_random": "🎲 Zufall", "body": "Körper", "body_normal": "Normal", "body_tall": "Groß", "body_short": "Klein", "body_slim": "Schlank", "body_chubby": "Pummelig", "body_round": "Rund", "body_square": "Kantig"},
+  fr: {"hs_braids": "Tresses", "hs_spiky": "Hérissés", "cel_random": "🎲 Au hasard", "body": "Corps", "body_normal": "Normal", "body_tall": "Grand", "body_short": "Petit", "body_slim": "Mince", "body_chubby": "Potelé", "body_round": "Rond", "body_square": "Carré"},
+  it: {"hs_braids": "Treccine", "hs_spiky": "A punta", "cel_random": "🎲 A caso", "body": "Corpo", "body_normal": "Normale", "body_tall": "Alto", "body_short": "Basso", "body_slim": "Magro", "body_chubby": "Paffuto", "body_round": "Rotondo", "body_square": "Squadrato"},
+  zh: {"hs_braids": "小辫子", "hs_spiky": "刺猬头", "cel_random": "🎲 随机", "body": "体型", "body_normal": "标准", "body_tall": "高个", "body_short": "矮个", "body_slim": "瘦瘦", "body_chubby": "胖嘟嘟", "body_round": "圆滚滚", "body_square": "方方"},
+  ja: {"hs_braids": "みつあみ", "hs_spiky": "ツンツン", "cel_random": "🎲 ランダム", "body": "体型", "body_normal": "ふつう", "body_tall": "のっぽ", "body_short": "ちび", "body_slim": "ほっそり", "body_chubby": "ぽっちゃり", "body_round": "まんまる", "body_square": "しかく"},
+} satisfies Record<Lang, Record<string, string>>;
+
 export const LANGS: Record<Lang, Pack> = { pt, en, es, de, fr, it, zh, ja };
-for (const l of Object.keys(EXTRA) as Lang[]) Object.assign(LANGS[l].ui, EXTRA[l], EXTRA2[l]);
-export type UiKey = keyof Pack['ui'] | keyof (typeof EXTRA)['pt'] | keyof (typeof EXTRA2)['pt'];
+for (const l of Object.keys(EXTRA) as Lang[]) Object.assign(LANGS[l].ui, EXTRA[l], EXTRA2[l], EXTRA3[l]);
+export type UiKey = keyof Pack['ui'] | keyof (typeof EXTRA)['pt'] | keyof (typeof EXTRA2)['pt'] | keyof (typeof EXTRA3)['pt'];
 /** Texto da interface no idioma escolhido. */
 export const uiText = (l: Lang, k: UiKey): string => (LANGS[l].ui as Record<string, string>)[k];
 
