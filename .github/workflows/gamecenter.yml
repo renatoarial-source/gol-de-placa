@@ -1,0 +1,35 @@
+name: Game Center
+
+# Liga o Game Center do Gol no App Store Connect e cria as conquistas (figurinhas) e o ranking de gols.
+# Pode rodar de novo: só cria o que falta. Detalhes em store/gamecenter.mjs.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'list = ver; create = criar o que falta'
+        type: choice
+        options: [list, create]
+        default: list
+
+permissions:
+  contents: read
+
+jobs:
+  gamecenter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            store
+            src/game
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: node store/gamecenter.mjs
+        env:
+          ACTION: ${{ inputs.action }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}

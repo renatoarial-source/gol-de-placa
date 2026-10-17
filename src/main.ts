@@ -16,6 +16,7 @@ import { STICKERS, apply as applyProgress, emptyState, ensureDay, needOf, type E
 import { FREE_TEAM, store as shop } from './game/store';
 import * as audio from './game/audio';
 import { onMatchFinished } from './game/rating';
+import * as gc from './game/gamecenter';
 import { MUSIC_STYLES, music, type MusicStyle } from './game/music';
 
 // ---------- preferências ----------
@@ -77,6 +78,7 @@ function track(ev: Ev) {
   store.set('progress', JSON.stringify(progress));
   for (const id of r.done) toast('📅', t('dailyDone'), t(('ch_' + id) as UiKey, { n: needOf(id) }));
   for (const id of r.stickers) toast(STICKERS.find((x) => x.id === id)!.e, t('newSticker'), t(('st_' + id) as UiKey));
+  gc.report(r.stickers, ev.t === 'goal' ? progress.goals : undefined);
 }
 let toastY = 0;
 function toast(icon: string, title: string, text: string) {
@@ -154,8 +156,10 @@ function album() {
       const has = progress.stickers.includes(st.id);
       return `<div class="sticker${has ? ' has' : ''}"><span class="se">${has ? st.e : '❔'}</span><span class="sn">${t(('st_' + st.id) as UiKey)}</span></div>`;
     }).join('')}</div>
+    ${gc.available ? '<button class="btn alt" data-go="gc">🏆 Game Center</button>' : ''}
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
+  on('[data-go=gc]', () => void gc.open());
   on('[data-go=back]', home);
 }
 
@@ -957,6 +961,7 @@ function parentGate(ok: () => void) {
 // compra restaurada ao abrir o app: atualiza a tela inicial (sem interromper uma partida)
 shop.onChange(() => { if (ui.querySelector('.logo')) home(); });
 void shop.init();
+void gc.start(progress.stickers, progress.goals);
 home();
 
 // ganchos para os testes automáticos
