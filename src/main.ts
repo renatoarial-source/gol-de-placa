@@ -28,11 +28,11 @@ if (!(lang in LANGS)) lang = 'pt';
 let sound = store.get('sound', '1') === '1';
 let voice = store.get('voice', store.get('narration', '1') === '0' ? 'off' : 'male') as audio.Voice;
 let diff = store.get('diff', 'easy') as Difficulty;
-let weatherPick = store.get('weather', 'day') as Weather | 'random';
+let weatherPick = store.get('weather', 'random') as Weather | 'random';
 let weather: Weather = weatherPick === 'random' ? 'day' : weatherPick;
 const WEATHERS: Weather[] = ['day', 'night', 'rain', 'snow'];
 /** No clima aleatório, cada partida sorteia o seu. */
-function rollWeather() { if (weatherPick === 'random') weather = WEATHERS[Math.floor(Math.random() * WEATHERS.length)]; }
+function rollWeather() { weather = weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick; }
 let crowd = store.get('crowd', 'full') as Crowd;
 let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
 let musicStyle = store.get('music', 'batucada') as MusicStyle;
@@ -110,6 +110,8 @@ function enforceFree() {
 
 document.documentElement.lang = LANGS[lang].voice;
 enforceFree();
+// a tela de abertura sorteia o clima a cada vez que o jogo abre (as partidas seguem a escolha do Clima)
+weather = WEATHERS[Math.floor(Math.random() * WEATHERS.length)];
 pitch.setAtmosphere(atmo());
 pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myTeam.kit, keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
 

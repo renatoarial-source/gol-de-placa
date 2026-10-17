@@ -6,6 +6,7 @@ async function open(page: Page, full = false) {
     localStorage.clear();
     localStorage.setItem('gol.lang', 'pt');
     localStorage.setItem('gol.sound', '0');
+    localStorage.setItem('gol.weather', 'day'); // testes previsíveis (o padrão do jogo é aleatório)
     if (f) localStorage.setItem('gol.unlocked.v1', '1');
   }, full);
   await page.reload();
@@ -274,6 +275,18 @@ test('2 jogadores: cada um escolhe o time, entre seleções ou clubes', async ({
   await page.click('[data-go=duo]');
   await expect(page.locator('.row b').first()).toContainText(badge1);
   await expect(page.locator('.row b').nth(1)).toContainText(badge2);
+});
+
+test('quem abre o jogo pela primeira vez já começa no clima aleatório', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.lang', 'pt'); localStorage.setItem('gol.sound', '0'); localStorage.setItem('gol.unlocked.v1', '1'); });
+  await page.reload();
+  const w = await page.evaluate(() => (window as unknown as { __gol: { pitch: { weather: string } } }).__gol.pitch.weather);
+  expect(['day', 'night', 'rain', 'snow']).toContain(w);
+  await page.click('[data-go=play]');
+  await page.click('[data-mode=penalty]');
+  await page.click('[data-role=kicker]');
+  await expect(page.locator('[data-weather=random]')).toHaveClass(/on/);
 });
 
 test('clima aleatório: fica escolhido e cada partida sorteia dia, noite, chuva ou neve', async ({ page }) => {

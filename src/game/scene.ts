@@ -168,7 +168,9 @@ function breathe(b: Body, t: number, armOpen = 0.08) {
 /** Volta suavemente à posição neutra (sem o "tranco" de zerar tudo de uma vez). */
 function easeToRest(tween: (d: number, fn: (k: number) => void) => Promise<void>, b: Body, dur = 0.3) {
   const parts = [b.pose, b.legL, b.legR, b.armL, b.armR, b.head];
-  const from = parts.map((o) => o.rotation.clone());
+  // volta pelo menor caminho: uma cambalhota completa (-360°) termina em pé, não gira de volta
+  const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+  const from = parts.map((o) => new THREE.Euler(wrap(o.rotation.x), wrap(o.rotation.y), wrap(o.rotation.z)));
   const py = b.pose.position.clone();
   return tween(dur, (q) => {
     const e = smooth(q);
@@ -222,6 +224,8 @@ export class Pitch {
   /** Comemoração de quem bate, para o próximo gol. */
   kickerCelebration: Celebration = 'jump';
   private replayCam = false;
+  private celebCam: { body: Body; fwd: THREE.Vector3; id: number } | null = null;
+  private celebId = 0;
   private lastSetup: Parameters<Pitch['setup']>[0] | null = null;
   private view: 'kick' | 'keep' = 'kick';
   /** Ao defender: câmera atrás do gol ('goal') ou atrás do cobrador ('kicker'). */
@@ -640,6 +644,7 @@ export class Pitch {
     this.spot = { sx: o.sx, sz: o.sz };
     this.view = o.view;
     this.keeperDiving = false;
+    this.celebCam = null;
     this.net.scale.set(1, 1, 1);
     this.bp.set(o.sx, BALL_R, o.sz);
     this.ball.position.set(o.sx, BALL_R * 1.5, o.sz);
@@ -741,7 +746,8 @@ export class Pitch {
       }
       p.needsUpdate = true;
     }
-    if (this.showcaseBody) this.showcaseBody.root.rotation.y += dt * 0.8;
+    if (this.showcaseBody && !this.showcaseBody.busy) this.showcaseBody.root.rotation.y += dt * 0.8;
+    if (this.celebCam) this.followCelebCam(Math.min(1, dt * 5));
     // bandeiras tremulando (mais forte na festa do gol)
     this.flags.forEach((f, i) => {
       const pos = (f.geometry as THREE.PlaneGeometry).attributes.position as THREE.BufferAttribute;
@@ -1018,61 +1024,139 @@ export class Pitch {
     const b = goal ? this.kicker : this.keeper;
     if (!b || (!goal && this.keeperMode === 'dive')) return; // goleiro que mergulhou fica no chão
     const style: Celebration = goal ? this.kickerCelebration : 'jump';
+    // gol da criança no jogo: primeiro ela vê a bola na rede, depois a câmera vira para o jogador comemorando de frente
+    const front = goal && b === this.kicker && b !== this.showcaseBody && this.view === 'kick' && !this.replayCam;
+    b.busy = true;
+    void this.tween(front ? 0.45 : 0, () => {}).then(() => {
+      const cam = front && this.kicker === b ? this.startCelebCam(b) : 0;
+      this.runCelebration(b, style, cam);
+    });
+  }
+
+  /** Câmera da comemoração: na frente do jogador, acompanhando enquanto ele se mexe. */
+  private startCelebCam(b: Body): number {
+    const r = b.root.rotation.y;
+    const id = ++this.celebId;
+    this.celebCam = { body: b, fwd: new THREE.Vector3(Math.sin(r), 0, Math.cos(r)), id };
+    this.camera.clearViewOffset();
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.fov = THREE.MathUtils.clamp(46 / Math.min(1, this.camera.aspect * 1.7), 46, 78);
+    this.camera.updateProjectionMatrix();
+    this.followCelebCam(1);
+    return id;
+  }
+  private followCelebCam(k: number) {
+    const c = this.celebCam;
+    if (!c) return;
+    const p = c.body.root.position;
+    // à frente do jogador (entre ele e o gol), um pouco de lado e na altura do peito
+    const side = new THREE.Vector3(c.fwd.z, 0, -c.fwd.x);
+    const want = new THREE.Vector3(p.x + c.fwd.x * 4.6 + side.x * 1.2, 1.7, p.z + c.fwd.z * 4.6 + side.z * 1.2);
+    this.camera.position.lerp(want, k);
+    this.camera.lookAt(p.x, 1.05 + c.body.root.position.y * 0.5, p.z);
+  }
+  private endCelebCam(id: number) {
+    if (!id || this.celebCam?.id !== id) return;
+    this.celebCam = null;
+    this.placeCamera();
+  }
+
+  private runCelebration(b: Body, style: Celebration, cam: number) {
     const y0 = b.root.position.y;
     const p0 = b.root.position.clone();
     const r0 = b.root.rotation.y;
     const fwd = new THREE.Vector3(Math.sin(r0), 0, Math.cos(r0)); // para onde o boneco olha
-    const dur = style === 'knee' || style === 'plane' ? 1.8 : 1.5;
-    b.busy = true;
+    const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    const dur = { jump: 1.7, plane: 2.1, dance: 1.9, flip: 1.6, robot: 1.9, knee: 2.0 }[style];
+    // na vitrine do Meu craque o boneco fica perto da câmera: corre e desliza menos para não sair do quadro
+    const reach = b === this.showcaseBody ? 0.4 : 1;
+    // braços para cima em "V": o esquerdo (x negativo) abre girando no sentido negativo, o direito no positivo
+    const armsUp = (a: number) => { b.armL.rotation.z = -a; b.armR.rotation.z = a; };
     void this.tween(dur, (q) => {
       const t = q * dur;
       b.armL.rotation.set(0, 0, 0); b.armR.rotation.set(0, 0, 0);
+      b.legL.rotation.set(0, 0, 0); b.legR.rotation.set(0, 0, 0);
+      b.pose.rotation.set(0, 0, 0); b.pose.position.set(0, 0, 0);
+      b.head.rotation.set(0, 0, 0);
       if (style === 'jump') {
-        b.root.position.y = y0 + Math.abs(Math.sin(q * Math.PI * 3)) * 0.45;
-        b.armL.rotation.z = Math.PI * 0.85; b.armR.rotation.z = -Math.PI * 0.85;
+        // três pulos socando o ar, encolhendo as pernas lá em cima
+        const ph = q * Math.PI * 3;
+        const air = Math.abs(Math.sin(ph));
+        b.root.position.y = y0 + air * 0.6;
+        armsUp(Math.PI * 0.78 + Math.sin(ph * 2) * 0.12);
+        b.legL.rotation.x = -air * 0.5; b.legR.rotation.x = -air * 0.5;
+        b.head.rotation.x = -0.25 * air;
       } else if (style === 'plane') {
-        // aviãozinho: braços abertos batendo como asas, corre em curva inclinando o corpo
-        const flap = Math.sin(t * 11) * 0.45;
-        // (o braço esquerdo fica em x negativo: para abrir para fora ele gira no sentido negativo)
+        // aviãozinho: braços abertos batendo como asas, corre em arco na frente da câmera inclinando o corpo
+        const flap = Math.sin(t * 9) * 0.4;
         b.armL.rotation.z = -Math.PI / 2 - flap; b.armR.rotation.z = Math.PI / 2 + flap;
-        b.armL.rotation.x = Math.sin(t * 11 + 1) * 0.25; b.armR.rotation.x = Math.sin(t * 11 + 1) * 0.25;
-        const a = q * Math.PI * 1.4;
-        b.root.position.set(p0.x + Math.sin(a) * 1.6, y0, p0.z + (1 - Math.cos(a)) * 1.6 * -Math.sign(fwd.z || 1));
-        b.root.rotation.y = r0 - a;
-        b.pose.rotation.z = Math.sin(t * 4) * 0.35;
-        b.legL.rotation.x = Math.sin(t * 14) * 0.7; b.legR.rotation.x = -Math.sin(t * 14) * 0.7;
+        // um "8" deitado na frente da câmera: vai para um lado, faz a curva e volta para o outro
+        const at = (u: number) => {
+          const a = u * Math.PI * 2;
+          const sx = Math.sin(a) * 2.0 * reach, sz = Math.sin(a * 2) * 0.7 * reach;
+          return new THREE.Vector3(p0.x + right.x * sx + fwd.x * sz, y0, p0.z + right.z * sx + fwd.z * sz);
+        };
+        const u = smooth(q);
+        const here = at(u), next = at(Math.min(1, u + 0.01));
+        b.root.position.copy(here);
+        if (next.distanceTo(here) > 1e-4) b.root.rotation.y = Math.atan2(next.x - here.x, next.z - here.z);
+        const turn = Math.cos(u * Math.PI * 2); // de que lado é a curva agora
+        b.pose.rotation.z = -turn * 0.4; // inclina para dentro da curva, como asa de avião
+        b.pose.rotation.x = 0.15;
+        const run = Math.sin(t * 15);
+        b.legL.rotation.x = run * 0.75; b.legR.rotation.x = -run * 0.75;
+        b.pose.position.y = Math.abs(Math.cos(t * 15)) * 0.06;
       } else if (style === 'dance') {
-        b.pose.position.x = Math.sin(t * 9) * 0.18;
-        b.pose.rotation.z = Math.sin(t * 9) * 0.12;
-        b.armL.rotation.z = Math.PI * (0.55 + 0.3 * Math.sin(t * 9)); b.armR.rotation.z = -Math.PI * (0.55 - 0.3 * Math.sin(t * 9));
-        b.legL.rotation.x = Math.max(0, Math.sin(t * 9)) * 0.6; b.legR.rotation.x = Math.max(0, -Math.sin(t * 9)) * 0.6;
+        // dancinha: quadril para os lados, braços alternando para cima, pulinhos
+        const s = Math.sin(t * 8);
+        b.pose.position.x = s * 0.2;
+        b.pose.rotation.z = s * 0.15;
+        b.pose.rotation.y = Math.sin(t * 4) * 0.35;
+        b.armL.rotation.z = -(Math.PI * 0.45 + Math.max(0, s) * Math.PI * 0.45);
+        b.armR.rotation.z = Math.PI * 0.45 + Math.max(0, -s) * Math.PI * 0.45;
+        b.legL.rotation.x = Math.max(0, s) * 0.55; b.legR.rotation.x = Math.max(0, -s) * 0.55;
+        b.root.position.y = y0 + Math.abs(Math.cos(t * 8)) * 0.12;
+        b.head.rotation.z = -s * 0.15;
       } else if (style === 'flip') {
-        // cambalhota para trás no ar
-        const k = Math.min(1, t / 0.9);
-        b.root.position.y = y0 + Math.sin(Math.PI * k) * 1.2;
-        b.pose.rotation.x = -Math.PI * 2 * k;
-        b.pose.position.y = Math.sin(Math.PI * k) * 0.9;
-        b.pose.position.z = -Math.sin(Math.PI * 2 * k) * 0.9;
-        if (k >= 1) { b.armL.rotation.z = Math.PI * 0.85; b.armR.rotation.z = -Math.PI * 0.85; }
+        // cambalhota para trás no ar, braços para cima antes e na chegada
+        const k = Math.min(1, Math.max(0, (t - 0.2) / 0.85));
+        const e = smooth(k);
+        b.root.position.y = y0 + Math.sin(Math.PI * k) * 1.4;
+        // gira pela cintura (1 m do chão), não pelos pés: o corpo não "cai" em cima da câmera no meio do giro
+        const th = -Math.PI * 2 * e;
+        b.pose.rotation.x = th;
+        b.pose.position.y = 1 - Math.cos(th);
+        b.pose.position.z = -Math.sin(th);
+        if (t < 0.2) { const c = t / 0.2; b.pose.position.y = -0.25 * c; armsUp(Math.PI * 0.6 * c); } // agacha e prepara
+        else if (k < 1) { b.legL.rotation.x = -1.2 * Math.sin(Math.PI * k); b.legR.rotation.x = -1.2 * Math.sin(Math.PI * k); armsUp(Math.PI * 0.3); }
+        else armsUp(Math.PI * 0.8);
       } else if (style === 'robot') {
-        // movimentos travados, em passos
-        const step = Math.floor(t / 0.25) % 4;
-        b.armL.rotation.x = [-1.5, 0, -1.5, -3][step]; b.armR.rotation.x = [0, -1.5, -3, -1.5][step];
-        b.pose.rotation.y = [0.4, -0.4, 0.4, -0.4][step];
+        // robô: movimentos travados, em passos, e cabeça virando junto
+        const step = Math.floor(t / 0.24) % 4;
+        // poses travadas para os lados (de frente dá para ver): um braço para cima, o outro esticado, e troca
+        const up = Math.PI * 0.95, out = Math.PI / 2;
+        b.armL.rotation.z = -[up, out, 0.15, out][step]; b.armR.rotation.z = [0.15, out, up, out][step];
+        b.armL.rotation.x = step === 1 ? -0.6 : 0; b.armR.rotation.x = step === 3 ? -0.6 : 0;
+        b.pose.rotation.y = [0.35, 0, -0.35, 0][step];
+        b.head.rotation.y = [-0.5, 0, 0.5, 0][step];
+        b.legL.rotation.x = step % 2 ? 0.4 : 0; b.legR.rotation.x = step % 2 ? 0 : 0.4;
+        b.root.position.y = y0 + (step % 2) * 0.05;
       } else {
-        // de joelhos deslizando na grama, braços para o céu
+        // de joelhos deslizando na grama, depois inclina para trás e soca o ar
         const k = Math.min(1, t / 0.9);
-        b.root.position.set(p0.x + fwd.x * 2.4 * (1 - (1 - k) * (1 - k)), y0, p0.z + fwd.z * 2.4 * (1 - (1 - k) * (1 - k)));
+        const slide = 1 - (1 - k) * (1 - k);
+        b.root.position.set(p0.x + fwd.x * 2.6 * reach * slide, y0, p0.z + fwd.z * 2.6 * reach * slide);
         b.pose.position.y = -0.42;
         b.legL.rotation.x = -1.4; b.legR.rotation.x = -1.4;
-        b.pose.rotation.x = -0.3;
-        b.armL.rotation.z = Math.PI * 0.8; b.armR.rotation.z = -Math.PI * 0.8;
+        b.pose.rotation.x = -0.15 - 0.25 * Math.min(1, t / 1.0);
+        armsUp(Math.PI * 0.8 + (t > 0.9 ? Math.sin((t - 0.9) * 12) * 0.15 : 0));
+        b.head.rotation.x = -0.35;
       }
     }).then(() => {
       if (!b) return;
       b.root.position.y = y0;
-      // volta à posição neutra suavemente e só então volta a respirar
-      void easeToRest((d, fn) => this.tween(d, fn), b, 0.35).then(() => { b.busy = false; });
+      // volta à posição neutra suavemente e só então volta a respirar; a câmera volta ao normal
+      void easeToRest((d, fn) => this.tween(d, fn), b, 0.35).then(() => { b.busy = false; this.endCelebCam(cam); });
     });
   }
 }
