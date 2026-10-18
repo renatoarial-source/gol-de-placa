@@ -27,8 +27,8 @@ export const HAIR_STYLES: HairStyle[] = [
   'short', 'long', 'ponytail', 'buns', 'braids', 'curly', 'spiky', 'mohawk', 'bald', 'quiff', 'dreads', 'bob', 'pigtails', 'topknot',
 ];
 /** Tipo de corpo: cada jogador em campo sai de um jeito (o "Meu craque" escolhe o seu). */
-export type Build = 'normal' | 'tall' | 'short' | 'slim' | 'chubby' | 'round' | 'square' | 'strong';
-export const BUILDS: Build[] = ['normal', 'tall', 'short', 'slim', 'chubby', 'round', 'square', 'strong'];
+export type Build = 'normal' | 'tall' | 'short' | 'slim' | 'chubby' | 'round' | 'square' | 'strong' | 'lanky';
+export const BUILDS: Build[] = ['normal', 'tall', 'short', 'slim', 'chubby', 'round', 'square', 'strong', 'lanky'];
 /** Escala do corpo (largura, altura, profundidade), barriga e tamanho da cabeça de cada tipo. */
 const BUILD_SHAPE: Record<Build, { sx: number; sy: number; sz: number; belly: number; head: number; arm?: number }> = {
   normal: { sx: 1, sy: 1, sz: 1, belly: 0, head: 1 },
@@ -40,6 +40,8 @@ const BUILD_SHAPE: Record<Build, { sx: number; sy: number; sz: number; belly: nu
   square: { sx: 1.18, sy: 1, sz: 1.05, belly: 0, head: 1.14 },
   // fortinho: ombros largos e braços grossos
   strong: { sx: 1.14, sy: 1.04, sz: 1.08, belly: 0, head: 0.98, arm: 1.35 },
+  // varapau: bem alto e bem magrinho
+  lanky: { sx: 0.74, sy: 1.26, sz: 0.8, belly: 0, head: 0.9, arm: 0.85 },
 };
 export const SKIN_COLORS = SKINS;
 export const HAIR_COLORS = HAIRS;

@@ -480,14 +480,14 @@ const EXTRA3 = {
 
 // ---------- 5 cabelos, corpo fortinho e 2 comemorações ----------
 const EXTRA4 = {
-  pt: { hs_quiff: 'Topete', hs_dreads: 'Dreads', hs_bob: 'Chanel', hs_pigtails: 'Maria-chiquinha', hs_topknot: 'Coque no alto', body_strong: 'Fortinho', cel_fish: '🐟 Peixinho', cel_spin: '🌀 Pião' },
-  en: { hs_quiff: 'Quiff', hs_dreads: 'Dreadlocks', hs_bob: 'Bob', hs_pigtails: 'Pigtails', hs_topknot: 'Top knot', body_strong: 'Strong', cel_fish: '🐟 Belly slide', cel_spin: '🌀 Spin' },
-  es: { hs_quiff: 'Copete', hs_dreads: 'Rastas', hs_bob: 'Melena corta', hs_pigtails: 'Coletas', hs_topknot: 'Moño alto', body_strong: 'Fuerte', cel_fish: '🐟 Pececito', cel_spin: '🌀 Trompo' },
-  de: { hs_quiff: 'Tolle', hs_dreads: 'Dreadlocks', hs_bob: 'Bob', hs_pigtails: 'Zöpfchen', hs_topknot: 'Dutt oben', body_strong: 'Kräftig', cel_fish: '🐟 Bauchrutscher', cel_spin: '🌀 Kreisel' },
-  fr: { hs_quiff: 'Banane', hs_dreads: 'Dreadlocks', hs_bob: 'Carré', hs_pigtails: 'Couettes', hs_topknot: 'Chignon haut', body_strong: 'Costaud', cel_fish: '🐟 Glissade', cel_spin: '🌀 Toupie' },
-  it: { hs_quiff: 'Ciuffo', hs_dreads: 'Dreadlocks', hs_bob: 'Caschetto', hs_pigtails: 'Codini', hs_topknot: 'Chignon alto', body_strong: 'Forte', cel_fish: '🐟 Tuffo', cel_spin: '🌀 Trottola' },
-  zh: { hs_quiff: '飞机头', hs_dreads: '脏辫', hs_bob: '波波头', hs_pigtails: '双马尾', hs_topknot: '高丸子头', body_strong: '强壮', cel_fish: '🐟 鱼跃', cel_spin: '🌀 陀螺' },
-  ja: { hs_quiff: 'リーゼント', hs_dreads: 'ドレッド', hs_bob: 'ボブ', hs_pigtails: 'ツインテール', hs_topknot: 'おだんご', body_strong: 'がっしり', cel_fish: '🐟 ヘッドスライディング', cel_spin: '🌀 コマ回り' },
+  pt: { body_lanky: 'Varapau', body_random: '🎲 Aleatório', hs_quiff: 'Topete', hs_dreads: 'Dreads', hs_bob: 'Chanel', hs_pigtails: 'Maria-chiquinha', hs_topknot: 'Coque no alto', body_strong: 'Fortinho', cel_fish: '🐟 Peixinho', cel_spin: '🌀 Pião' },
+  en: { body_lanky: 'Beanpole', body_random: '🎲 Random', hs_quiff: 'Quiff', hs_dreads: 'Dreadlocks', hs_bob: 'Bob', hs_pigtails: 'Pigtails', hs_topknot: 'Top knot', body_strong: 'Strong', cel_fish: '🐟 Belly slide', cel_spin: '🌀 Spin' },
+  es: { body_lanky: 'Larguirucho', body_random: '🎲 Aleatorio', hs_quiff: 'Copete', hs_dreads: 'Rastas', hs_bob: 'Melena corta', hs_pigtails: 'Coletas', hs_topknot: 'Moño alto', body_strong: 'Fuerte', cel_fish: '🐟 Pececito', cel_spin: '🌀 Trompo' },
+  de: { body_lanky: 'Bohnenstange', body_random: '🎲 Zufällig', hs_quiff: 'Tolle', hs_dreads: 'Dreadlocks', hs_bob: 'Bob', hs_pigtails: 'Zöpfchen', hs_topknot: 'Dutt oben', body_strong: 'Kräftig', cel_fish: '🐟 Bauchrutscher', cel_spin: '🌀 Kreisel' },
+  fr: { body_lanky: 'Grand échalas', body_random: '🎲 Au hasard', hs_quiff: 'Banane', hs_dreads: 'Dreadlocks', hs_bob: 'Carré', hs_pigtails: 'Couettes', hs_topknot: 'Chignon haut', body_strong: 'Costaud', cel_fish: '🐟 Glissade', cel_spin: '🌀 Toupie' },
+  it: { body_lanky: 'Spilungone', body_random: '🎲 Casuale', hs_quiff: 'Ciuffo', hs_dreads: 'Dreadlocks', hs_bob: 'Caschetto', hs_pigtails: 'Codini', hs_topknot: 'Chignon alto', body_strong: 'Forte', cel_fish: '🐟 Tuffo', cel_spin: '🌀 Trottola' },
+  zh: { body_lanky: '竹竿', body_random: '🎲 随机', hs_quiff: '飞机头', hs_dreads: '脏辫', hs_bob: '波波头', hs_pigtails: '双马尾', hs_topknot: '高丸子头', body_strong: '强壮', cel_fish: '🐟 鱼跃', cel_spin: '🌀 陀螺' },
+  ja: { body_lanky: 'ひょろ長', body_random: '🎲 ランダム', hs_quiff: 'リーゼント', hs_dreads: 'ドレッド', hs_bob: 'ボブ', hs_pigtails: 'ツインテール', hs_topknot: 'おだんご', body_strong: 'がっしり', cel_fish: '🐟 ヘッドスライディング', cel_spin: '🌀 コマ回り' },
 } satisfies Record<Lang, Record<string, string>>;
 
 export const LANGS: Record<Lang, Pack> = { pt, en, es, de, fr, it, zh, ja };

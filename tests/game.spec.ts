@@ -345,7 +345,7 @@ test('Meu craque: escolhe a comemoração', async ({ page }) => {
 test('Meu craque: corpo, cabelos novos e comemoração aleatória ficam salvos', async ({ page }) => {
   await open(page, true);
   await page.click('[data-go=player]');
-  await expect(page.locator('[data-build]')).toHaveCount(8);
+  await expect(page.locator('[data-build]')).toHaveCount(10);
   await expect(page.locator('[data-style=braids]')).toHaveText('Trancinhas');
   await expect(page.locator('[data-style=spiky]')).toHaveText('Espetado');
   await page.click('[data-build=round]');

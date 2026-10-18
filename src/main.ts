@@ -11,7 +11,7 @@ import {
   playerSaves, shootoutWinner, shotFromSwipe, wallHit,
   type Difficulty, type Kind, type Outcome, type Shootout, type Wall,
 } from './game/physics';
-import { BOOT_COLORS, BUILDS, CELEBRATIONS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Celebration, type Crowd, type Look, type Weather } from './game/scene';
+import { BOOT_COLORS, BUILDS, type Build, CELEBRATIONS, HAIR_COLORS, HAIR_STYLES, Pitch, SKIN_COLORS, type Celebration, type Crowd, type Look, type Weather } from './game/scene';
 import { STICKERS, apply as applyProgress, emptyState, ensureDay, findSticker, needOf, type Ev, type State as ProgressState, type Sticker } from './game/progress';
 import { FREE_TEAM, store as shop } from './game/store';
 import * as audio from './game/audio';
@@ -38,7 +38,8 @@ let weatherPick = store.get('weather', 'random') as Weather | 'random';
 let weather: Weather = weatherPick === 'random' ? 'day' : weatherPick;
 const WEATHERS: Weather[] = ['day', 'night', 'rain', 'snow'];
 /** No clima aleatório, cada partida sorteia o seu. */
-function rollWeather() { weather = weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick; }
+function rollWeather() { rollBuild(); rollWeather0(); }
+function rollWeather0() { weather = weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick; }
 let crowd = store.get('crowd', 'full') as Crowd;
 let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
 let musicStyle = store.get('music', 'batucada') as MusicStyle;
@@ -53,8 +54,11 @@ let teamKind = store.get('teamKind', 'club') as 'nation' | 'club';
 let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
 /** Comemoração escolhida no Meu craque: uma fixa ou 'random' (uma diferente a cada gol). */
 type CelChoice = Celebration | 'random';
-const DEFAULT_LOOK: Look & { cel: CelChoice } = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '', cel: 'random', build: 'normal' };
-let look: Look & { cel: CelChoice } = (() => { try { return { ...DEFAULT_LOOK, ...JSON.parse(store.get('look', '{}')) }; } catch { return DEFAULT_LOOK; } })();
+/** Corpo escolhido: um fixo ou 'random' (um diferente a cada partida). */
+type BuildChoice = Build | 'random';
+type MyLook = Omit<Look, 'build'> & { cel: CelChoice; build?: BuildChoice };
+const DEFAULT_LOOK: MyLook = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '', cel: 'random', build: 'normal' };
+let look: MyLook = (() => { try { return { ...DEFAULT_LOOK, ...JSON.parse(store.get('look', '{}')) }; } catch { return DEFAULT_LOOK; } })();
 audio.setSound(sound);
 audio.setNarration(voice);
 
@@ -133,7 +137,11 @@ function atmo(opp?: Team) {
 
 /** Sem a versão completa, só o time do download e o boneco padrão. */
 const unlocked = () => shop.isUnlocked();
-const myLook = () => (unlocked() ? look : undefined);
+/** No corpo aleatório, cada partida sorteia um tipo (fica o mesmo a partida inteira). */
+let matchBuild: Build = BUILDS[Math.floor(Math.random() * BUILDS.length)];
+const rollBuild = () => { matchBuild = BUILDS[Math.floor(Math.random() * BUILDS.length)]; };
+const resolveLook = (l: MyLook): Look => ({ ...l, build: l.build === 'random' ? matchBuild : l.build });
+const myLook = () => (unlocked() ? resolveLook(look) : undefined);
 let lastCel: Celebration | null = null;
 /** Comemoração do próximo gol: a escolhida ou, no aleatório, uma diferente da última. */
 function celFor(c: CelChoice): Celebration {
@@ -1139,7 +1147,7 @@ function builder() {
   hud.classList.add('hidden');
   const draft = { ...look };
   const keeperPreview = false;
-  const refresh = () => pitch.showcase(draft, myKit(), keeperPreview);
+  const refresh = () => pitch.showcase(resolveLook(draft), myKit(), keeperPreview);
   const swatches = (key: 'skin' | 'hair' | 'boots', colors: string[]) =>
     `<div class="swatches">${colors.map((c, i) => `<button class="sw${draft[key] === i ? ' on' : ''}" data-${key}="${i}" style="background:${c}" aria-label="${i + 1}"></button>`).join('')}</div>`;
   const render = () => {
@@ -1153,7 +1161,7 @@ function builder() {
         <b>${t('hairStyle')}</b><div class="seg wrap">${HAIR_STYLES.map((h) => `<button data-style="${h}" class="${draft.style === h ? 'on' : ''}">${t(('hs_' + h) as UiKey)}</button>`).join('')}</div>
         <b>${t('hairColor')}</b>${swatches('hair', HAIR_COLORS)}
         <b>${t('boots')}</b>${swatches('boots', BOOT_COLORS)}
-        <b>${t('body')}</b><div class="seg wrap">${BUILDS.map((b) => `<button data-build="${b}" class="${(draft.build ?? 'normal') === b ? 'on' : ''}">${t(('body_' + b) as UiKey)}</button>`).join('')}</div>
+        <b>${t('body')}</b><div class="seg wrap">${[...BUILDS, 'random' as const].map((b) => `<button data-build="${b}" class="${(draft.build ?? 'normal') === b ? 'on' : ''}">${t(('body_' + b) as UiKey)}</button>`).join('')}</div>
         <b>${t('celebration')}</b><div class="seg wrap">${[...CELEBRATIONS, 'random' as const].map((c) => `<button data-cel="${c}" class="${draft.cel === c ? 'on' : ''}">${t(('cel_' + c) as UiKey)}</button>`).join('')}</div>
         <div class="row">
           <div><b>${t('number')}</b><input id="pnum" class="numin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${draft.number}" autocomplete="off" aria-label="${t('number')}"></div>
@@ -1180,7 +1188,8 @@ function builder() {
     });
     // escolher a comemoração mostra ela no boneco da vitrine
     on('[data-cel]', (el) => { draft.cel = el.dataset.cel as CelChoice; render(); pitch.kickerCelebration = celFor(draft.cel); pitch.celebrateShowcase(); });
-    on('[data-build]', (el) => { draft.build = el.dataset.build as Look['build']; render(); });
+    // aleatório: a vitrine mostra um tipo sorteado a cada toque (no jogo, um por partida)
+    on('[data-build]', (el) => { draft.build = el.dataset.build as BuildChoice; if (draft.build === 'random') rollBuild(); render(); });
     // número da camisa: a criança digita (1 a 99), sem redesenhar a tela
     const num = $('pnum') as HTMLInputElement;
     const readNum = () => {
