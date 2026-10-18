@@ -1,0 +1,35 @@
+name: Capturas da loja
+
+# Mostra as capturas que a Apple não terminou de processar; fix=1 apaga as travadas.
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'gol, gelada ou esconde'
+        default: gelada
+      version:
+        description: 'Versão (ex.: 1.1.2)'
+        required: true
+      fix:
+        description: '1 = apagar as travadas'
+        default: '0'
+
+permissions:
+  contents: read
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+      - run: node scripts/asc-shots.mjs
+        env:
+          APP: ${{ inputs.app }}
+          VERSION: ${{ inputs.version }}
+          FIX: ${{ inputs.fix }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
