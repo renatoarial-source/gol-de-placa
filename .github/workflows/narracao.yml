@@ -1,0 +1,33 @@
+name: Gerar narração
+
+# Gera as falas do narrador e da narradora (8 idiomas) com o Google Text-to-Speech
+# a partir de scripts/tts/phrases-gol.json e salva na branch "narracao" (public/voice).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: node scripts/tts/generate.mjs
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          SET: gol
+          OUT_DIR: ${{ runner.temp }}/voice
+      - name: Salvar na branch narracao
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout -B narracao
+          rm -rf public/voice && mkdir -p public/voice && cp -r "$RUNNER_TEMP/voice/." public/voice/
+          git add -A public/voice
+          git commit -m "Narração gerada" || echo nada
+          git push -f origin narracao

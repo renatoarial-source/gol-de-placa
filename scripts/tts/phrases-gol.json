@@ -1,0 +1,482 @@
+{
+ "pt": {
+  "voice": "pt-BR",
+  "calls": {
+   "ready": [
+    "Ajeita a bola… silêncio no estádio…",
+    "O estádio inteiro prende a respiração…",
+    "Lá vai… vai bater…"
+   ],
+   "goal": [
+    "Gooooool!",
+    "É gol!",
+    "Que golaço!",
+    "Balançou a rede!",
+    "Lá dentro!",
+    "Golaço!"
+   ],
+   "corner": [
+    "No ângulo!",
+    "Onde a coruja dorme!",
+    "Gol de placa!",
+    "Na gaveta!"
+   ],
+   "save": [
+    "Que defesa!",
+    "Que goleiro!",
+    "Paredão!",
+    "Que milagre!",
+    "Espalmou!",
+    "Defendeu!"
+   ],
+   "post": [
+    "Na trave! Uuuuh, quase!",
+    "Carimbou a trave! Por muito pouco!"
+   ],
+   "wide": [
+    "Pra fora! Uuuh, passou perto!",
+    "Passou raspando! Quase!"
+   ],
+   "over": [
+    "Por cima do gol! Mandou pra arquibancada!",
+    "Isolou! Lá no alto!"
+   ],
+   "wall": [
+    "Parou na barreira!",
+    "Bateu na barreira! A barreira segurou!"
+   ],
+   "win": [
+    "Vitória! Que jogo! Que jogo!"
+   ],
+   "lose": [
+    "Não foi dessa vez… bora de novo!"
+   ],
+   "champion": [
+    "É campeão! É campeão! É campeeeeão!"
+   ],
+   "sudden": [
+    "Morte súbita! Quem errar, perde! Que emoção!"
+   ]
+  }
+ },
+ "en": {
+  "voice": "en-US",
+  "calls": {
+   "ready": [
+    "The ball is set… the stadium goes quiet…",
+    "The whole crowd holds its breath…",
+    "Here comes the run-up… here it comes…"
+   ],
+   "goal": [
+    "Gooooal!",
+    "It's a goal!",
+    "What a goal!",
+    "Back of the net!",
+    "It's in!",
+    "What a strike!"
+   ],
+   "corner": [
+    "Top corner!",
+    "Right in the top bin!",
+    "A stunning goal!",
+    "Into the corner!"
+   ],
+   "save": [
+    "What a save!",
+    "What a keeper!",
+    "A brick wall!",
+    "A miracle save!",
+    "Pushed away!",
+    "Saved!"
+   ],
+   "post": [
+    "Off the post! Ooooh, so close!",
+    "It hits the woodwork! So close!"
+   ],
+   "wide": [
+    "Wide! Ooh, just wide!",
+    "Just past the post! So close!"
+   ],
+   "over": [
+    "Over the bar! Into the stands!",
+    "Way over! Into the sky!"
+   ],
+   "wall": [
+    "Blocked by the wall!",
+    "Into the wall! The wall holds!"
+   ],
+   "win": [
+    "Victory! What a game! What a game!"
+   ],
+   "lose": [
+    "Not this time… let's go again!"
+   ],
+   "champion": [
+    "Champions! Champions! Chaaaampions!"
+   ],
+   "sudden": [
+    "Sudden death! Miss and you are out! What drama!"
+   ]
+  }
+ },
+ "es": {
+  "voice": "es-ES",
+  "calls": {
+   "ready": [
+    "Acomoda la pelota… silencio en el estadio…",
+    "Todo el estadio contiene la respiración…",
+    "Ahí va… va a patear…"
+   ],
+   "goal": [
+    "¡Goooool!",
+    "¡Es gol!",
+    "¡Qué golazo!",
+    "¡Al fondo de la red!",
+    "¡Adentro!",
+    "¡Golazo!"
+   ],
+   "corner": [
+    "¡Al ángulo!",
+    "¡Donde duermen las arañas!",
+    "¡Gol de antología!",
+    "¡En la escuadra!"
+   ],
+   "save": [
+    "¡Qué atajada!",
+    "¡Qué arquero!",
+    "¡Una muralla!",
+    "¡Qué milagro!",
+    "¡La sacó!",
+    "¡Atajó!"
+   ],
+   "post": [
+    "¡Al palo! ¡Uuuuh, casi!",
+    "¡Pegó en el palo! ¡Por muy poco!"
+   ],
+   "wide": [
+    "¡Afuera! ¡Uuuh, pasó cerca!",
+    "¡Pasó cerquita! ¡Casi!"
+   ],
+   "over": [
+    "¡Por arriba! ¡A la tribuna!",
+    "¡La mandó a las nubes!"
+   ],
+   "wall": [
+    "¡Dio en la barrera!",
+    "¡La paró la barrera! ¡Aguantó la barrera!"
+   ],
+   "win": [
+    "¡Victoria! ¡Qué partido! ¡Qué partido!"
+   ],
+   "lose": [
+    "Esta vez no… ¡vamos otra vez!"
+   ],
+   "champion": [
+    "¡Campeón! ¡Campeón! ¡Campeeeeón!"
+   ],
+   "sudden": [
+    "¡Muerte súbita! ¡El que falla, pierde! ¡Qué emoción!"
+   ]
+  }
+ },
+ "de": {
+  "voice": "de-DE",
+  "calls": {
+   "ready": [
+    "Der Ball liegt bereit… Stille im Stadion…",
+    "Das ganze Stadion hält den Atem an…",
+    "Jetzt der Anlauf… gleich wird geschossen…"
+   ],
+   "goal": [
+    "Tooooor!",
+    "Tor!",
+    "Was für ein Tor!",
+    "Im Netz!",
+    "Drin!",
+    "Traumtor!"
+   ],
+   "corner": [
+    "Ins Eck!",
+    "Genau in den Winkel!",
+    "Ein Traumtor!",
+    "Oben rein!"
+   ],
+   "save": [
+    "Was für eine Parade!",
+    "Was für ein Torwart!",
+    "Eine Wand!",
+    "Ein Wunder!",
+    "Abgewehrt!",
+    "Gehalten!"
+   ],
+   "post": [
+    "Pfosten! Uuuuh, so knapp!",
+    "An den Pfosten! Ganz knapp!"
+   ],
+   "wide": [
+    "Daneben! Uuuh, knapp vorbei!",
+    "Knapp vorbei! Fast!"
+   ],
+   "over": [
+    "Drüber! Auf die Tribüne!",
+    "Weit drüber! In den Himmel!"
+   ],
+   "wall": [
+    "In die Mauer!",
+    "Die Mauer hält! Abgeblockt!"
+   ],
+   "win": [
+    "Sieg! Was für ein Spiel! Was für ein Spiel!"
+   ],
+   "lose": [
+    "Diesmal nicht… gleich nochmal!"
+   ],
+   "champion": [
+    "Meister! Meister! Meeeeister!"
+   ],
+   "sudden": [
+    "Sudden Death! Wer verschießt, verliert! Spannung pur!"
+   ]
+  }
+ },
+ "fr": {
+  "voice": "fr-FR",
+  "calls": {
+   "ready": [
+    "Le ballon est placé… silence dans le stade…",
+    "Tout le stade retient son souffle…",
+    "C'est parti… le tir arrive…"
+   ],
+   "goal": [
+    "Buuuuut !",
+    "C'est un but !",
+    "Quel but !",
+    "Au fond des filets !",
+    "Dedans !",
+    "Superbe but !"
+   ],
+   "corner": [
+    "Dans la lucarne !",
+    "En plein dans l'angle !",
+    "Un but magnifique !",
+    "Sous la barre !"
+   ],
+   "save": [
+    "Quel arrêt !",
+    "Quel gardien !",
+    "Un mur !",
+    "Un miracle !",
+    "Repoussé !",
+    "Arrêté !"
+   ],
+   "post": [
+    "Sur le poteau ! Ooooh, si près !",
+    "Le poteau ! C'était tout près !"
+   ],
+   "wide": [
+    "À côté ! Ooh, juste à côté !",
+    "Juste à côté ! Presque !"
+   ],
+   "over": [
+    "Au-dessus ! Dans les tribunes !",
+    "Bien au-dessus ! Dans les nuages !"
+   ],
+   "wall": [
+    "Dans le mur !",
+    "Le mur tient bon ! Contré !"
+   ],
+   "win": [
+    "Victoire ! Quel match ! Quel match !"
+   ],
+   "lose": [
+    "Pas cette fois… on recommence !"
+   ],
+   "champion": [
+    "Champions ! Champions ! Chaaaampions !"
+   ],
+   "sudden": [
+    "Mort subite ! Qui rate, perd ! Quel suspense !"
+   ]
+  }
+ },
+ "it": {
+  "voice": "it-IT",
+  "calls": {
+   "ready": [
+    "Sistema il pallone… silenzio nello stadio…",
+    "Tutto lo stadio trattiene il respiro…",
+    "Prende la rincorsa… sta per tirare…"
+   ],
+   "goal": [
+    "Goooool!",
+    "È gol!",
+    "Che gol!",
+    "In fondo alla rete!",
+    "Dentro!",
+    "Golazo!"
+   ],
+   "corner": [
+    "Nel sette!",
+    "All'incrocio dei pali!",
+    "Un gol da cineteca!",
+    "Sotto la traversa!"
+   ],
+   "save": [
+    "Che parata!",
+    "Che portiere!",
+    "Un muro!",
+    "Un miracolo!",
+    "Respinta!",
+    "Parata!"
+   ],
+   "post": [
+    "Palo! Uuuuh, che peccato!",
+    "Colpisce il palo! Per un soffio!"
+   ],
+   "wide": [
+    "Fuori! Uuuh, di poco!",
+    "Di poco fuori! Quasi!"
+   ],
+   "over": [
+    "Alto! In tribuna!",
+    "Altissimo! Tra le nuvole!"
+   ],
+   "wall": [
+    "Sulla barriera!",
+    "La barriera respinge! Tiene la barriera!"
+   ],
+   "win": [
+    "Vittoria! Che partita! Che partita!"
+   ],
+   "lose": [
+    "Non questa volta… riproviamo!"
+   ],
+   "champion": [
+    "Campioni! Campioni! Campiooooni!"
+   ],
+   "sudden": [
+    "Ad oltranza! Chi sbaglia, perde! Che emozione!"
+   ]
+  }
+ },
+ "zh": {
+  "voice": "zh-CN",
+  "calls": {
+   "ready": [
+    "摆好皮球……全场安静……",
+    "全场观众屏住了呼吸……",
+    "助跑……准备射门……"
+   ],
+   "goal": [
+    "球进啦！",
+    "进球！",
+    "漂亮的进球！",
+    "球网在颤动！",
+    "进了！",
+    "世界波！"
+   ],
+   "corner": [
+    "死角！",
+    "直挂死角！",
+    "精彩绝伦！",
+    "打进了上角！"
+   ],
+   "save": [
+    "漂亮的扑救！",
+    "好门将！",
+    "铜墙铁壁！",
+    "奇迹般的扑救！",
+    "扑出去了！",
+    "扑住了！"
+   ],
+   "post": [
+    "击中门柱！哎呀，太可惜了！",
+    "打在门柱上！就差一点点！"
+   ],
+   "wide": [
+    "偏出了！哎呀，差一点！",
+    "稍稍偏出！太可惜了！"
+   ],
+   "over": [
+    "高出横梁！飞上看台了！",
+    "踢飞了！飞上天了！"
+   ],
+   "wall": [
+    "打在人墙上！",
+    "人墙挡住了！人墙立功了！"
+   ],
+   "win": [
+    "胜利！精彩的比赛！太精彩了！"
+   ],
+   "lose": [
+    "下次加油！再来一次！"
+   ],
+   "champion": [
+    "冠军！冠军！我们是冠军！"
+   ],
+   "sudden": [
+    "突然死亡！谁罚丢谁就输！太紧张了！"
+   ]
+  }
+ },
+ "ja": {
+  "voice": "ja-JP",
+  "calls": {
+   "ready": [
+    "ボールをセット……スタジアムが静まりかえる……",
+    "スタジアム全体が息をのむ……",
+    "助走して……いま、けります……"
+   ],
+   "goal": [
+    "ゴーーール！",
+    "ゴール！",
+    "すばらしいゴール！",
+    "ネットが揺れた！",
+    "決まった！",
+    "スーパーゴール！"
+   ],
+   "corner": [
+    "隅に決めた！",
+    "ゴールの角に突き刺さった！",
+    "見事なゴール！",
+    "完璧なコース！"
+   ],
+   "save": [
+    "ナイスセーブ！",
+    "すごいキーパー！",
+    "まるで壁だ！",
+    "奇跡のセーブ！",
+    "はじいた！",
+    "止めた！"
+   ],
+   "post": [
+    "ポストにあたった！おしい！",
+    "ポスト直撃！あとちょっと！"
+   ],
+   "wide": [
+    "はずれた！おしい！",
+    "わずかにはずれ！あとちょっと！"
+   ],
+   "over": [
+    "バーの上！スタンドへ！",
+    "ふかしてしまった！空高く！"
+   ],
+   "wall": [
+    "壁にあたった！",
+    "壁がとめた！壁がふんばった！"
+   ],
+   "win": [
+    "勝利！すばらしい試合！最高！"
+   ],
+   "lose": [
+    "ざんねん！もう一回！"
+   ],
+   "champion": [
+    "チャンピオン！チャンピオン！優勝だ！"
+   ],
+   "sudden": [
+    "サドンデス！はずしたら負け！ドキドキ！"
+   ]
+  }
+ }
+}
