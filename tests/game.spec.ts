@@ -166,7 +166,7 @@ test('Torcida e música: escolhe o ritmo e as cores do time do coração', async
   page.on('pageerror', (e) => errors.push(e.message));
   await open(page);
   await page.click('[data-go=fans]');
-  await expect(page.locator('[data-music]')).toHaveCount(8);
+  await expect(page.locator('[data-music]')).toHaveCount(9);
   await page.click('[data-music=charanga]');
   await page.click('[data-h0="#111111"]');
   await page.click('[data-h1="#ffffff"]');
@@ -174,6 +174,10 @@ test('Torcida e música: escolhe o ritmo e as cores do time do coração', async
   expect(await page.evaluate(() => [localStorage.getItem('gol.music'), localStorage.getItem('gol.heart')])).toEqual(['charanga', '["#111111","#ffffff"]']);
   await page.click('[data-heart=none]');
   await expect(page.locator('.flag')).toHaveCount(0);
+  // som misto: fica salvo e o jogo segue sem erro (o ritmo é sorteado a cada chute)
+  await page.click('[data-music=misto]');
+  await expect(page.locator('[data-music=misto].on')).toHaveCount(1);
+  expect(await page.evaluate(() => localStorage.getItem('gol.music'))).toBe('misto');
   expect(errors).toEqual([]);
 });
 

@@ -44,11 +44,21 @@ function rollStyle() { pitch.round = roundUnlocked(progress.stickers.length) && 
 function rollWeather0() { weather = weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick; }
 let crowd = store.get('crowd', 'full') as Crowd;
 let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
-let musicStyle = store.get('music', 'estadio') as MusicStyle;
+/** Ritmo escolhido; 'misto' sorteia um ritmo diferente a cada chute. */
+type MusicPick = MusicStyle | 'misto';
+const MUSIC_PICKS: MusicPick[] = [...MUSIC_STYLES.filter((m) => m !== 'off'), 'misto', 'off'];
+let musicStyle = store.get('music', 'estadio') as MusicPick;
+const playableStyles = MUSIC_STYLES.filter((m) => m !== 'off');
+const randomStyle = (): MusicStyle => {
+  const opts = playableStyles.filter((m) => m !== music.style());
+  return opts[Math.floor(Math.random() * opts.length)];
+};
+/** No som misto, cada cobrança toca um ritmo sorteado. */
+function mixMusic() { if (musicStyle === 'misto') music.setStyle(randomStyle()); }
 /** Cores do time do coração (só cores, sem nome de clube), ou null. */
 const HEART_COLORS = ['#111111', '#ffffff', '#d50000', '#0d47a1', '#1b8a3a', '#ffd400', '#7b1f2e', '#ff6d00', '#6a1b9a', '#64b5f6'];
 let heart: [string, string] | null = (() => { try { const h = JSON.parse(store.get('heart', 'null')); return Array.isArray(h) ? h as [string, string] : null; } catch { return null; } })();
-music.setStyle(musicStyle);
+music.setStyle(musicStyle === 'misto' ? randomStyle() : musicStyle);
 // narração gravada: carrega as falas do idioma/voz e abaixa a música quando o narrador fala
 audio.whenAudioReady(() => audio.preloadVoice(lang));
 audio.onSpeak((secs) => music.duck(secs));
@@ -551,6 +561,7 @@ interface Duo { kicker: Team; keeper: Team; keeperAt: { x: number; y: number } }
 
 /** O jogador bate. Devolve se foi gol. Com `duo`, o goleiro é a outra criança. */
 async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team, duo?: Duo): Promise<boolean> {
+  mixMusic();
   const kickerKit = duo?.kicker.kit ?? myKit();
   pitch.setup({ sx, sz, view: 'kick', kickerKit, keeperKit: (duo?.keeper ?? opp).kit, wall, seed: Math.floor(rng() * 100), look: duo ? undefined : myLook() });
   // quem não escolheu comemoração (ou joga sem a versão completa / no 2 jogadores) ganha uma diferente a cada gol
@@ -607,6 +618,7 @@ async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall
 
 /** A máquina bate e o jogador defende tocando no gol. Devolve se a máquina fez gol. */
 async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team): Promise<boolean> {
+  mixMusic();
   pitch.setup({ sx, sz, view: 'keep', kickerKit: opp.kit, keeperKit: myKit(), wall, seed: Math.floor(rng() * 100), look: myLook() });
   pitch.kickerCelebration = CELEBRATIONS[Math.floor(rng() * CELEBRATIONS.length)];
   showHint(t('yourKeep'), tutKeep ? t('tutKeep') : '');
@@ -1116,7 +1128,7 @@ function fans() {
     <h2>${t('fanTitle')}</h2>
     <div class="card">
       <b>${t('music')}</b>
-      <div class="seg wrap">${MUSIC_STYLES.map((m) => `<button data-music="${m}" class="${m === musicStyle ? 'on' : ''}">${t(('mus_' + m) as UiKey)}</button>`).join('')}</div>
+      <div class="seg wrap">${MUSIC_PICKS.map((m) => `<button data-music="${m}" class="${m === musicStyle ? 'on' : ''}">${t(('mus_' + m) as UiKey)}</button>`).join('')}</div>
     </div>
     <div class="card">
       <b>${t('heart')}</b>
@@ -1131,9 +1143,9 @@ function fans() {
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
   on('[data-music]', (el) => {
-    musicStyle = el.dataset.music as MusicStyle;
+    musicStyle = el.dataset.music as MusicPick;
     store.set('music', musicStyle);
-    music.setStyle(musicStyle);
+    music.setStyle(musicStyle === 'misto' ? randomStyle() : musicStyle);
     fans();
   });
   const pick = (i: 0 | 1, c: string) => {
