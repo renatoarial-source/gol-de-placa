@@ -1,4 +1,5 @@
-/* Sons sintetizados na hora (sem arquivos): apito, chute, rede, trave, torcida.
+/* Sons do jogo: gravações reais (torcida do Maracanã e do Mineirão, apito, chute, rede, chuva; ver public/sfx/LEIA-ME.txt)
+ * e, se uma gravação não carregar, a versão sintetizada na hora.
  * E a narração, falada pela voz do próprio aparelho no idioma escolhido.
  */
 import { Capacitor } from '@capacitor/core';
@@ -49,11 +50,34 @@ export function initAudio() {
 // ---------- torcida gravada (Pixabay Content License; ver public/sfx/LEIA-ME.txt) ----------
 
 const SFX = {
-  fundo: './sfx/torcida-fundo.mp3',
-  cheer: ['./sfx/torcida-gol.mp3', './sfx/torcida-gol2.mp3'],
-  ohh: ['./sfx/torcida-uhh.mp3'],
+  fundo: './sfx/torcida-maracana.mp3',
+  cheer: ['./sfx/torcida-gol.mp3', './sfx/torcida-gol2.mp3', './sfx/torcida-gol3.mp3', './sfx/torcida-gol4.mp3'],
+  ohh: ['./sfx/torcida-uhh.mp3', './sfx/torcida-uhh2.mp3', './sfx/torcida-uhh3.mp3'],
   clap: ['./sfx/torcida-aplauso.mp3'],
+  // torcedores gritando gol na arquibancada (misturados à torcida, não competem com o narrador)
+  grito: ['./sfx/torcedor-gooool.mp3', './sfx/torcedor-gol-gol.mp3'],
 };
+/** Efeitos gravados do lance e as músicas de estádio (usadas pelo music.ts). */
+export const REC = {
+  apito: './sfx/apito.mp3', chute: './sfx/chute.mp3', rede: './sfx/rede.mp3', chuva: './sfx/chuva.mp3',
+  bateria: './sfx/bateria.mp3', vuvuzelas: './sfx/vuvuzelas.mp3',
+  cantos: ['./sfx/canto1.mp3', './sfx/canto2.mp3', './sfx/canto3.mp3'],
+};
+/** Gravação já carregada (ou undefined enquanto carrega / se falhar). */
+export const recorded = (url: string): AudioBuffer | undefined => sfx.get(url);
+/** Toca uma gravação uma vez; devolve false se ela ainda não carregou. */
+function playRec(url: string, vol: number, rate = 1, delay = 0): boolean {
+  const b = sfx.get(url);
+  if (!ctx || !master || !b) return false;
+  const s = ctx.createBufferSource();
+  s.buffer = b;
+  s.playbackRate.value = rate;
+  const g = ctx.createGain();
+  g.gain.value = vol;
+  s.connect(g).connect(master);
+  s.start(ctx.currentTime + delay);
+  return true;
+}
 const sfx = new Map<string, AudioBuffer>();
 let crowdBed: GainNode | null = null;
 let crowdSize = 1; // lotado 1, média 0.6, pouca 0.3
@@ -65,7 +89,10 @@ async function loadCrowd(c: AudioContext, out: GainNode) {
       if (r.ok) sfx.set(url, await c.decodeAudioData(await r.arrayBuffer()));
     } catch { /* fica com a torcida sintetizada */ }
   };
-  await Promise.all([SFX.fundo, ...SFX.cheer, ...SFX.ohh, ...SFX.clap].map(get));
+  await Promise.all([SFX.fundo, ...SFX.cheer, ...SFX.ohh, ...SFX.clap, ...SFX.grito, REC.apito, REC.chute, REC.rede, REC.chuva].map(get));
+  if (rainOn && !rainRec) { stopRain(); startRain(); } // a chuva gravada chegou: troca a sintetizada
+  // as músicas de estádio são maiores: carregam depois, sem atrasar o resto
+  void Promise.all([REC.bateria, REC.vuvuzelas, ...REC.cantos].map(get));
   const bed = sfx.get(SFX.fundo);
   if (!bed || !crowdGain) return;
   // torcida de fundo gravada, em loop; o murmúrio sintetizado sai de cena
@@ -84,9 +111,25 @@ let rainSrc: AudioBufferSourceNode | null = null;
 let rainGain: GainNode | null = null;
 let rainOn = false;
 let rainTimer: number | null = null;
+let rainRec = false;
 function startRain() {
   if (!ctx || !master || rainSrc) return;
   const c = ctx;
+  const rec = sfx.get(REC.chuva);
+  if (rec) {
+    // chuva gravada de verdade, em loop, baixinha por baixo da torcida
+    rainRec = true;
+    rainSrc = c.createBufferSource();
+    rainSrc.buffer = rec;
+    rainSrc.loop = true;
+    rainGain = c.createGain();
+    rainGain.gain.setValueAtTime(0, c.currentTime);
+    rainGain.gain.linearRampToValueAtTime(0.45, c.currentTime + 1.5);
+    rainSrc.connect(rainGain).connect(master);
+    rainSrc.start();
+    return;
+  }
+  rainRec = false;
   rainSrc = c.createBufferSource();
   rainSrc.buffer = noiseBuffer(c, 4);
   rainSrc.loop = true;
@@ -136,6 +179,11 @@ export function setCrowdSize(size: 'full' | 'half' | 'few') {
 /** Toca uma reação gravada; devolve false se ainda não carregou (aí usa a sintetizada). */
 function crowdClip(kind: 'cheer' | 'ohh' | 'clap'): boolean {
   if (!ctx || !master) return false;
+  // no gol, às vezes um torcedor perto grita "goooool" junto com a torcida
+  if (kind === 'cheer' && Math.random() < 0.6) {
+    const g = SFX.grito[Math.floor(Math.random() * SFX.grito.length)];
+    playRec(g, 0.55 * (0.5 + 0.5 * crowdSize), 0.97 + Math.random() * 0.06, 0.35 + Math.random() * 0.3);
+  }
   const list = SFX[kind].map((u) => sfx.get(u)).filter((b): b is AudioBuffer => !!b);
   if (!list.length) return false;
   const s = ctx.createBufferSource();
@@ -177,6 +225,7 @@ function env(g: GainNode, t: number, peak: number, attack: number, decay: number
 
 export function whistle() {
   if (!ctx || !master) return;
+  if (playRec(REC.apito, 0.8)) return;
   const t = ctx.currentTime;
   for (const [start, len] of [[0, 0.12], [0.18, 0.45]]) {
     const o = ctx.createOscillator();
@@ -198,6 +247,7 @@ export function whistle() {
 
 export function kick() {
   if (!ctx || !master) return;
+  if (playRec(REC.chute, 1, 0.95 + Math.random() * 0.1)) return;
   const t = ctx.currentTime;
   const o = ctx.createOscillator();
   const g = ctx.createGain();
@@ -217,6 +267,7 @@ export function kick() {
 
 export function net() {
   if (!ctx || !master) return;
+  if (playRec(REC.rede, 0.9)) return;
   const t = ctx.currentTime;
   const n = ctx.createBufferSource();
   n.buffer = noiseBuffer(ctx, 0.5);

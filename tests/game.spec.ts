@@ -166,7 +166,7 @@ test('Torcida e música: escolhe o ritmo e as cores do time do coração', async
   page.on('pageerror', (e) => errors.push(e.message));
   await open(page);
   await page.click('[data-go=fans]');
-  await expect(page.locator('[data-music]')).toHaveCount(7);
+  await expect(page.locator('[data-music]')).toHaveCount(8);
   await page.click('[data-music=charanga]');
   await page.click('[data-h0="#111111"]');
   await page.click('[data-h1="#ffffff"]');

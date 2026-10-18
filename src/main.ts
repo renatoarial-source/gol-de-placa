@@ -44,7 +44,7 @@ function rollStyle() { pitch.round = roundUnlocked(progress.stickers.length) && 
 function rollWeather0() { weather = weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick; }
 let crowd = store.get('crowd', 'full') as Crowd;
 let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
-let musicStyle = store.get('music', 'batucada') as MusicStyle;
+let musicStyle = store.get('music', 'estadio') as MusicStyle;
 /** Cores do time do coração (só cores, sem nome de clube), ou null. */
 const HEART_COLORS = ['#111111', '#ffffff', '#d50000', '#0d47a1', '#1b8a3a', '#ffd400', '#7b1f2e', '#ff6d00', '#6a1b9a', '#64b5f6'];
 let heart: [string, string] | null = (() => { try { const h = JSON.parse(store.get('heart', 'null')); return Array.isArray(h) ? h as [string, string] : null; } catch { return null; } })();
@@ -1126,6 +1126,8 @@ function fans() {
       ${heart ? `<div class="flag" style="--a:${heart[0]};--b:${heart[1]}"></div>` : ''}
       <p class="voice-note">${t('heartInfo')}</p>
     </div>
+    <p class="voice-note credits">🎧 ${t('soundCredits')}: Félix Blume, _vk (Maracanã), dacarpe, Bruna32U, AxelTheCocker02, neilraouf, Kinoton,
+      soundrecorder7, Imp_sounds, bittermelonheart (CC0) · Pablo-F, luminadii, gusvelasco, Quistard, juskiddink (CC BY 3.0/4.0)</p>
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
   on('[data-music]', (el) => {

@@ -3,10 +3,10 @@
  * o coro "olé, olé", cornetas de estádio e um pagode de arquibancada.
  * A intensidade sobe antes da cobrança e explode no gol.
  */
-import { whenAudioReady } from './audio';
+import { REC, recorded, whenAudioReady } from './audio';
 
-export type MusicStyle = 'batucada' | 'charanga' | 'palmas' | 'ole' | 'corneta' | 'pagode' | 'off';
-export const MUSIC_STYLES: MusicStyle[] = ['batucada', 'charanga', 'palmas', 'ole', 'corneta', 'pagode', 'off'];
+export type MusicStyle = 'estadio' | 'batucada' | 'charanga' | 'palmas' | 'ole' | 'corneta' | 'pagode' | 'off';
+export const MUSIC_STYLES: MusicStyle[] = ['estadio', 'batucada', 'charanga', 'palmas', 'ole', 'corneta', 'pagode', 'off'];
 
 let ctx: AudioContext | null = null;
 let out: GainNode | null = null;
@@ -18,7 +18,7 @@ let step = 0;
 let nextTime = 0;
 let noise: AudioBuffer | null = null;
 
-const BPM: Record<Exclude<MusicStyle, 'off'>, number> = { batucada: 126, charanga: 112, palmas: 100, ole: 104, corneta: 120, pagode: 98 };
+const BPM: Record<Exclude<MusicStyle, 'off'>, number> = { estadio: 120, batucada: 126, charanga: 112, palmas: 100, ole: 104, corneta: 120, pagode: 98 };
 
 function env(g: GainNode, t: number, peak: number, attack: number, decay: number) {
   g.gain.setValueAtTime(0, t);
@@ -190,13 +190,71 @@ const OLE: [number, string[], number][][] = [
 // acordes do pagode (cavaquinho), um por compasso
 const CAVACO = [['G4', 'B4', 'D5', 'E5'], ['A4', 'C5', 'E5', 'G5'], ['A4', 'D5', 'F#5', 'C6'], ['G4', 'B4', 'D5', 'G5']];
 
+// ---------- gravações de estádio de verdade ----------
+/** Laços gravados tocando agora (bateria no "Estádio de verdade", vuvuzelas nas "Cornetas"). */
+let loops: { src: AudioBufferSourceNode; gain: GainNode; url: string }[] = [];
+let nextChant = 0;
+const LOOP_FOR: Partial<Record<MusicStyle, [string, number][]>> = {
+  estadio: [[REC.bateria, 1.25]],
+  corneta: [[REC.vuvuzelas, 0.55]],
+};
+function stopLoops() {
+  if (!ctx) { loops = []; return; }
+  for (const l of loops) {
+    l.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.3);
+    const s = l.src;
+    setTimeout(() => { try { s.stop(); } catch { /* já parou */ } }, 1500);
+  }
+  loops = [];
+}
+/** Liga os laços do estilo (se as gravações já carregaram; senão tenta de novo no próximo passo). */
+function ensureLoops() {
+  if (!ctx || !out) return;
+  for (const [url, vol] of LOOP_FOR[style] ?? []) {
+    if (loops.some((l) => l.url === url)) continue;
+    const b = recorded(url);
+    if (!b) continue;
+    const src = ctx.createBufferSource();
+    src.buffer = b; src.loop = true;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 1.2);
+    src.connect(gain).connect(out);
+    src.start(ctx.currentTime, Math.random() * b.duration * 0.8);
+    loops.push({ src, gain, url });
+  }
+}
+/** No "Estádio de verdade", de tempos em tempos a torcida puxa um canto por cima da bateria. */
+function chant(t: number) {
+  if (!ctx || !out || t < nextChant) return;
+  const ready = REC.cantos.map((u) => recorded(u)).filter((b): b is AudioBuffer => !!b);
+  if (!ready.length) return;
+  const b = ready[Math.floor(Math.random() * ready.length)];
+  const src = ctx.createBufferSource();
+  src.buffer = b;
+  const g = ctx.createGain();
+  const len = Math.min(b.duration, 14);
+  const off = Math.random() * Math.max(0, b.duration - len);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(1.1, t + 1);
+  g.gain.setValueAtTime(1.1, t + len - 1.5);
+  g.gain.linearRampToValueAtTime(0, t + len);
+  src.connect(g).connect(out);
+  src.start(t, off, len);
+  nextChant = t + len + 6 + Math.random() * 10;
+}
+
 /** Toca o passo (semicolcheia) `s` no tempo `t`. */
 function play(s: number, t: number, dur16: number) {
   const st = s % 16;
   const bar = Math.floor(s / 16);
   const hot = level >= 0.7 || t < boostUntil;
   const v = 0.55 + 0.45 * Math.min(1, level);
-  if (style === 'batucada') {
+  if (style === 'estadio') {
+    // tudo gravado: a bateria fica em laço; no calor do jogo entram cantos e o surdo marca mais forte
+    if (st === 0) { ensureLoops(); chant(t + (hot ? 0 : 2)); }
+    if (hot && (st === 4 || st === 12)) surdo(t, 55, 0.35 * v);
+  } else if (style === 'batucada') {
     if (st === 4 || st === 12) surdo(t, 55, 0.9 * v);
     if (st === 0 || st === 8) surdo(t, 72, 0.45 * v);
     caixa(t, ([3, 7, 11, 15].includes(st) ? 0.32 : 0.12) * v);
@@ -234,6 +292,7 @@ function play(s: number, t: number, dur16: number) {
     if (hot && st % 2 === 1) chocalho(t, 0.08 * v);
     for (const [at, notes, len] of OLE[bar % 2]) if (at === st) coro(t, notes.map(N), dur16 * len * 0.95, 0.13 * v);
   } else if (style === 'corneta') {
+    if (st === 0) ensureLoops();
     // cornetas: umas compridas e outras curtinhas, cada uma num tom um pouco diferente (ninguém combina)
     if (st === 0 || st === 8 || st === 11) bumbo(t, 0.6 * v);
     if (st === 4 || st === 12) caixa(t, 0.25 * v);
@@ -271,6 +330,7 @@ function start() {
 }
 function stop() {
   if (timer !== null) { clearInterval(timer); timer = null; }
+  stopLoops();
 }
 
 whenAudioReady((c, master) => {
