@@ -23,7 +23,7 @@ if (CANCEL) {
   const r = await api('PATCH', `/reviewSubmissions/${CANCEL}`, { data: { type: 'reviewSubmissions', id: CANCEL, attributes: { canceled: true } } });
   console.log('Cancelado:', r.data.attributes.state);
 }
-const subs = (await api('GET', `/reviewSubmissions?filter[app]=${APP}&filter[platform]=IOS&limit=6`)).data;
+const subs = (await api('GET', `/reviewSubmissions?filter[app]=${APP}&filter[platform]=IOS&limit=30`)).data;
 for (const s of subs) {
   const items = (await api('GET', `/reviewSubmissions/${s.id}/items?include=appStoreVersion,appEvent`)).data;
   const desc = items.map((i) => Object.entries(i.relationships || {}).filter(([, v]) => v.data).map(([k, v]) => `${k}:${v.data.id}`).join(',') + ` (${i.attributes.state})`);
