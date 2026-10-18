@@ -51,7 +51,14 @@ const ESCONDE_QUERIES = [
   ['birds forest ambience', 'fundo'], ['park ambience birds', 'fundo'], ['beach waves', 'fundo'], ['farm ambience', 'fundo'], ['night crickets', 'fundo'],
   ['kids laughing', 'risada'], ['children cheering yay', 'festa'], ['bubble pop', 'bolha'], ['door creak', 'porta'],
 ];
-const FS_QUERIES = SET === 'gelada' ? GELADA_QUERIES : SET === 'esconde' ? ESCONDE_QUERIES : GOL_QUERIES;
+// Esconde-Esconde, segunda leva: bichos e objetos que faltaram
+const ESCONDE2_QUERIES = [
+  ['penguin', 'pinguim'], ['penguins colony', 'pinguim'], ['sea lion bark', 'foca'], ['seal bark', 'foca'], ['camel grunt', 'camelo'], ['camel', 'camelo'],
+  ['sleigh bells', 'guizo'], ['jingle bells shake', 'guizo'], ['clown horn', 'buzina'], ['bike horn honk', 'buzina'], ['service bell ding', 'campainha'],
+  ['cash register ding', 'campainha'], ['hamster squeak', 'rato'], ['guinea pig squeak', 'rato'], ['macaw', 'papagaio'], ['owl', 'coruja'],
+  ['chicks peeping', 'pintinho'], ['dog bark single', 'cachorro'], ['cat meow kitten', 'gato'], ['bear growl', 'urso'],
+];
+const FS_QUERIES = SET === 'gelada' ? GELADA_QUERIES : SET === 'esconde' ? ESCONDE_QUERIES : SET === 'esconde2' ? ESCONDE2_QUERIES : GOL_QUERIES;
 async function freesoundSearch(q) {
   const html = await (await get(`https://freesound.org/search/?q=${encodeURIComponent(q)}&s=Downloads+(most+first)`)).text();
   const ids = [...html.matchAll(/href="\/people\/([^/"]+)\/sounds\/(\d+)\/"/g)].map((m) => [m[1], m[2]]);
