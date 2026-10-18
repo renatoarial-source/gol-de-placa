@@ -1,0 +1,699 @@
+{
+ "bolha__fs15348__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "bolha__fs240566__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "bolha__fs319107__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "bolha__fs66787__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.1,
+    "text": "you",
+    "p_speech": 0.1
+   }
+  ]
+ },
+ "cachorro__fs163459__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "cachorro__fs501719__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "cachorro__fs9032__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "cavalo__fs165243__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "cavalo__fs419231__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.76,
+  "segments": [
+   {
+    "start": 0.3,
+    "end": 2.3,
+    "text": "Hahahaha",
+    "p_speech": 0.62
+   }
+  ]
+ },
+ "cavalo__fs59569__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "coruja__fs398734__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.5,
+  "segments": [
+   {
+    "start": 0.8,
+    "end": 3.8,
+    "text": "Hmm, hmm, hmm, hmm.",
+    "p_speech": 0.41
+   }
+  ]
+ },
+ "coruja__fs465697__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "corvo__fs361470__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "corvo__fs75162__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "elefante__fs507467__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.41,
+  "segments": []
+ },
+ "elefante__fs527845__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "festa__fs438421__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.9,
+  "segments": [
+   {
+    "start": 0.4,
+    "end": 2.4,
+    "text": "16-1.",
+    "p_speech": 0.77
+   }
+  ]
+ },
+ "folhas__fs106114__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "folhas__fs204030__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "folhas__fs362253__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "folhas__fs59315__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "fundo__fs221758__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "fundo__fs274175__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "fundo__fs352514__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "fundo__fs458113__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "fundo__fs96533__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gaivota__fs144835__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gaivota__fs353416__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gaivota__fs400331__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "galinha__fs316920__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "galinha__fs316921__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "galinha__fs456803__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "galinha__fs49805__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.4,
+  "segments": []
+ },
+ "ganso__fs164484__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.43,
+  "segments": [
+   {
+    "start": 4.3,
+    "end": 6.3,
+    "text": "You",
+    "p_speech": 0.42
+   }
+  ]
+ },
+ "ganso__fs425488__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "ganso__fs470035__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.89,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 1.2,
+    "text": "Don't stop, keeper!",
+    "p_speech": 0.88
+   }
+  ]
+ },
+ "ganso__fs515408__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.48,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 0.5,
+    "text": "RUN",
+    "p_speech": 0.53
+   }
+  ]
+ },
+ "gato__fs110011__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gato__fs213889__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gato__fs260881__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gato__fs415209__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "leao__fs149190__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "leao__fs170454__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.44,
+  "segments": []
+ },
+ "leao__fs186899__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "leao__fs212764__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "leao__fs439280__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "macaco__fs160380__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "macaco__fs397054__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "macaco__fs493793__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "ovelha__fs210511__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "ovelha__fs362283__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.56,
+  "segments": []
+ },
+ "ovelha__fs75190__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.5,
+  "segments": [
+   {
+    "start": 1.0,
+    "end": 3.0,
+    "text": "Hey",
+    "p_speech": 0.2
+   }
+  ]
+ },
+ "papagaio__fs332056__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "papagaio__fs401190__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs138340__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs234263__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs257046__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs32939__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs366111__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs378727__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs38874__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs397946__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "passos__fs411206__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "pato__fs185134__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.45,
+  "segments": []
+ },
+ "pato__fs326543__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "pato__fs442820__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "pintinho__fs150298__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "pintinho__fs572954__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "pombo__fs319512__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "pombo__fs45922__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.31,
+  "segments": []
+ },
+ "pombo__fs76445__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "porco__fs260640__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.44,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "MRAAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 2.0,
+    "end": 4.0,
+    "text": "i am going to do a special demo with my camera",
+    "p_speech": 0.51
+   },
+   {
+    "start": 4.0,
+    "end": 6.0,
+    "text": "And I am going to do a first video with my camera",
+    "p_speech": 0.51
+   },
+   {
+    "start": 6.0,
+    "end": 8.0,
+    "text": "MRAAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 8.0,
+    "end": 10.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 10.0,
+    "end": 12.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 12.0,
+    "end": 14.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 14.0,
+    "end": 16.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 16.0,
+    "end": 18.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 18.0,
+    "end": 20.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 20.0,
+    "end": 22.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 22.0,
+    "end": 24.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 24.0,
+    "end": 26.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   },
+   {
+    "start": 26.0,
+    "end": 28.0,
+    "text": "MRAAA",
+    "p_speech": 0.51
+   }
+  ]
+ },
+ "porco__fs352698__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.49,
+  "segments": []
+ },
+ "porco__fs442906__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.65,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "EEEEEEEEEEEEEEEEEEEEEEEE",
+    "p_speech": 0.42
+   }
+  ]
+ },
+ "porta__fs109710__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "porta__fs23448__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "porta__fs346212__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "rato__fs188043__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "rato__fs445958__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "rato__fs463789__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "risada__fs273152__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.74,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "Ha ha ha ha ha ha ha ha",
+    "p_speech": 0.51
+   }
+  ]
+ },
+ "risada__fs365632__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "risada__fs371342__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "risada__fs55209__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.98,
+  "segments": [
+   {
+    "start": 1.1,
+    "end": 18.9,
+    "text": "I'm not gonna joke you.",
+    "p_speech": 0.7
+   },
+   {
+    "start": 18.9,
+    "end": 21.9,
+    "text": "Do another one to make me laugh.",
+    "p_speech": 0.7
+   }
+  ]
+ },
+ "ronco__fs114609__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "ronco__fs16755__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "ronco__fs61605__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "ronco__fs63349__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.62,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "Oh",
+    "p_speech": 0.43
+   }
+  ]
+ },
+ "sapo__fs536759__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "sino__fs212663__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "sino__fs29870__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.64,
+  "segments": []
+ },
+ "sino__fs425172__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "sino__fs484344__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "sino__fs520998__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "sino__fs76405__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "sino__fs91924__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "trem__fs71778__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "trem__fs9923__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.36,
+  "segments": []
+ },
+ "trovao__fs237729__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "trovao__fs35643__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "trovao__fs360328__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "vaca__fs163727__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.59,
+  "segments": [
+   {
+    "start": 0.1,
+    "end": 1.1,
+    "text": "No.",
+    "p_speech": 0.54
+   }
+  ]
+ },
+ "vaca__fs177253__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.54,
+  "segments": []
+ }
+}
