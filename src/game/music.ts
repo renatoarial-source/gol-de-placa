@@ -1,11 +1,12 @@
 /* Música da torcida, toda sintetizada na hora (sem gravações e sem músicas de terceiros):
- * batucada de arquibancada, charanga com uma melodia original e palmas com o coro "ô, ô, ô".
+ * batucada de arquibancada, charanga com uma melodia original, palmas com o coro "ô, ô, ô",
+ * o coro "olé, olé", cornetas de estádio e um pagode de arquibancada.
  * A intensidade sobe antes da cobrança e explode no gol.
  */
 import { whenAudioReady } from './audio';
 
-export type MusicStyle = 'batucada' | 'charanga' | 'palmas' | 'off';
-export const MUSIC_STYLES: MusicStyle[] = ['batucada', 'charanga', 'palmas', 'off'];
+export type MusicStyle = 'batucada' | 'charanga' | 'palmas' | 'ole' | 'corneta' | 'pagode' | 'off';
+export const MUSIC_STYLES: MusicStyle[] = ['batucada', 'charanga', 'palmas', 'ole', 'corneta', 'pagode', 'off'];
 
 let ctx: AudioContext | null = null;
 let out: GainNode | null = null;
@@ -17,7 +18,7 @@ let step = 0;
 let nextTime = 0;
 let noise: AudioBuffer | null = null;
 
-const BPM: Record<Exclude<MusicStyle, 'off'>, number> = { batucada: 126, charanga: 112, palmas: 100 };
+const BPM: Record<Exclude<MusicStyle, 'off'>, number> = { batucada: 126, charanga: 112, palmas: 100, ole: 104, corneta: 120, pagode: 98 };
 
 function env(g: GainNode, t: number, peak: number, attack: number, decay: number) {
   g.gain.setValueAtTime(0, t);
@@ -135,6 +136,42 @@ function coro(t: number, freqs: number[], dur: number, v: number) {
   g.connect(out!);
 }
 
+/** Corneta de estádio: som rasgado e meio desafinado, com a "subidinha" do sopro no começo. */
+function corneta(t: number, freq: number, dur: number, v: number) {
+  const f = ctx!.createBiquadFilter();
+  f.type = 'lowpass'; f.frequency.value = 1500; f.Q.value = 3;
+  const g = ctx!.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(v, t + 0.04);
+  g.gain.setValueAtTime(v * 0.85, t + dur * 0.85);
+  g.gain.linearRampToValueAtTime(0, t + dur);
+  f.connect(g).connect(out!);
+  for (const [type, d] of [['sawtooth', 1], ['square', 1.012]] as const) {
+    const o = ctx!.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(freq * 0.92 * d, t);
+    o.frequency.linearRampToValueAtTime(freq * d, t + 0.08);
+    o.connect(f); o.start(t); o.stop(t + dur + 0.02);
+  }
+}
+/** Pandeiro: platinelas (chiado curto) e, no tempo forte, a pele. */
+const pandeiro = (t: number, v: number, pele = false) => {
+  hiss(t, 'bandpass', 7500, v, 0.06, 2);
+  if (pele) tone(t, 190, 140, v * 1.4, 0.09);
+};
+const tanta = (t: number, v: number) => tone(t, 110, 70, v, 0.35);
+/** Cavaquinho: acorde "rasgado" (as cordas uma logo depois da outra), bem curtinho. */
+function cavaco(t: number, notes: number[], v: number) {
+  notes.forEach((fq, i) => {
+    const o = ctx!.createOscillator();
+    const g = ctx!.createGain();
+    o.type = 'triangle'; o.frequency.value = fq;
+    env(g, t + i * 0.012, v, 0.003, 0.16);
+    o.connect(g).connect(out!);
+    o.start(t + i * 0.012); o.stop(t + 0.3);
+  });
+}
+
 const N = (name: string) => {
   const m = /^([A-G])(#?)(\d)$/.exec(name)!;
   const semis = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1] as 'C'] + (m[2] ? 1 : 0);
@@ -145,6 +182,13 @@ const N = (name: string) => {
 const MELODY = ['E5', 'G5', 'C6', 'G5', 'E5', 'G5', 'C6', '-', 'F5', 'A5', 'C6', 'A5', 'F5', 'A5', 'C6', '-',
   'G5', 'B5', 'D6', 'B5', 'G5', 'F5', 'E5', 'D5', 'C5', 'E5', 'G5', 'C6', '-', '-', '', ''];
 const ROOTS = ['C2', 'F2', 'G2', 'C2'];
+// "o-lé, o-lé, o-lé, o-lé... o-lé, o-lé": [passo no compasso, notas, duração em semicolcheias], 2 compassos
+const OLE: [number, string[], number][][] = [
+  [[0, ['C4', 'G4'], 2], [2, ['E4', 'C5'], 2], [4, ['C4', 'G4'], 2], [6, ['E4', 'C5'], 2], [8, ['C4', 'G4'], 2], [10, ['E4', 'C5'], 2], [12, ['C4', 'G4'], 2], [14, ['E4', 'C5'], 2]],
+  [[0, ['D4', 'A4'], 2], [2, ['F4', 'D5'], 4], [8, ['C4', 'G4'], 2], [10, ['E4', 'C5'], 5]],
+];
+// acordes do pagode (cavaquinho), um por compasso
+const CAVACO = [['G4', 'B4', 'D5', 'E5'], ['A4', 'C5', 'E5', 'G5'], ['A4', 'D5', 'F#5', 'C6'], ['G4', 'B4', 'D5', 'G5']];
 
 /** Toca o passo (semicolcheia) `s` no tempo `t`. */
 function play(s: number, t: number, dur16: number) {
@@ -183,6 +227,28 @@ function play(s: number, t: number, dur16: number) {
     if (bar % 2 === 0 && [0, 4, 8].includes(st)) coro(t, [N('C4'), N('G4')], dur16 * 3, 0.12 * v);
     if (bar % 2 === 1 && [0, 2, 4].includes(st)) coro(t, [N('D4'), N('A4')], dur16 * 1.6, 0.12 * v);
     if (bar % 2 === 1 && st === 6) coro(t, [N('C4'), N('G4'), N('E4')], dur16 * 6, 0.11 * v);
+  } else if (style === 'ole') {
+    // o estádio inteiro cantando "olé", com palmas no contratempo e o bumbo marcando
+    if (st === 0 || st === 8) bumbo(t, 0.55 * v);
+    if (st === 4 || st === 12) palma(t, 0.7 * v);
+    if (hot && st % 2 === 1) chocalho(t, 0.08 * v);
+    for (const [at, notes, len] of OLE[bar % 2]) if (at === st) coro(t, notes.map(N), dur16 * len * 0.95, 0.13 * v);
+  } else if (style === 'corneta') {
+    // cornetas: umas compridas e outras curtinhas, cada uma num tom um pouco diferente (ninguém combina)
+    if (st === 0 || st === 8 || st === 11) bumbo(t, 0.6 * v);
+    if (st === 4 || st === 12) caixa(t, 0.25 * v);
+    const b = 233.08 * (1 + ((bar * 7) % 5) * 0.012);
+    if (st === 0) corneta(t, b, dur16 * 5, 0.07 * v);
+    if (st === 8 || st === 10) corneta(t, b * 1.03, dur16 * 1.4, 0.06 * v);
+    if (st === 12) corneta(t, b * 0.98, dur16 * 3.5, 0.07 * v);
+    if (hot && st % 4 === 2) corneta(t, b * (1.2 + Math.random() * 0.1), dur16 * 1.2, 0.05 * v);
+  } else if (style === 'pagode') {
+    // pagode de arquibancada: pandeiro, tantã, cavaquinho e o coro "lá-iá" quando esquenta
+    pandeiro(t, ([2, 6, 10, 14].includes(st) ? 0.16 : 0.07) * v, st === 0 || st === 8);
+    if ([0, 6, 8, 14].includes(st)) tanta(t, 0.55 * v);
+    if (st === 3 || st === 11) tamborim(t, 0.1 * v);
+    if ([2, 5, 10, 13].includes(st)) cavaco(t, CAVACO[bar % 4].map(N), 0.07 * v);
+    if (hot && bar % 2 === 0 && (st === 0 || st === 4)) coro(t, [N('G4'), N('D5')], dur16 * 3, 0.1 * v);
   }
 }
 

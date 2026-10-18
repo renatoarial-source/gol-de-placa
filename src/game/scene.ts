@@ -322,6 +322,14 @@ export class Pitch {
   private crowd!: THREE.InstancedMesh;
   private crowdY!: Float32Array;
   private crowdX!: Float32Array; // posição ao longo do estádio, para a "ola"
+  private crowdBX!: Float32Array; // posição de cada torcedor na cadeira
+  private crowdBZ!: Float32Array;
+  private crowdR!: Float32Array; // jeito de cada um (0..1): ritmo, altura do pulo, quem gira
+  private ohh = 0; // torcida lamentando (mãos na cabeça)
+  private paper: THREE.Points | null = null; // papel picado do gol
+  private paperV: Float32Array | null = null;
+  private paperT = 0;
+  private crowdPal: string[] = ['#ffffff'];
   private cheer = 0;
   private hemi!: THREE.HemisphereLight;
   private sun!: THREE.DirectionalLight;
@@ -531,6 +539,9 @@ export class Pitch {
     this.crowd = new THREE.InstancedMesh(new THREE.BoxGeometry(0.42, 0.62, 0.36), new THREE.MeshLambertMaterial(), n);
     this.crowdY = new Float32Array(n);
     this.crowdX = new Float32Array(n);
+    this.crowdBX = new Float32Array(n);
+    this.crowdBZ = new Float32Array(n);
+    this.crowdR = new Float32Array(n);
     const m = new THREE.Matrix4();
     order.forEach((si, i) => {
       const p = seats[si];
@@ -538,6 +549,9 @@ export class Pitch {
       this.crowd.setMatrixAt(i, m);
       this.crowdY[i] = p.y;
       this.crowdX[i] = along[si];
+      this.crowdBX[i] = p.x;
+      this.crowdBZ[i] = p.z;
+      this.crowdR[i] = Math.random();
     });
     this.scene.add(this.crowd);
 
@@ -671,6 +685,7 @@ export class Pitch {
     const share = { full: 1, half: 0.5, few: 0.16 }[o.crowd];
     this.crowd.count = Math.floor(this.crowdY.length * share);
     const pal = [...o.colors, ...o.colors, '#ffffff', '#e53935', '#43a047', '#ff8f00', '#8e24aa'];
+    this.crowdPal = [...o.colors, ...o.colors, '#ffffff', '#ffd400'];
     const c = new THREE.Color();
     for (let i = 0; i < this.crowdY.length; i++) this.crowd.setColorAt(i, c.set(pal[Math.floor(Math.random() * pal.length)]));
     if (this.crowd.instanceColor) this.crowd.instanceColor.needsUpdate = true;
@@ -852,19 +867,39 @@ export class Pitch {
     if (this.kicker && !this.kicker.busy) breathe(this.kicker, T);
     for (const w of this.wall) if (!w.busy) breathe(w, T, -0.25);
     if (this.showcaseBody && !this.showcaseBody.busy) breathe(this.showcaseBody, T);
-    // torcida: balança sempre, faz a "ola" de tempos em tempos e pula no gol
+    // torcida: cada um balança no seu ritmo, faz a "ola" de tempos em tempos e explode no gol
+    // (pula, levanta os braços, vai de um lado para o outro e alguns giram); no lance perdido, murcha
     this.cheer = Math.max(0, this.cheer - dt);
+    this.ohh = Math.max(0, this.ohh - dt);
     const arr = this.crowd.instanceMatrix.array as Float32Array;
     const wave = (this.idle * 22) % 520; // a ola percorre o estádio (~268 m) e some por um tempo
-    const party = Math.min(1, this.cheer);
+    const party = Math.min(1, this.cheer / 1.5); // a festa vai acalmando no fim
+    const sad = Math.min(1, this.ohh / 0.8);
     for (let i = 0; i < this.crowd.count; i++) {
-      const ph = i * 1.7;
-      let y = Math.sin(this.idle * 2 + ph) * 0.03;
+      const r = this.crowdR[i];
+      const ph = r * 40;
+      let y = Math.sin(this.idle * (1.8 + r * 1.2) + ph) * 0.04;
+      let sx = 1, sy = 1, xo = 0, rot = 0;
       const dw = Math.abs(this.crowdX[i] - wave);
-      if (dw < 6) y += (1 - dw / 6) * 0.5;
-      if (party) y += Math.max(0, Math.sin(this.idle * 12 + ph)) * 0.4 * party;
-      arr[i * 16 + 13] = this.crowdY[i] + y;
+      if (dw < 6) { const k = 1 - dw / 6; y += k * 0.5; sy += k * 0.3; }
+      if (party) {
+        const j = Math.max(0, Math.sin(this.idle * (7 + r * 7) + ph));
+        y += j * (0.3 + 0.5 * r) * party;
+        sy += j * 0.45 * party; // braços para cima
+        sx -= j * 0.12 * party;
+        xo = Math.sin(this.idle * (2.5 + r * 2) + ph) * 0.18 * party;
+        if (r > 0.82) rot = (this.idle * (5 + r * 6) + ph) * party; // alguns giram de alegria
+      }
+      if (sad) { y -= 0.12 * sad; sy -= 0.18 * sad; }
+      const c = Math.cos(rot), sn = Math.sin(rot), o = i * 16;
+      arr[o] = c * sx; arr[o + 2] = -sn * sx;
+      arr[o + 5] = sy;
+      arr[o + 8] = sn; arr[o + 10] = c;
+      arr[o + 12] = this.crowdBX[i] + xo;
+      arr[o + 13] = this.crowdY[i] + y + (sy - 1) * 0.31;
+      arr[o + 14] = this.crowdBZ[i];
     }
+    this.updatePaper(dt);
     this.crowd.instanceMatrix.needsUpdate = true;
     if (this.fall) {
       const p = this.fall.geometry.attributes.position as THREE.BufferAttribute;
@@ -884,9 +919,11 @@ export class Pitch {
       const pos = (f.geometry as THREE.PlaneGeometry).attributes.position as THREE.BufferAttribute;
       for (let k = 0; k < pos.count; k++) {
         const x = pos.getX(k) + 0.85;
-        pos.setZ(k, Math.sin(this.idle * (party ? 9 : 4) + x * 3 + i) * 0.12 * x);
+        pos.setZ(k, Math.sin(this.idle * (party ? 11 : 4) + x * 3 + i) * (party ? 0.28 : 0.12) * x);
       }
       pos.needsUpdate = true;
+      // na festa, as bandeiras sobem e descem, cada uma no seu tempo
+      if (f.parent) f.parent.position.y = 1.0 + (party ? Math.max(0, Math.sin(this.idle * 8 + i * 1.3)) * 0.9 * party : 0);
     });
     this.ballShadow.position.x = this.ball.position.x;
     this.ballShadow.position.z = this.ball.position.z;
@@ -1183,8 +1220,60 @@ export class Pitch {
     }));
   }
 
+  /** Reação da torcida ao lance: festa (gol da criança ou defesa dela) ou lamento. */
+  crowdReact(kind: 'party' | 'ohh') {
+    if (kind === 'ohh') { this.ohh = 1.6; return; }
+    this.cheer = Math.max(this.cheer, 4.5);
+    this.throwPaper();
+  }
+
+  /** Papel picado caindo das arquibancadas, nas cores da torcida. */
+  private throwPaper() {
+    const n = 700;
+    const pos = new Float32Array(n * 3);
+    const col = new Float32Array(n * 3);
+    this.paperV = new Float32Array(n * 3);
+    const c = new THREE.Color();
+    for (let i = 0; i < n; i++) {
+      const back = i % 2 === 0; // metade atrás do gol, metade nas laterais
+      pos[i * 3] = back ? (Math.random() - 0.5) * 60 : (Math.random() < 0.5 ? -1 : 1) * (27 + Math.random() * 5);
+      pos[i * 3 + 1] = 6 + Math.random() * 6;
+      pos[i * 3 + 2] = back ? -13 - Math.random() * 6 : Math.random() * 36;
+      this.paperV[i * 3] = (Math.random() - 0.5) * 2;
+      this.paperV[i * 3 + 1] = 1.5 + Math.random() * 3; // sobe um pouco antes de cair
+      this.paperV[i * 3 + 2] = (Math.random() - 0.5) * 2;
+      c.set(this.crowdPal[Math.floor(Math.random() * this.crowdPal.length)]);
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
+    if (this.paper) { this.scene.remove(this.paper); this.paper.geometry.dispose(); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    this.paper = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.28, vertexColors: true, transparent: true, opacity: 1, depthWrite: false }));
+    this.paperT = 0;
+    this.scene.add(this.paper);
+  }
+
+  private updatePaper(dt: number) {
+    if (!this.paper || !this.paperV) return;
+    this.paperT += dt;
+    const p = this.paper.geometry.attributes.position as THREE.BufferAttribute;
+    const a = p.array as Float32Array;
+    const v = this.paperV;
+    for (let i = 0; i < p.count; i++) {
+      v[i * 3 + 1] = Math.max(-1.6, v[i * 3 + 1] - 6 * dt); // cai devagar, como papel
+      a[i * 3] += (v[i * 3] + Math.sin(this.paperT * 4 + i) * 0.8) * dt;
+      a[i * 3 + 1] = Math.max(0.02, a[i * 3 + 1] + v[i * 3 + 1] * dt);
+      a[i * 3 + 2] += v[i * 3 + 2] * dt;
+    }
+    p.needsUpdate = true;
+    const m = this.paper.material as THREE.PointsMaterial;
+    m.opacity = Math.max(0, 1 - Math.max(0, this.paperT - 5) / 1.5);
+    if (this.paperT > 6.5) { this.scene.remove(this.paper); this.paper.geometry.dispose(); this.paper = null; }
+  }
+
   celebrate(goal: boolean) {
-    this.cheer = 2.5;
+    this.cheer = Math.max(this.cheer, 3);
     const b = goal ? this.kicker : this.keeper;
     if (b) setMood(b, 'happy');
     if (!b || (!goal && this.keeperMode === 'dive')) return; // goleiro que mergulhou fica no chão

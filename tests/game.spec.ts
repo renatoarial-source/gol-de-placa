@@ -44,7 +44,7 @@ test('versão do download: pênalti como batedor com um time só; o resto pede a
   await page.click('[data-role=kicker]');
   await expect(page.locator('.team.on')).toContainText('Tubarões');
   await expect(page.locator('.team.locked')).toHaveCount(11);
-  await expect(page.locator('[data-weather]')).toHaveCount(4);
+  await expect(page.locator('[data-weather]')).toHaveCount(5); // dia, noite, chuva, neve e aleatório
   await expect(page.locator('[data-crowd]')).toHaveCount(3);
   await expect(page.locator('.sub')).toContainText('Faça 3 gols');
 });
@@ -166,7 +166,7 @@ test('Torcida e música: escolhe o ritmo e as cores do time do coração', async
   page.on('pageerror', (e) => errors.push(e.message));
   await open(page);
   await page.click('[data-go=fans]');
-  await expect(page.locator('[data-music]')).toHaveCount(4);
+  await expect(page.locator('[data-music]')).toHaveCount(7);
   await page.click('[data-music=charanga]');
   await page.click('[data-h0="#111111"]');
   await page.click('[data-h1="#ffffff"]');

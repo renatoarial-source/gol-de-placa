@@ -178,9 +178,28 @@ class Quit extends Error {}
 const guard = (id: number) => { if (id !== run) throw new Quit(); };
 const quiet = (p: Promise<unknown>) => p.catch((e) => { if (!(e instanceof Quit)) throw e; });
 
-function haptic(strong: boolean) {
-  if (native) void Haptics.impact({ style: strong ? ImpactStyle.Heavy : ImpactStyle.Light }).catch(() => {});
+// ---------- vibração: um padrão para cada lance (dá para desligar na tela inicial) ----------
+let vibe = store.get('vibe', '1') === '1';
+const HS = { L: ImpactStyle.Light, M: ImpactStyle.Medium, H: ImpactStyle.Heavy };
+type Buzz = 'kick' | 'goal' | 'save' | 'post' | 'miss' | 'wall' | 'conceded' | 'dive' | 'win' | 'tap';
+/** [força, em quantos ms] — o gol "treme" junto com a torcida; a trave dá um tranco e um tremidinho. */
+const BUZZ: Record<Buzz, [keyof typeof HS, number][]> = {
+  kick: [['M', 0]],
+  goal: [['H', 0], ['H', 110], ['M', 240], ['L', 380], ['M', 560], ['L', 700], ['H', 900], ['L', 1060], ['M', 1240], ['L', 1420], ['L', 1600]],
+  save: [['H', 0], ['M', 110], ['L', 240], ['M', 420], ['L', 560]],
+  post: [['H', 0], ['L', 70], ['L', 140], ['L', 210], ['L', 280]],
+  miss: [['L', 0], ['L', 160]],
+  wall: [['M', 0], ['L', 90]],
+  conceded: [['M', 0], ['L', 200]],
+  dive: [['M', 0]],
+  win: [['H', 0], ['M', 150], ['H', 300], ['M', 450], ['H', 650], ['L', 850], ['H', 1100]],
+  tap: [['L', 0]],
+};
+function buzz(kind: Buzz) {
+  if (!native || !vibe) return;
+  for (const [st, at] of BUZZ[kind]) setTimeout(() => void Haptics.impact({ style: HS[st] }).catch(() => {}), at);
 }
+const kickFx = () => { audio.kick(); buzz('kick'); };
 
 function show(html: string, full = true) {
   ui.innerHTML = `<div class="screen${full ? ' full' : ''}">${html}</div>`;
@@ -278,6 +297,7 @@ function home() {
     <div class="card">
       <label class="set">🌐 ${t('language')} <select id="lang">${langs}</select></label>
       <label class="set">${t('sound')} <button class="toggle${sound ? ' on' : ''}" data-tg="sound">${sound ? 'ON' : 'OFF'}</button></label>
+      ${native ? `<label class="set">${t('vibration')} <button class="toggle${vibe ? ' on' : ''}" data-vibe>${vibe ? 'ON' : 'OFF'}</button></label>` : ''}
       <b class="set-title">${t('narration')}</b>
       <div class="seg">${(['male', 'female', 'off'] as audio.Voice[]).map((v) =>
         `<button data-voice="${v}" class="${v === voice ? 'on' : ''}">${t(v === 'male' ? 'voiceMale' : v === 'female' ? 'voiceFemale' : 'voiceOff')}</button>`).join('')}</div>
@@ -291,6 +311,7 @@ function home() {
   on('[data-go=event]', () => ev && eventScreen(ev));
   on('[data-go=full]', () => unlock(home));
   on('[data-go=promo]', () => parentGate(() => window.open(Capacitor.getPlatform() === 'android' ? ESCONDE.android : ESCONDE.ios, '_blank')));
+  on('[data-vibe]', () => { vibe = !vibe; store.set('vibe', vibe ? '1' : '0'); buzz('goal'); home(); });
   on('[data-tg]', () => { sound = !sound; store.set('sound', sound ? '1' : '0'); audio.setSound(sound); home(); });
   on('[data-voice]', (el) => {
     voice = el.dataset.voice as audio.Voice;
@@ -501,7 +522,11 @@ function react(outcome: Outcome, kickerIsMe: boolean, top: boolean) {
   else if (outcome === 'save') audio.crowd('clap');
   else if (outcome === 'post') { audio.post(); audio.crowd('ohh'); }
   else audio.crowd('ohh');
-  haptic(outcome === 'goal' || outcome === 'save');
+  // a torcida faz festa quando dá certo para a criança e lamenta quando não dá
+  pitch.crowdReact(good ? 'party' : 'ohh');
+  if (good && outcome === 'save') music.burst();
+  buzz(outcome === 'goal' ? (kickerIsMe ? 'goal' : 'conceded') : outcome === 'save' ? (kickerIsMe ? 'miss' : 'save')
+    : outcome === 'post' ? 'post' : outcome === 'wall' ? 'wall' : 'miss');
 }
 
 /** No 2 jogadores, o goleiro escolhe antes onde vai pular (o batedor não vê). */
@@ -539,7 +564,7 @@ async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall
     shot: s, runUp: 0.35, wallU: wallHit(s, wall), cpuKeeper: saves ? { x: s.tx, y: s.ty } : keeperAt,
     decide: (): Outcome => (aim !== 'target' ? aim : saves ? 'save' : 'goal'),
   };
-  const outcome = await pitch.play({ ...play, onKick: audio.kick });
+  const outcome = await pitch.play({ ...play, onKick: kickFx });
   guard(id);
   const top = isTopCorner(s);
   react(outcome, true, top);
@@ -590,6 +615,7 @@ async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall
     saved = aimResult(shot, wall) === 'target' && playerSaves(shot, tap, diff, kind);
     const to = saved ? { x: shot.tx, y: shot.ty } : p;
     pitch.keeperDive(to.x, to.y, Math.max(0.12, T - at));
+    buzz('dive');
   };
   touch.classList.remove('hidden');
   touch.addEventListener('pointerdown', onTap);
@@ -600,7 +626,7 @@ async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall
         const aim = aimResult(shot, wall);
         return aim !== 'target' ? aim : (saved ?? playerSaves(shot, tap, diff, kind)) ? 'save' : 'goal';
       },
-      onKick: audio.kick,
+      onKick: kickFx,
       onFlightStart: (now) => { t0 = now; },
     });
     guard(id);
@@ -754,6 +780,7 @@ async function cup(id: number) {
 }
 
 function confetti() {
+  buzz('win');
   const bits = ['⚽', '🎉', '⭐', '🏆', '🎊'];
   for (let i = 0; i < 26; i++) {
     const d = document.createElement('div');
