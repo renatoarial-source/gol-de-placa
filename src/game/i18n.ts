@@ -477,9 +477,22 @@ const EXTRA3 = {
   ja: {"hs_braids": "みつあみ", "hs_spiky": "ツンツン", "cel_random": "🎲 ランダム", "body": "体型", "body_normal": "ふつう", "body_tall": "のっぽ", "body_short": "ちび", "body_slim": "ほっそり", "body_chubby": "ぽっちゃり", "body_round": "まんまる", "body_square": "しかく", "sk_goals": "{n}ゴール", "sk_saves": "{n}セーブ", "sk_corner": "すみに{n}ゴール", "sk_ground": "グラウンダーで{n}ゴール", "sk_curve": "カーブで{n}ゴール", "sk_free": "フリーキックで{n}ゴール", "sk_post": "ポスト{n}回", "sk_wins": "{n}勝", "sk_wins_1": "はじめての勝利", "sk_keeperWins": "キーパーで{n}勝", "sk_keeperWins_1": "キーパーではじめての勝利", "sk_perfect": "パーフェクト{n}試合", "sk_cups": "カップ優勝{n}回", "sk_hardCups": "むずかしいで優勝{n}回", "sk_rain": "雨の中で{n}ゴール", "sk_snow": "雪の中で{n}ゴール", "sk_night": "夜に{n}ゴール", "sk_duos": "2人で{n}試合", "sk_dailies": "今日のチャレンジ：{n}日", "sk_goalStreak": "{n}ゴール連続", "sk_saveStreak": "{n}セーブ連続", "sk_team": "{team}で勝利"},
 } satisfies Record<Lang, Record<string, string>>;
 
+
+// ---------- 5 cabelos, corpo fortinho e 2 comemorações ----------
+const EXTRA4 = {
+  pt: { hs_quiff: 'Topete', hs_dreads: 'Dreads', hs_bob: 'Chanel', hs_pigtails: 'Maria-chiquinha', hs_topknot: 'Coque no alto', body_strong: 'Fortinho', cel_fish: '🐟 Peixinho', cel_spin: '🌀 Pião' },
+  en: { hs_quiff: 'Quiff', hs_dreads: 'Dreadlocks', hs_bob: 'Bob', hs_pigtails: 'Pigtails', hs_topknot: 'Top knot', body_strong: 'Strong', cel_fish: '🐟 Belly slide', cel_spin: '🌀 Spin' },
+  es: { hs_quiff: 'Copete', hs_dreads: 'Rastas', hs_bob: 'Melena corta', hs_pigtails: 'Coletas', hs_topknot: 'Moño alto', body_strong: 'Fuerte', cel_fish: '🐟 Pececito', cel_spin: '🌀 Trompo' },
+  de: { hs_quiff: 'Tolle', hs_dreads: 'Dreadlocks', hs_bob: 'Bob', hs_pigtails: 'Zöpfchen', hs_topknot: 'Dutt oben', body_strong: 'Kräftig', cel_fish: '🐟 Bauchrutscher', cel_spin: '🌀 Kreisel' },
+  fr: { hs_quiff: 'Banane', hs_dreads: 'Dreadlocks', hs_bob: 'Carré', hs_pigtails: 'Couettes', hs_topknot: 'Chignon haut', body_strong: 'Costaud', cel_fish: '🐟 Glissade', cel_spin: '🌀 Toupie' },
+  it: { hs_quiff: 'Ciuffo', hs_dreads: 'Dreadlocks', hs_bob: 'Caschetto', hs_pigtails: 'Codini', hs_topknot: 'Chignon alto', body_strong: 'Forte', cel_fish: '🐟 Tuffo', cel_spin: '🌀 Trottola' },
+  zh: { hs_quiff: '飞机头', hs_dreads: '脏辫', hs_bob: '波波头', hs_pigtails: '双马尾', hs_topknot: '高丸子头', body_strong: '强壮', cel_fish: '🐟 鱼跃', cel_spin: '🌀 陀螺' },
+  ja: { hs_quiff: 'リーゼント', hs_dreads: 'ドレッド', hs_bob: 'ボブ', hs_pigtails: 'ツインテール', hs_topknot: 'おだんご', body_strong: 'がっしり', cel_fish: '🐟 ヘッドスライディング', cel_spin: '🌀 コマ回り' },
+} satisfies Record<Lang, Record<string, string>>;
+
 export const LANGS: Record<Lang, Pack> = { pt, en, es, de, fr, it, zh, ja };
-for (const l of Object.keys(EXTRA) as Lang[]) Object.assign(LANGS[l].ui, EXTRA[l], EXTRA2[l], EXTRA3[l]);
-export type UiKey = keyof Pack['ui'] | keyof (typeof EXTRA)['pt'] | keyof (typeof EXTRA2)['pt'] | keyof (typeof EXTRA3)['pt'];
+for (const l of Object.keys(EXTRA) as Lang[]) Object.assign(LANGS[l].ui, EXTRA[l], EXTRA2[l], EXTRA3[l], EXTRA4[l]);
+export type UiKey = keyof Pack['ui'] | keyof (typeof EXTRA)['pt'] | keyof (typeof EXTRA2)['pt'] | keyof (typeof EXTRA3)['pt'] | keyof (typeof EXTRA4)['pt'];
 /** Texto da interface no idioma escolhido. */
 export const uiText = (l: Lang, k: UiKey): string => (LANGS[l].ui as Record<string, string>)[k];
 

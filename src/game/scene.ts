@@ -21,13 +21,16 @@ function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => 
 const lambert = (color: string | THREE.Texture) =>
   typeof color === 'string' ? new THREE.MeshLambertMaterial({ color }) : new THREE.MeshLambertMaterial({ map: color });
 
-export type HairStyle = 'short' | 'long' | 'mohawk' | 'curly' | 'bald' | 'ponytail' | 'buns' | 'braids' | 'spiky';
-export const HAIR_STYLES: HairStyle[] = ['short', 'long', 'ponytail', 'buns', 'braids', 'curly', 'spiky', 'mohawk', 'bald'];
+export type HairStyle = 'short' | 'long' | 'mohawk' | 'curly' | 'bald' | 'ponytail' | 'buns' | 'braids' | 'spiky'
+  | 'quiff' | 'dreads' | 'bob' | 'pigtails' | 'topknot';
+export const HAIR_STYLES: HairStyle[] = [
+  'short', 'long', 'ponytail', 'buns', 'braids', 'curly', 'spiky', 'mohawk', 'bald', 'quiff', 'dreads', 'bob', 'pigtails', 'topknot',
+];
 /** Tipo de corpo: cada jogador em campo sai de um jeito (o "Meu craque" escolhe o seu). */
-export type Build = 'normal' | 'tall' | 'short' | 'slim' | 'chubby' | 'round' | 'square';
-export const BUILDS: Build[] = ['normal', 'tall', 'short', 'slim', 'chubby', 'round', 'square'];
+export type Build = 'normal' | 'tall' | 'short' | 'slim' | 'chubby' | 'round' | 'square' | 'strong';
+export const BUILDS: Build[] = ['normal', 'tall', 'short', 'slim', 'chubby', 'round', 'square', 'strong'];
 /** Escala do corpo (largura, altura, profundidade), barriga e tamanho da cabeça de cada tipo. */
-const BUILD_SHAPE: Record<Build, { sx: number; sy: number; sz: number; belly: number; head: number }> = {
+const BUILD_SHAPE: Record<Build, { sx: number; sy: number; sz: number; belly: number; head: number; arm?: number }> = {
   normal: { sx: 1, sy: 1, sz: 1, belly: 0, head: 1 },
   tall: { sx: 0.95, sy: 1.14, sz: 0.95, belly: 0, head: 1 },
   short: { sx: 1.02, sy: 0.84, sz: 1.02, belly: 0, head: 1.06 },
@@ -35,6 +38,8 @@ const BUILD_SHAPE: Record<Build, { sx: number; sy: number; sz: number; belly: nu
   chubby: { sx: 1.2, sy: 0.97, sz: 1.2, belly: 0.1, head: 1.04 },
   round: { sx: 1.36, sy: 0.9, sz: 1.36, belly: 0.16, head: 1.08 },
   square: { sx: 1.18, sy: 1, sz: 1.05, belly: 0, head: 1.14 },
+  // fortinho: ombros largos e braços grossos
+  strong: { sx: 1.14, sy: 1.04, sz: 1.08, belly: 0, head: 0.98, arm: 1.35 },
 };
 export const SKIN_COLORS = SKINS;
 export const HAIR_COLORS = HAIRS;
@@ -44,8 +49,8 @@ export interface Look { skin: number; hair: number; style: HairStyle; boots: num
 /** Expressão do rosto: concentrado antes do chute, feliz no gol, triste no erro, assustado no quase. */
 export type Mood = 'calm' | 'focus' | 'happy' | 'sad' | 'wow';
 export type Weather = 'day' | 'night' | 'rain' | 'snow';
-export type Celebration = 'jump' | 'plane' | 'dance' | 'flip' | 'robot' | 'knee';
-export const CELEBRATIONS: Celebration[] = ['jump', 'plane', 'dance', 'flip', 'robot', 'knee'];
+export type Celebration = 'jump' | 'plane' | 'dance' | 'flip' | 'robot' | 'knee' | 'fish' | 'spin';
+export const CELEBRATIONS: Celebration[] = ['jump', 'plane', 'dance', 'flip', 'robot', 'knee', 'fish', 'spin'];
 export type Crowd = 'full' | 'half' | 'few';
 
 interface Body {
@@ -156,11 +161,11 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   const hair = HAIRS[look ? look.hair : (seed * 7 + 3) % HAIRS.length];
   // futebol feminino: todas as jogadoras, com penteados de jogadora; masculino: os de sempre
   const pool: HairStyle[] = womens
-    ? ['ponytail', 'buns', 'long', 'braids', 'ponytail', 'curly', 'long']
-    : ['short', 'short', 'curly', 'long', 'mohawk', 'bald', 'spiky'];
+    ? ['ponytail', 'buns', 'long', 'braids', 'ponytail', 'curly', 'long', 'bob', 'pigtails', 'topknot']
+    : ['short', 'short', 'curly', 'long', 'mohawk', 'bald', 'spiky', 'quiff', 'dreads', 'topknot'];
   const style: HairStyle = look ? look.style : pool[(seed * 5 + 1) % pool.length];
   // corpo: o do "Meu craque" é o escolhido; os outros variam (metade normal, o resto de todo tipo)
-  const build: Build = look ? look.build ?? 'normal' : seed % 2 === 0 ? 'normal' : BUILDS[1 + ((seed * 3 + 1) % (BUILDS.length - 1))];
+  const build: Build = look ? look.build ?? 'normal' : seed % 3 === 0 ? 'normal' : BUILDS[1 + ((seed * 3 + 1) % (BUILDS.length - 1))];
   const shape = BUILD_SHAPE[build];
   if (look) number = look.number;
   const shirt = keeper ? kit.keeper : kit.shirt;
@@ -173,6 +178,7 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   const mShorts = lambert(shorts);
   const mSocks = lambert(socks);
   const mShoe = lambert(look ? BOOT_COLORS[look.boots] : '#161616');
+  const mSole = lambert('#f2f2f2');
   const mHair = lambert(hair);
   const mGlove = lambert(keeper ? '#f5f5f5' : skin);
 
@@ -185,7 +191,9 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
     g.position.set(x, 0.8, 0);
     g.add(box(0.2, 0.3, 0.22, mSkin, -0.15));
     g.add(box(0.21, 0.42, 0.23, mSocks, -0.5));
-    g.add(box(0.24, 0.1, 0.34, mShoe, -0.75, 0, 0.04));
+    // chuteira bem visível: maior, com sola branca e as travinhas
+    g.add(box(0.27, 0.13, 0.4, mShoe, -0.74, 0, 0.06));
+    g.add(box(0.28, 0.04, 0.41, mSole, -0.82, 0, 0.06));
     pose.add(g);
     return g;
   };
@@ -252,9 +260,40 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
       head.add(sp);
     }
   }
+  // cinco penteados a mais
+  if (style === 'quiff') { // topete
+    head.add(box(0.5, 0.08, 0.5, mHair, 0.26));
+    const q = box(0.42, 0.16, 0.22, mHair, 0.34, 0, 0.16);
+    q.rotation.x = -0.35;
+    head.add(q);
+  }
+  if (style === 'dreads') {
+    head.add(box(0.52, 0.12, 0.52, mHair, 0.26));
+    for (const [x, z] of [[-0.24, -0.1], [0.24, -0.1], [-0.2, -0.24], [0, -0.26], [0.2, -0.24], [-0.26, 0.08], [0.26, 0.08]])
+      head.add(box(0.08, 0.42, 0.08, mHair, 0.02, x, z));
+  }
+  if (style === 'bob') { // chanel
+    head.add(box(0.54, 0.12, 0.54, mHair, 0.26));
+    head.add(box(0.54, 0.34, 0.12, mHair, 0.06, 0, -0.24));
+    for (const x of [-0.26, 0.26]) head.add(box(0.06, 0.34, 0.4, mHair, 0.06, x, -0.02));
+    head.add(box(0.5, 0.08, 0.06, mHair, 0.2, 0, 0.24)); // franjinha
+  }
+  if (style === 'pigtails') { // maria-chiquinha
+    head.add(box(0.5, 0.1, 0.5, mHair, 0.26));
+    for (const x of [-0.32, 0.32]) {
+      const t = box(0.12, 0.34, 0.12, mHair, 0.04, x, -0.06);
+      t.rotation.z = x > 0 ? -0.4 : 0.4;
+      head.add(t);
+    }
+  }
+  if (style === 'topknot') { // coque no alto
+    head.add(box(0.5, 0.1, 0.5, mHair, 0.26));
+    head.add(box(0.2, 0.18, 0.2, mHair, 0.4, 0, -0.04));
+  }
   // tipo de corpo: escala o boneco a partir dos pés (chão continua no 0) e mantém a cabeça "de cubo"
   pose.scale.set(shape.sx, shape.sy, shape.sz);
   head.scale.set(shape.head / shape.sx, shape.head / shape.sy, shape.head / shape.sz);
+  if (shape.arm) for (const a of [armL, armR]) a.scale.set(shape.arm, 1, shape.arm);
   pose.traverse((o) => { o.castShadow = false; });
   return {
     root, pose, legL, legR, armL, armR, head,
@@ -326,6 +365,8 @@ export class Pitch {
   private crowdBZ!: Float32Array;
   private crowdR!: Float32Array; // jeito de cada um (0..1): ritmo, altura do pulo, quem gira
   private ohh = 0; // torcida lamentando (mãos na cabeça)
+  private tension = false; // cobrança prestes a sair: a torcida levanta e segura a respiração
+  private tense = 0;
   private paper: THREE.Points | null = null; // papel picado do gol
   private paperV: Float32Array | null = null;
   private paperT = 0;
@@ -875,29 +916,52 @@ export class Pitch {
     const wave = (this.idle * 22) % 520; // a ola percorre o estádio (~268 m) e some por um tempo
     const party = Math.min(1, this.cheer / 1.5); // a festa vai acalmando no fim
     const sad = Math.min(1, this.ohh / 0.8);
+    this.tense += ((this.tension ? 1 : 0) - this.tense) * Math.min(1, dt * 3);
+    const CT = this.idle;
     for (let i = 0; i < this.crowd.count; i++) {
       const r = this.crowdR[i];
       const ph = r * 40;
-      let y = Math.sin(this.idle * (1.8 + r * 1.2) + ph) * 0.04;
-      let sx = 1, sy = 1, xo = 0, rot = 0;
+      // cada torcedor é de um "tipo": pulador, bandeira (balança de lado), batedor de palmas, abraçador ou girador
+      const kind = r < 0.28 ? 0 : r < 0.5 ? 1 : r < 0.7 ? 2 : r < 0.82 ? 3 : 4;
+      let y = Math.sin(CT * (1.8 + r * 1.2) + ph) * 0.04 * (1 - this.tense * 0.7);
+      let sx = 1, sy = 1, xo = 0, zo = 0, rot = 0;
+      // antes da cobrança: todo mundo levanta e fica parado, na ponta do pé
+      y += this.tense * 0.12; sy += this.tense * 0.08;
+      // ola
       const dw = Math.abs(this.crowdX[i] - wave);
       if (dw < 6) { const k = 1 - dw / 6; y += k * 0.5; sy += k * 0.3; }
-      if (party) {
-        const j = Math.max(0, Math.sin(this.idle * (7 + r * 7) + ph));
-        y += j * (0.3 + 0.5 * r) * party;
-        sy += j * 0.45 * party; // braços para cima
-        sx -= j * 0.12 * party;
-        xo = Math.sin(this.idle * (2.5 + r * 2) + ph) * 0.18 * party;
-        if (r > 0.82) rot = (this.idle * (5 + r * 6) + ph) * party; // alguns giram de alegria
+      // ninguém fica parado: de vez em quando um torcedor sozinho pula, acena, vira para o lado ou levanta os braços
+      const slot = Math.floor(CT * 0.4 + r * 97);
+      const roll = (Math.sin(slot * 12.9898 + i * 78.233) * 43758.5453) % 1;
+      const ev = Math.abs(roll);
+      if (!party && ev < 0.05) {
+        const f = (CT * 0.4 + r * 97) % 1; // quanto do "momento" já passou
+        const bump = Math.sin(Math.PI * f);
+        if (ev < 0.015) y += bump * 0.45; // pulinho
+        else if (ev < 0.03) { sy += bump * 0.4; sx -= bump * 0.1; } // braços para cima
+        else if (ev < 0.04) rot = Math.sin(CT * 10) * 0.5 * bump; // acenando
+        else rot = bump * 1.2; // vira para conversar com o vizinho
       }
-      if (sad) { y -= 0.12 * sad; sy -= 0.18 * sad; }
+      if (party) {
+        const j = Math.max(0, Math.sin(CT * (7 + r * 7) + ph));
+        if (kind === 0) { y += j * (0.4 + 0.5 * r) * party; sy += j * 0.45 * party; sx -= j * 0.12 * party; }
+        else if (kind === 1) { xo = Math.sin(CT * 5 + ph) * 0.35 * party; sy += 0.35 * party; rot = Math.sin(CT * 5 + ph) * 0.4 * party; }
+        else if (kind === 2) { sx += Math.abs(Math.sin(CT * 14 + ph)) * 0.25 * party; sy += 0.2 * party; y += j * 0.15 * party; }
+        else if (kind === 3) { xo = Math.sin(CT * 2 + ph) * 0.3 * party; zo = Math.cos(CT * 2 + ph) * 0.1 * party; y += j * 0.25 * party; rot = Math.sin(CT * 2 + ph) * 0.3 * party; }
+        else { rot = (CT * (5 + r * 6) + ph) * party; y += j * 0.3 * party; }
+      }
+      if (sad) {
+        if (kind <= 1) { y -= 0.12 * sad; sy -= 0.18 * sad; } // mãos na cabeça
+        else if (kind <= 3) { y -= 0.3 * sad; sy -= 0.3 * sad; } // senta de desânimo
+        else rot = Math.sin(CT * 9 + ph) * 0.35 * sad; // balança a cabeça: "não acredito"
+      }
       const c = Math.cos(rot), sn = Math.sin(rot), o = i * 16;
       arr[o] = c * sx; arr[o + 2] = -sn * sx;
       arr[o + 5] = sy;
       arr[o + 8] = sn; arr[o + 10] = c;
       arr[o + 12] = this.crowdBX[i] + xo;
       arr[o + 13] = this.crowdY[i] + y + (sy - 1) * 0.31;
-      arr[o + 14] = this.crowdBZ[i];
+      arr[o + 14] = this.crowdBZ[i] + zo;
     }
     this.updatePaper(dt);
     this.crowd.instanceMatrix.needsUpdate = true;
@@ -1166,6 +1230,29 @@ export class Pitch {
     return res;
   }
 
+  /** Escolheu a cor da chuteira: a câmera desce até os pés e o boneco levanta o pé para mostrar. */
+  showBoots() {
+    const b = this.showcaseBody;
+    if (!b) return;
+    b.busy = (b.busy ?? 0) + 1;
+    b.root.rotation.y = 0; // de frente
+    const from = this.camera.position.clone();
+    // os pés ficam na parte de cima da tela (embaixo estão as opções): olha para um ponto abaixo do chão
+    const to = new THREE.Vector3(0, 3.4, 12);
+    void this.tween(1.6, (q) => {
+      const k = Math.sin(Math.PI * Math.min(1, q * 1.15)); // vai e volta
+      this.camera.position.lerpVectors(from, to, k);
+      this.camera.lookAt(0, -2.5 + k * 0.5, 6);
+      b.legR.rotation.x = -0.6 * k; // pé para a frente, mostrando a chuteira
+      b.pose.rotation.x = 0.12 * k;
+      b.armL.rotation.z = -0.5 * k; b.armR.rotation.z = 0.5 * k;
+    }).then(() => {
+      this.camera.position.copy(from);
+      this.camera.lookAt(0, -2.5, 6);
+      void easeToRest((d, fn) => this.tween(d, fn), b, 0.2).then(() => { b.busy = (b.busy ?? 1) - 1; });
+    });
+  }
+
   /** Mostra a comemoração escolhida no boneco da vitrine do "Meu craque". */
   celebrateShowcase() {
     if (!this.showcaseBody) return;
@@ -1221,7 +1308,11 @@ export class Pitch {
   }
 
   /** Reação da torcida ao lance: festa (gol da criança ou defesa dela) ou lamento. */
+  /** Torcida tensa (de pé, quietinha) enquanto a cobrança não sai. */
+  crowdTension(on: boolean) { this.tension = on; }
+
   crowdReact(kind: 'party' | 'ohh') {
+    this.tension = false;
     if (kind === 'ohh') { this.ohh = 1.6; return; }
     this.cheer = Math.max(this.cheer, 4.5);
     this.throwPaper();
@@ -1321,7 +1412,7 @@ export class Pitch {
     const r0 = b.root.rotation.y;
     const fwd = new THREE.Vector3(Math.sin(r0), 0, Math.cos(r0)); // para onde o boneco olha
     const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
-    const dur = { jump: 1.7, plane: 2.1, dance: 1.9, flip: 1.6, robot: 1.9, knee: 2.0 }[style];
+    const dur = { jump: 1.7, plane: 2.1, dance: 1.9, flip: 1.6, robot: 1.9, knee: 2.0, fish: 2.0, spin: 1.8 }[style];
     // na vitrine do Meu craque o boneco fica perto da câmera: corre e desliza menos para não sair do quadro
     const reach = b === this.showcaseBody ? 0.4 : 1;
     // braços para cima em "V": o esquerdo (x negativo) abre girando no sentido negativo, o direito no positivo
@@ -1400,6 +1491,33 @@ export class Pitch {
         b.head.rotation.y = [-0.5, 0, 0.5, 0][step];
         b.legL.rotation.x = step % 2 ? 0.4 : 0; b.legR.rotation.x = step % 2 ? 0 : 0.4;
         b.root.position.y = y0 + (step % 2) * 0.05;
+      } else if (style === 'fish') {
+        // peixinho: corre, mergulha de barriga e desliza na grama com os braços para a frente, depois bate as pernas
+        const run = Math.min(1, t / 0.45);
+        const dive = Math.min(1, Math.max(0, (t - 0.45) / 0.25));
+        const slide = Math.min(1, Math.max(0, (t - 0.45) / 0.9));
+        const go = (0.8 * run + 2.4 * (1 - (1 - slide) * (1 - slide))) * reach;
+        b.root.position.set(p0.x + fwd.x * go, y0, p0.z + fwd.z * go);
+        if (dive === 0) {
+          const r = Math.sin(t * 16);
+          b.legL.rotation.x = r * 0.7; b.legR.rotation.x = -r * 0.7;
+        } else {
+          b.pose.rotation.x = (Math.PI / 2) * smooth(dive); // deita de barriga
+          b.pose.position.y = 0.35 * smooth(dive);
+          b.pose.position.z = 0.6 * smooth(dive);
+          armsUp(Math.PI * 0.95);
+          const kick = t > 1.2 ? Math.sin((t - 1.2) * 18) * 0.5 : 0;
+          b.legL.rotation.x = -0.3 + kick; b.legR.rotation.x = -0.3 - kick;
+          b.head.rotation.x = -0.9 * smooth(dive);
+        }
+      } else if (style === 'spin') {
+        // pião: gira no lugar com os braços abertos, cada vez mais rápido, e termina com os braços para cima
+        const e = smooth(Math.min(1, t / 1.4));
+        b.root.rotation.y = r0 + e * Math.PI * 6;
+        b.armL.rotation.z = -Math.PI / 2 - Math.sin(t * 10) * 0.1; b.armR.rotation.z = Math.PI / 2 + Math.sin(t * 10) * 0.1;
+        b.root.position.y = y0 + Math.abs(Math.sin(t * 6)) * 0.12;
+        b.legL.rotation.z = -0.15; b.legR.rotation.z = 0.15;
+        if (t > 1.4) { b.root.rotation.y = r0; armsUp(Math.PI * 0.85); b.root.position.y = y0 + Math.sin((t - 1.4) * Math.PI / 0.4) * 0.4; }
       } else {
         // de joelhos deslizando na grama, depois inclina para trás e soca o ar
         const k = Math.min(1, t / 0.9);

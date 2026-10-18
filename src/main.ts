@@ -53,7 +53,7 @@ let teamKind = store.get('teamKind', 'club') as 'nation' | 'club';
 let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
 /** Comemoração escolhida no Meu craque: uma fixa ou 'random' (uma diferente a cada gol). */
 type CelChoice = Celebration | 'random';
-const DEFAULT_LOOK: Look & { cel: CelChoice } = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '', cel: 'jump', build: 'normal' };
+const DEFAULT_LOOK: Look & { cel: CelChoice } = { skin: 1, hair: 0, style: 'short', boots: 2, number: 10, name: '', cel: 'random', build: 'normal' };
 let look: Look & { cel: CelChoice } = (() => { try { return { ...DEFAULT_LOOK, ...JSON.parse(store.get('look', '{}')) }; } catch { return DEFAULT_LOOK; } })();
 audio.setSound(sound);
 audio.setNarration(voice);
@@ -275,6 +275,7 @@ function rewardsCard(): string {
 
 function home() {
   run++;
+  pitch.crowdTension(false);
   music.setIntensity(0.35);
   eventTeam = null;
   pitch.womens = !!look.female;
@@ -536,8 +537,10 @@ interface Duo { kicker: Team; keeper: Team; keeperAt: { x: number; y: number } }
 async function myKick(id: number, kind: Kind, sx: number, sz: number, wall: Wall | null, opp: Team, duo?: Duo): Promise<boolean> {
   const kickerKit = duo?.kicker.kit ?? myKit();
   pitch.setup({ sx, sz, view: 'kick', kickerKit, keeperKit: (duo?.keeper ?? opp).kit, wall, seed: Math.floor(rng() * 100), look: duo ? undefined : myLook() });
-  pitch.kickerCelebration = !duo && unlocked() ? celFor(look.cel) : 'jump';
+  // quem não escolheu comemoração (ou joga sem a versão completa / no 2 jogadores) ganha uma diferente a cada gol
+  pitch.kickerCelebration = celFor(!duo && unlocked() ? look.cel : 'random');
   showHint(t('yourKick'), tutKick ? t('tutKick') : '');
+  pitch.crowdTension(true);
   const unhand = tutKick ? hand(pitch.screenOf(sx, 0.1, sz), pitch.screenOf(HALF - 0.6, GOAL_H - 0.5, 0)) : () => {};
   music.setIntensity(0.75);
   audio.whistle();
@@ -591,6 +594,7 @@ async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall
   pitch.setup({ sx, sz, view: 'keep', kickerKit: opp.kit, keeperKit: myKit(), wall, seed: Math.floor(rng() * 100), look: myLook() });
   pitch.kickerCelebration = CELEBRATIONS[Math.floor(rng() * CELEBRATIONS.length)];
   showHint(t('yourKeep'), tutKeep ? t('tutKeep') : '');
+  pitch.crowdTension(true);
   const unhand = tutKeep ? hand(pitch.screenOf(-(HALF - 0.8), 1.2, 0)) : () => {};
   music.setIntensity(0.75);
   await sleep(tutKeep ? 2200 : 900);
@@ -1164,7 +1168,7 @@ function builder() {
     screen.scrollTop = keepY;
     on('[data-skin]', (el) => { draft.skin = Number(el.dataset.skin); render(); });
     on('[data-hair]', (el) => { draft.hair = Number(el.dataset.hair); render(); });
-    on('[data-boots]', (el) => { draft.boots = Number(el.dataset.boots); render(); });
+    on('[data-boots]', (el) => { draft.boots = Number(el.dataset.boots); render(); pitch.showBoots(); });
     on('[data-style]', (el) => { draft.style = el.dataset.style as Look['style']; render(); });
     // jogadora: troca o rosto e, se o cabelo for curto, já sugere um rabo de cavalo (dá para trocar depois)
     on('[data-kind2]', (el) => {
