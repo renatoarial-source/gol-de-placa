@@ -57,7 +57,7 @@ async function freesoundSearch(q) {
   const ids = [...html.matchAll(/href="\/people\/([^/"]+)\/sounds\/(\d+)\/"/g)].map((m) => [m[1], m[2]]);
   const uniq = [];
   for (const x of ids) if (!uniq.find((u) => u[1] === x[1])) uniq.push(x);
-  return uniq.slice(0, 6);
+  return uniq.slice(0, SET === 'gol' ? 6 : 4);
 }
 function licenseOf(html) {
   if (/publicdomain\/zero/i.test(html)) return 'CC0';
