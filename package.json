@@ -2,7 +2,7 @@
   "name": "gol-de-placa",
   "private": true,
   "license": "UNLICENSED",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Gol de Placa: pênaltis e faltas para crianças, com bonecos de blocos, para iOS e Android.",
   "type": "module",
   "scripts": {

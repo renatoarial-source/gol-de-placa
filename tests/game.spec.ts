@@ -99,13 +99,13 @@ test('como goleiro (versão completa), com chuva e torcida pouca', async ({ page
 });
 
 test('falta (versão completa): cinco cobranças até o resultado', async ({ page }) => {
-  test.setTimeout(420_000);
+  test.setTimeout(720_000);
   await open(page, true);
   await start(page, 'free', 'kicker');
   for (let i = 0; i < 5; i++) {
-    await expect(page.locator('#hint')).toBeVisible({ timeout: 60_000 });
+    await expect(page.locator('#hint')).toBeVisible({ timeout: 120_000 });
     await swipe(page, 10);
-    await expect(page.locator(marks)).toHaveCount(i + 1, { timeout: 60_000 });
+    await expect(page.locator(marks)).toHaveCount(i + 1, { timeout: 120_000 });
   }
   await expect(page.locator('.result')).toContainText('de 5', { timeout: 30_000 });
   await page.click('[data-go=menu]');

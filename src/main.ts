@@ -1282,7 +1282,7 @@ function parentGate(ok: () => void) {
   document.body.appendChild(m);
   m.querySelector('[data-x]')!.addEventListener('click', () => m.remove());
   m.querySelectorAll<HTMLElement>('[data-a]').forEach((el) => el.addEventListener('click', () => {
-    if (Number(el.dataset.a) !== right) { m.querySelector('.msg')!.textContent = t('wrong'); setTimeout(() => m.remove(), 900); return; }
+    if (Number(el.dataset.a) !== right) { m.querySelector('.msg')!.textContent = t('wrong'); setTimeout(() => m.remove(), 1500); return; }
     m.remove();
     ok();
   }));
