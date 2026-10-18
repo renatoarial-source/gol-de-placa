@@ -26,7 +26,7 @@ for (const iap of iaps) {
   const locs = (await api('GET', `/v2/inAppPurchases/${iap.id}/inAppPurchaseLocalizations?limit=50`)).data;
   for (const l of locs) {
     const { locale, name, description } = l.attributes;
-    const fixed = description?.replace(/\b17\b/g, '21');
+    const fixed = description?.replace(/\b17\b/g, '21').replace(/(^|[^0-9])8(?=[^0-9]|$)/g, '$122');
     console.log(`  ${locale} | ${name} | ${description}${fixed !== description ? `  ->  ${fixed}` : ''}`);
     if (FIX && fixed !== description) {
       await api('PATCH', `/v1/inAppPurchaseLocalizations/${l.id}`, { data: { type: 'inAppPurchaseLocalizations', id: l.id, attributes: { description: fixed } } });
