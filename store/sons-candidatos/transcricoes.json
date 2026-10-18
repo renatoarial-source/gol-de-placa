@@ -1,0 +1,545 @@
+{
+ "abrir__fs103333__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs118197__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs156459__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs175025__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs236300__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs256317__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs31995__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs32264__CC0.mp3": {
+  "lang": "ja",
+  "lang_p": 0.21,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 0.5,
+    "text": "チョッ!!",
+    "p_speech": 0.79
+   }
+  ]
+ },
+ "abrir__fs329806__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs377991__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs392624__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs393878__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs41348__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs434143__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs58846__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "abrir__fs683461__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "arroto__fs12730__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "arroto__fs132717__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "arroto__fs428137__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "arroto__fs463721__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.64,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "Gghhhhh",
+    "p_speech": 0.65
+   }
+  ]
+ },
+ "arroto__fs8631__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "bar__fs243373__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.55,
+  "segments": []
+ },
+ "bar__fs394290__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "bar__fs415974__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.85,
+  "segments": [
+   {
+    "start": 2.3,
+    "end": 20.6,
+    "text": "Crazy.",
+    "p_speech": 0.61
+   }
+  ]
+ },
+ "bar__fs99632__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.29,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "I",
+    "p_speech": 0.27
+   },
+   {
+    "start": 30.0,
+    "end": 32.0,
+    "text": "I",
+    "p_speech": 0.53
+   }
+  ]
+ },
+ "beber__fs194808__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "beber__fs259641__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "beber__fs272037__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "beber__fs433645__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "beber__fs517173__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "beber__fs56270__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.42,
+  "segments": []
+ },
+ "beber__fs58847__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.32,
+  "segments": [
+   {
+    "start": 0.1,
+    "end": 2.0,
+    "text": "Thank you for watching!",
+    "p_speech": 0.28
+   }
+  ]
+ },
+ "beber__fs67230__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.42,
+  "segments": []
+ },
+ "beber__fs79146__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.51,
+  "segments": []
+ },
+ "brinde__fs101246__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs15285__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs179438__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.92,
+  "segments": [
+   {
+    "start": 3.9,
+    "end": 9.9,
+    "text": "Cheers.",
+    "p_speech": 0.79
+   },
+   {
+    "start": 9.9,
+    "end": 18.9,
+    "text": "Cheers.",
+    "p_speech": 0.79
+   },
+   {
+    "start": 18.9,
+    "end": 22.9,
+    "text": "Cheers.",
+    "p_speech": 0.79
+   }
+  ]
+ },
+ "brinde__fs257742__CC0.mp3": {
+  "lang": "de",
+  "lang_p": 1.0,
+  "segments": [
+   {
+    "start": 1.8,
+    "end": 5.7,
+    "text": "So, warte.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 5.7,
+    "end": 7.7,
+    "text": "Drück auf auch ne.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 7.7,
+    "end": 8.7,
+    "text": "Tut er schon?",
+    "p_speech": 0.97
+   },
+   {
+    "start": 8.7,
+    "end": 13.9,
+    "text": "Ja.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 13.9,
+    "end": 20.3,
+    "text": "Ein bisschen weniger gepickelt so.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 20.3,
+    "end": 21.3,
+    "text": "Hey, jetzt.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 21.3,
+    "end": 23.3,
+    "text": "Der war nicht schlecht.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 24.3,
+    "end": 25.3,
+    "text": "Und einen.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 25.3,
+    "end": 27.3,
+    "text": "Aber das musst du hier einer sein, so ein Trockner, oder?",
+    "p_speech": 0.97
+   },
+   {
+    "start": 27.3,
+    "end": 29.3,
+    "text": "Habe mal einen Trocknen.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 29.3,
+    "end": 31.3,
+    "text": "Ach, fuck.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 31.3,
+    "end": 33.3,
+    "text": "Da muss ich so halten.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 33.3,
+    "end": 35.3,
+    "text": "Noch einmal.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 35.3,
+    "end": 37.3,
+    "text": "Habe mal noch mal einen.",
+    "p_speech": 0.97
+   },
+   {
+    "start": 38.3,
+    "end": 40.3,
+    "text": "Ja, war geil.",
+    "p_speech": 0.97
+   }
+  ]
+ },
+ "brinde__fs31374__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.27,
+  "segments": []
+ },
+ "brinde__fs325194__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs325195__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs360697__CC-BY.mp3": {
+  "lang": "nn",
+  "lang_p": 0.78,
+  "segments": [
+   {
+    "start": 8.7,
+    "end": 11.8,
+    "text": "වස්ා්ර්ුවු හූ්ලිශසම",
+    "p_speech": 0.41
+   }
+  ]
+ },
+ "brinde__fs379506__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs429028__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs568055__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs613763__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs695295__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "brinde__fs76812__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "festa__fs182571__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "festa__fs182572__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "festa__fs182825__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gelo__fs119917__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gelo__fs319994__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gelo__fs341579__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gelo__fs40702__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gelo__fs432349__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gelo__fs527322__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "gelo__fs527325__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs123003__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs166923__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs169193__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs173930__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs177104__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs179437__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.51,
+  "segments": []
+ },
+ "servir__fs179439__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs212735__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs220303__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs234620__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs241880__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs257957__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs347006__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs383865__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs428334__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.39,
+  "segments": []
+ },
+ "servir__fs436008__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs44775__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.46,
+  "segments": []
+ },
+ "servir__fs7744__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ },
+ "servir__fs95741__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.35,
+  "segments": []
+ }
+}
