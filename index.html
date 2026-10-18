@@ -8,6 +8,22 @@
   <title>Gol de Placa</title>
 </head>
 <body>
+  <!-- Abertura do estúdio: logo da Arial Gamer por 1,5 s (toque para pular). Não aparece nos testes automáticos. -->
+  <div id="studioIntro" aria-hidden="true" style="position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#2b3a7a,#121a3d 70%);transition:opacity .45s ease">
+    <img src="./arial-gamer-logo.png" alt="" style="width:min(72vw,60vh,440px);height:auto;border-radius:50%;box-shadow:0 12px 40px rgba(0,0,0,.45);animation:studioPop .6s cubic-bezier(.2,1.4,.4,1) both">
+  </div>
+  <style>@keyframes studioPop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}</style>
+  <script>
+    (function () {
+      var el = document.getElementById('studioIntro');
+      if (!el) return;
+      if (navigator.webdriver || /[?&]nointro/.test(location.search)) { el.remove(); return; }
+      var done = false;
+      function hide() { if (done) return; done = true; el.style.opacity = '0'; el.style.pointerEvents = 'none'; setTimeout(function () { el.remove(); }, 500); }
+      el.addEventListener('pointerdown', hide);
+      setTimeout(hide, 1500);
+    })();
+  </script>
   <canvas id="pitch"></canvas>
   <canvas id="trail"></canvas>
   <div id="touch" class="hidden"></div>
