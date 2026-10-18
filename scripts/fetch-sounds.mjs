@@ -1,4 +1,4 @@
-// Busca sons gratuitos para o Gol (Freesound e Pixabay), confere a licença e baixa os candidatos.
+// Busca sons gratuitos (Freesound e Pixabay) para o Gol — ou, com SET=gelada / SET=esconde, para os outros jogos —, confere a licença e baixa os candidatos.
 // Roda no GitHub Actions (workflow sounds.yml), que tem acesso livre à internet.
 // Só aceita CC0 / Pixabay Content License (livres, inclusive app pago) e CC BY (com crédito). Nada de "NonCommercial".
 import fs from 'node:fs';
@@ -13,7 +13,8 @@ const manifest = [];
 const seen = new Set();
 
 // ---------- Freesound ----------
-const FS_QUERIES = [
+const SET = process.env.SET || 'gol';
+const GOL_QUERIES = [
   ['torcida', 'torcida'], ['estadio brasil', 'torcida'], ['mineirao', 'torcida'], ['maracana', 'torcida'],
   ['soccer crowd goal', 'gol'], ['football crowd goal celebration', 'gol'], ['crowd goal scream', 'gol'],
   ['football crowd ooh miss', 'uuh'], ['crowd disappointed stadium', 'uuh'],
@@ -29,6 +30,28 @@ const FS_QUERIES = [
   // chuva
   ['rain light', 'chuva'], ['rain loop', 'chuva'], ['chuva', 'chuva'],
 ];
+// Gelada (bar, 18+): servir, beber, brindar, abrir garrafa e o murmúrio do bar
+const GELADA_QUERIES = [
+  ['beer pour glass', 'servir'], ['pouring beer', 'servir'], ['pouring drink glass', 'servir'], ['pour wine glass', 'servir'], ['pouring water glass', 'servir'], ['soda pour fizz', 'servir'],
+  ['gulp drinking', 'beber'], ['drinking swallow', 'beber'], ['sip drink', 'beber'],
+  ['glass clink cheers', 'brinde'], ['glasses toast', 'brinde'], ['beer glasses clink', 'brinde'], ['cheers toast clink', 'brinde'],
+  ['beer bottle open', 'abrir'], ['bottle cap pop', 'abrir'], ['can open fizz', 'abrir'], ['champagne cork pop', 'abrir'],
+  ['ice cubes glass', 'gelo'], ['ice clink glass', 'gelo'],
+  ['bar ambience', 'bar'], ['pub ambience crowd', 'bar'], ['restaurant chatter', 'bar'], ['boteco', 'bar'], ['bar crowd talking', 'bar'],
+  ['party cheer small group', 'festa'], ['people cheering party', 'festa'], ['burp', 'arroto'],
+];
+// Esconde-Esconde (crianças): bichos, passos, folhas, chuva, trovão, sino, trem
+const ESCONDE_QUERIES = [
+  ['cow moo', 'vaca'], ['chicken cluck', 'galinha'], ['pig oink', 'porco'], ['pig grunt', 'porco'], ['horse neigh', 'cavalo'], ['duck quack', 'pato'],
+  ['dog bark small', 'cachorro'], ['cat meow', 'gato'], ['parrot', 'papagaio'], ['owl hoot', 'coruja'], ['lion roar', 'leao'], ['tiger growl', 'leao'],
+  ['chick peep', 'pintinho'], ['monkey screech', 'macaco'], ['goose honk', 'ganso'], ['pigeon coo', 'pombo'], ['elephant trumpet', 'elefante'],
+  ['sheep baa', 'ovelha'], ['frog croak', 'sapo'], ['seagull', 'gaivota'], ['crow caw', 'corvo'], ['mouse squeak', 'rato'], ['snoring', 'ronco'],
+  ['footsteps grass', 'passos'], ['footsteps wood floor', 'passos'], ['footsteps kids running', 'passos'], ['leaves rustle bush', 'folhas'],
+  ['rain light', 'chuva'], ['rain loop', 'chuva'], ['thunder', 'trovao'], ['church bell', 'sino'], ['bicycle bell', 'sino'], ['steam train whistle', 'trem'],
+  ['birds forest ambience', 'fundo'], ['park ambience birds', 'fundo'], ['beach waves', 'fundo'], ['farm ambience', 'fundo'], ['night crickets', 'fundo'],
+  ['kids laughing', 'risada'], ['children cheering yay', 'festa'], ['bubble pop', 'bolha'], ['door creak', 'porta'],
+];
+const FS_QUERIES = SET === 'gelada' ? GELADA_QUERIES : SET === 'esconde' ? ESCONDE_QUERIES : GOL_QUERIES;
 async function freesoundSearch(q) {
   const html = await (await get(`https://freesound.org/search/?q=${encodeURIComponent(q)}&s=Downloads+(most+first)`)).text();
   const ids = [...html.matchAll(/href="\/people\/([^/"]+)\/sounds\/(\d+)\/"/g)].map((m) => [m[1], m[2]]);
@@ -70,7 +93,7 @@ for (const [q, cat] of FS_QUERIES) {
 }
 
 // ---------- Pixabay (Pixabay Content License: livre, inclusive comercial) ----------
-const PX_QUERIES = [
+const PX_QUERIES = SET !== 'gol' ? [] : [
   ['torcida de futebol', 'torcida'], ['torcida', 'torcida'], ['futebol', 'torcida'], ['soccer stadium', 'fundo'], ['soccer stadium goal', 'gol'],
   ['football crowd', 'gol'], ['stadium chant', 'canto'], ['football chant', 'canto'], ['crowd ole', 'canto'],
   ['samba', 'samba'], ['batucada', 'samba'], ['brazil', 'samba'], ['referee whistle', 'apito'], ['soccer kick', 'chute'], ['vuvuzela', 'corneta'],
