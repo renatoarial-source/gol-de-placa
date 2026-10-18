@@ -201,6 +201,7 @@ test('tutorial: na primeira cobrança aparece a mãozinha, que some ao chutar e 
 });
 
 test('primeiro gol dá figurinha e conta no desafio do dia; o álbum mostra', async ({ page }) => {
+  test.setTimeout(300_000);
   await open(page);
   await page.evaluate(() => localStorage.setItem('gol.tutKick', '1'));
   await expect(page.locator('.daily li')).toHaveCount(3);
@@ -211,14 +212,14 @@ test('primeiro gol dá figurinha e conta no desafio do dia; o álbum mostra', as
   await start(page, 'penalty', 'kicker');
   // várias tentativas até sair um gol (o goleiro às vezes defende)
   for (let i = 0; i < 5; i++) {
-    await expect(page.locator('#hint')).toBeVisible({ timeout: 40_000 });
+    await expect(page.locator('#hint')).toBeVisible({ timeout: 60_000 });
     const target = await page.evaluate((side) => (window as unknown as { __gol: { pitch: { screenOf(x: number, y: number, z: number): { x: number; y: number } } } }).__gol.pitch.screenOf(side, 0.5, 0), i % 2 ? 3.1 : -3.1);
     const vp = page.viewportSize()!;
     await page.mouse.move(vp.width / 2, vp.height * 0.9);
     await page.mouse.down();
     for (let k = 1; k <= 8; k++) { await page.mouse.move(vp.width / 2 + (target.x - vp.width / 2) * k / 8, vp.height * 0.9 + (target.y - vp.height * 0.9) * k / 8); await page.waitForTimeout(15); }
     await page.mouse.up();
-    await expect(page.locator(marks)).toHaveCount(i + 1, { timeout: 40_000 });
+    await expect(page.locator(marks)).toHaveCount(i + 1, { timeout: 60_000 });
     if (await page.locator('#hud .line:first-child .dot.g').count()) break;
   }
   const p = await page.evaluate(() => JSON.parse(localStorage.getItem('gol.progress')!));

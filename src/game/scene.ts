@@ -491,11 +491,13 @@ export class Pitch {
   private idle = 0;
   private spot = { sx: 0, sz: 11 };
   private keeperDiving = false;
-  /** Velocidade do tempo (0,35 no replay em câmera lenta). */
+  /** Velocidade do tempo (0,55 no replay em câmera lenta). */
   timeScale = 1;
   /** Comemoração de quem bate, para o próximo gol. */
   kickerCelebration: Celebration = 'jump';
   private replayCam = false;
+  /** Onde a bola entra no gol (para o replay enquadrar o lance inteiro). */
+  private replayAim: { x: number; y: number } | null = null;
   private celebCam: { body: Body; fwd: THREE.Vector3; id: number } | null = null;
   private celebId = 0;
   /** futebol feminino: todo mundo em campo é jogadora (escolhido no Meu craque e na tela do time) */
@@ -870,9 +872,29 @@ export class Pitch {
       this.camera.clearViewOffset();
       this.camera.aspect = window.innerWidth / window.innerHeight;
       const side = sx > 0 ? -1 : 1;
-      this.camera.position.set(side * 9, 1.5, Math.min(sz, 14) * 0.55);
-      this.camera.lookAt(0, 1.1, Math.min(sz, 14) * 0.25);
-      this.camera.fov = THREE.MathUtils.clamp(48 / Math.min(1, this.camera.aspect * 1.6), 48, 85);
+      const aim = this.replayAim ?? { x: 0, y: GOAL_H / 2 };
+      // de lado e um pouco à frente do gol; a abertura da lente é calculada para caber o gol
+      // inteiro (as duas traves, o travessão e a rede) e o ponto onde a bola entra, em qualquer tela
+      this.camera.position.set(side * 8, 1.4, 6.5);
+      this.camera.lookAt(aim.x * 0.4, 1.1, 0);
+      this.camera.updateMatrixWorld();
+      const m = 0.4;
+      const pts: [number, number, number][] = [
+        [-HALF - m, 0, 0], [HALF + m, 0, 0], [-HALF - m, GOAL_H + m, 0], [HALF + m, GOAL_H + m, 0],
+        [-HALF, 0, -1.4], [HALF, 0, -1.4], [aim.x, aim.y + 0.3, 0],
+        // um pedaço do caminho da bola antes de entrar
+        [aim.x + (sx - aim.x) * (4 / Math.max(4, d)), 0.6, 4 * (sz / Math.max(4, d))],
+      ];
+      let tx = 0, ty = 0;
+      const v = new THREE.Vector3();
+      for (const [x, y, z] of pts) {
+        v.set(x, y, z).applyMatrix4(this.camera.matrixWorldInverse);
+        if (v.z > -0.5) continue;
+        tx = Math.max(tx, Math.abs(v.x) / -v.z);
+        ty = Math.max(ty, Math.abs(v.y) / -v.z);
+      }
+      const half = Math.max(ty, tx / this.camera.aspect) * 1.08;
+      this.camera.fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(half)), 30, 110);
       this.camera.updateProjectionMatrix();
       for (const m of this.netBack) m.visible = true;
       return;
@@ -1410,14 +1432,16 @@ export class Pitch {
     if (!this.lastSetup) return;
     this.setup(this.lastSetup);
     this.replayCam = true;
+    this.replayAim = { x: o.shot.tx, y: o.shot.ty };
     this.placeCamera();
-    this.timeScale = 0.35;
+    this.timeScale = 0.55;
     try {
       await this.play({ ...o, runUp: 0.35, onKick: undefined, onFlightStart: undefined });
       await this.tween(0.5, () => {});
     } finally {
       this.timeScale = 1;
       this.replayCam = false;
+      this.replayAim = null;
       this.placeCamera();
     }
   }
