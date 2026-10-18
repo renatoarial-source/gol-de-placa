@@ -1,0 +1,27 @@
+name: Compras no app
+
+# Mostra a descrição das compras no app do Esconde-Esconde; com fix=1, troca "17" lugares por "21".
+on:
+  workflow_dispatch:
+    inputs:
+      fix:
+        description: '1 = corrigir; 0 = só mostrar'
+        default: '0'
+
+permissions:
+  contents: read
+
+jobs:
+  iap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+      - run: node scripts/asc-iap.mjs
+        env:
+          FIX: ${{ inputs.fix }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
