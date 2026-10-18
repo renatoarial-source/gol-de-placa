@@ -1,0 +1,27 @@
+name: Buscar sons gratuitos
+
+# Baixa candidatos de som (Freesound/Pixabay) e salva na branch "sons-candidatos" para escolha.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: node scripts/fetch-sounds.mjs
+      - name: Salvar na branch sons-candidatos
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout -B sons-candidatos
+          git add -f store/sons-candidatos
+          git commit -m "Sons candidatos (Freesound/Pixabay)" || echo "nada novo"
+          git push -f origin sons-candidatos
