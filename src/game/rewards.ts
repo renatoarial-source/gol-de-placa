@@ -24,6 +24,10 @@ export const STADIUMS: Stadium[] = [
   { id: 'golden', e: '🏆', need: 90, seatA: '#ffca28', seatB: '#c49000', ground: '#3a8a35' },
 ];
 
+/** Estilo "bolinha" (bonecos redondos): liberado com figurinhas; depois sai em 1 de cada 4 partidas. */
+export const ROUND = { e: '⚪', need: 25, chance: 0.25 };
+export const roundUnlocked = (stickers: number) => stickers >= ROUND.need;
+
 export const kitUnlocked = (id: string, stickers: number) => (KITS.find((k) => k.id === id)?.need ?? 99) <= stickers;
 export const stadiumUnlocked = (id: string, stickers: number) => (STADIUMS.find((s) => s.id === id)?.need ?? 99) <= stickers;
 export const findStadium = (id: string) => STADIUMS.find((s) => s.id === id) ?? STADIUMS[0];
@@ -34,7 +38,7 @@ export function specialKit(id: string, stickers: number): Kit | undefined {
 }
 /** Próximo prêmio a liberar (para mostrar "faltam N figurinhas"). */
 export function nextReward(stickers: number): { e: string; left: number } | undefined {
-  const all = [...KITS, ...STADIUMS].filter((r) => r.need > stickers).sort((a, b) => a.need - b.need);
+  const all = [...KITS, ...STADIUMS, ROUND].filter((r) => r.need > stickers).sort((a, b) => a.need - b.need);
   return all.length ? { e: all[0].e, left: all[0].need - stickers } : undefined;
 }
 

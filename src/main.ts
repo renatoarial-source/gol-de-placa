@@ -19,7 +19,7 @@ import { onMatchFinished } from './game/rating';
 import * as gc from './game/gamecenter';
 import { MUSIC_STYLES, music, type MusicStyle } from './game/music';
 import {
-  KITS, STADIUMS, addMatch, bracket, emptyScore, eventFor, findStadium, kitUnlocked, nextReward, specialKit, stadiumUnlocked,
+  KITS, ROUND, STADIUMS, addMatch, roundUnlocked, bracket, emptyScore, eventFor, findStadium, kitUnlocked, nextReward, specialKit, stadiumUnlocked,
   type CupEvent, type EventScore,
 } from './game/rewards';
 import { NATIONS } from './game/teams';
@@ -38,7 +38,9 @@ let weatherPick = store.get('weather', 'random') as Weather | 'random';
 let weather: Weather = weatherPick === 'random' ? 'day' : weatherPick;
 const WEATHERS: Weather[] = ['day', 'night', 'rain', 'snow'];
 /** No clima aleatório, cada partida sorteia o seu. */
-function rollWeather() { rollBuild(); rollWeather0(); }
+function rollWeather() { rollBuild(); rollStyle(); rollWeather0(); }
+/** Estilo "bolinha": depois de liberado no álbum, 1 de cada 4 partidas é com todo mundo redondo. */
+function rollStyle() { pitch.round = roundUnlocked(progress.stickers.length) && Math.random() < ROUND.chance; }
 function rollWeather0() { weather = weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick; }
 let crowd = store.get('crowd', 'full') as Crowd;
 let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
@@ -108,6 +110,8 @@ function track(ev: Ev) {
   progress = r.s;
   store.set('progress', JSON.stringify(progress));
   for (const id of r.done) toast('📅', t('dailyDone'), t(('ch_' + id) as UiKey, { n: needOf(id) }));
+  if (r.stickers.length && progress.stickers.length >= ROUND.need && progress.stickers.length - r.stickers.length < ROUND.need)
+    toast(ROUND.e, t('roundUnlocked'), t('roundInfo'));
   for (const id of r.stickers) { const st = findSticker(id); if (st) toast(st.e, t('newSticker'), stickerName(st)); }
   // só as 18 primeiras são conquistas no Game Center
   gc.report(r.stickers.filter((id) => findSticker(id)?.base), ev.t === 'goal' ? progress.goals : undefined);
@@ -271,6 +275,7 @@ function rewardsCard(): string {
     ${nx ? `<p class="sub">${t('nextReward', { n: nx.left, e: nx.e })}</p>` : ''}
     <b>${t('kits')}</b>
     <div class="rewardgrid">${kitBtn('', '🛡️', 0, myTeam.kit.shirt, myTeam.kit.shorts)}${KITS.map((k) => kitBtn(k.id, k.e, k.need, k.kit.shirt, k.kit.shorts)).join('')}</div>
+    <div class="round-row${roundUnlocked(n) ? '' : ' locked'}"><span class="round-kit"></span><span><b>${ROUND.e} ${t('roundStyle')}</b><small>${roundUnlocked(n) ? t('roundInfo') : `🔒 ${t('roundNeed', { n: ROUND.need })}`}</small></span></div>
     <b>${t('stadiums')}</b>
     <div class="rewardgrid">${STADIUMS.map((s) => {
       const open = s.need <= n;
@@ -284,6 +289,7 @@ function rewardsCard(): string {
 function home() {
   run++;
   pitch.crowdTension(false);
+  pitch.round = false; // a tela inicial é sempre de bloquinhos
   music.setIntensity(0.35);
   eventTeam = null;
   pitch.womens = !!look.female;

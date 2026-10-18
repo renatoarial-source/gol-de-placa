@@ -158,7 +158,20 @@ function shirtTex(kit: Kit, color: string, number: number | null, name = ''): TH
 }
 
 /** Boneco de blocos virado para +z. */
-function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?: Look, womens = false): Body {
+/** Partes arredondadas do estilo "bolinha". */
+function ball(r: number, mat: THREE.Material, y = 0, x = 0, z = 0, sx = 1, sy = 1, sz = 1) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), mat);
+  m.position.set(x, y, z);
+  m.scale.set(sx, sy, sz);
+  return m;
+}
+function pill(r: number, len: number, mat: THREE.Material, y = 0, x = 0, z = 0) {
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 14), mat);
+  m.position.set(x, y, z);
+  return m;
+}
+
+function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?: Look, womens = false, round = false): Body {
   const skin = SKINS[look ? look.skin : seed % SKINS.length];
   const hair = HAIRS[look ? look.hair : (seed * 7 + 3) % HAIRS.length];
   // futebol feminino: todas as jogadoras, com penteados de jogadora; masculino: os de sempre
@@ -187,6 +200,11 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
   const root = new THREE.Group();
   const pose = new THREE.Group();
   root.add(pose);
+  if (round) {
+    const female = look ? !!look.female : womens;
+    return roundBody({ root, pose, shape, style, female, skin, hair, mSkin, mShirt, mShorts, mSocks, mShoe, mSole, mHair, mGlove,
+      mBack: lambert(shirtTex(kit, shirt, number, look?.name ?? '')), seed });
+  }
 
   const leg = (x: number) => {
     const g = new THREE.Group();
@@ -305,6 +323,88 @@ function makeBody(kit: Kit, number: number, seed: number, keeper = false, look?:
 }
 
 /** Troca a expressão do rosto. */
+/** Estilo "bolinha": o mesmo boneco (mesmas articulações e animações), feito de esferas e cápsulas. */
+function roundBody(o: {
+  root: THREE.Group; pose: THREE.Group; shape: (typeof BUILD_SHAPE)[Build]; style: HairStyle; female: boolean; skin: string; hair: string;
+  mSkin: THREE.Material; mShirt: THREE.Material; mShorts: THREE.Material; mSocks: THREE.Material; mShoe: THREE.Material; mSole: THREE.Material;
+  mHair: THREE.Material; mGlove: THREE.Material; mBack: THREE.Material; seed: number;
+}): Body {
+  const { root, pose, shape, style, mSkin, mShirt, mShorts, mSocks, mShoe, mSole, mHair, mGlove } = o;
+  const leg = (x: number) => {
+    const g = new THREE.Group();
+    g.position.set(x, 0.8, 0);
+    g.add(pill(0.1, 0.18, mSkin, -0.16));
+    g.add(pill(0.105, 0.26, mSocks, -0.5));
+    g.add(ball(0.15, mShoe, -0.74, 0, 0.06, 1, 0.55, 1.4));
+    g.add(ball(0.15, mSole, -0.79, 0, 0.06, 1.02, 0.25, 1.42));
+    pose.add(g);
+    return g;
+  };
+  const legL = leg(-0.14);
+  const legR = leg(0.14);
+  pose.add(ball(0.3, mShorts, 0.84, 0, 0, 1, 0.5, 0.62));
+  pose.add(ball(0.32, mShirt, 1.22, 0, 0, 1, 1.12, 0.64));
+  // número nas costas
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.36), o.mBack);
+  back.position.set(0, 1.24, -0.215);
+  back.rotation.y = Math.PI;
+  pose.add(back);
+  if (shape.belly) pose.add(ball(0.24, mShirt, 1.14, 0, 0.12 + shape.belly / 2, 1, 0.9, 0.7));
+  const arm = (x: number) => {
+    const g = new THREE.Group();
+    g.position.set(x, 1.48, 0);
+    g.add(ball(0.12, mShirt, -0.06));
+    g.add(pill(0.08, 0.24, mSkin, -0.34));
+    g.add(ball(0.1, mGlove, -0.58));
+    pose.add(g);
+    return g;
+  };
+  const armL = arm(-0.38);
+  const armR = arm(0.38);
+  const bald = style === 'bald';
+  const faceHair = bald ? o.skin : o.hair;
+  const mFace = new THREE.MeshLambertMaterial({ map: faceTex(o.skin, faceHair, 'calm', o.female) });
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 24, 18), mSkin);
+  head.position.y = 1.82;
+  pose.add(head);
+  // rosto: um pedaço de esfera colado na frente da cabeça, com a mesma textura do rosto de bloquinho
+  const face = new THREE.Mesh(new THREE.SphereGeometry(0.274, 24, 16, Math.PI / 2 - 0.85, 1.7, 0.62, 1.5), mFace);
+  head.add(face);
+  // cabelo: uma "touca" e os detalhes de cada penteado
+  if (!bald) {
+    const capR = style === 'curly' ? 0.34 : 0.29;
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(capR, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), mHair);
+    cap.rotation.x = -0.35;
+    cap.position.set(0, style === 'curly' ? 0.03 : 0, -0.02);
+    head.add(cap);
+  }
+  const H = (m: THREE.Mesh) => head.add(m);
+  if (style === 'long' || style === 'bob') H(ball(0.27, mHair, style === 'bob' ? -0.02 : -0.08, 0, -0.14, 1.05, style === 'bob' ? 0.8 : 1.1, 0.6));
+  if (style === 'bob') H(ball(0.2, mHair, 0.16, 0, 0.16, 1.1, 0.35, 0.5)); // franjinha
+  if (style === 'ponytail') { H(ball(0.1, mHair, 0.06, 0, -0.29)); H(pill(0.07, 0.24, mHair, -0.14, 0, -0.33)); }
+  if (style === 'pigtails') for (const x of [-0.3, 0.3]) H(pill(0.07, 0.2, mHair, -0.02, x, -0.06));
+  if (style === 'buns') for (const x of [-0.17, 0.17]) H(ball(0.1, mHair, 0.26, x, -0.04));
+  if (style === 'topknot') H(ball(0.11, mHair, 0.33, 0, -0.04));
+  if (style === 'braids') for (const x of [-0.26, 0.26]) H(pill(0.06, 0.32, mHair, -0.12, x, -0.08));
+  if (style === 'dreads') for (const [x, z] of [[-0.24, -0.1], [0.24, -0.1], [-0.16, -0.22], [0, -0.26], [0.16, -0.22]]) H(pill(0.05, 0.3, mHair, -0.1, x, z));
+  if (style === 'mohawk') H(ball(0.06, mHair, 0.28, 0, -0.02, 1, 2, 4));
+  if (style === 'quiff') H(ball(0.12, mHair, 0.25, 0, 0.13, 1.4, 0.7, 1));
+  if (style === 'spiky') for (const [x, z] of [[-0.13, 0.08], [0.1, 0.1], [0, -0.05], [-0.15, -0.15], [0.14, -0.14]]) {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 8), mHair);
+    c.position.set(x, 0.3, z);
+    c.rotation.set(z * 1.5, 0, -x * 1.5);
+    H(c);
+  }
+  pose.scale.set(shape.sx, shape.sy, shape.sz);
+  head.scale.set(shape.head / shape.sx, shape.head / shape.sy, shape.head / shape.sz);
+  if (shape.arm) for (const a of [armL, armR]) a.scale.set(shape.arm, 1, shape.arm);
+  return {
+    root, pose, legL, legR, armL, armR, head,
+    face: { mat: mFace, skin: o.skin, hair: faceHair, female: o.female, mood: 'calm' },
+    phase: (o.seed * 1.37) % (Math.PI * 2),
+  };
+}
+
 function setMood(b: Body | null, mood: Mood) {
   if (!b || b.face.mood === mood) return;
   b.face.mood = mood;
@@ -400,6 +500,8 @@ export class Pitch {
   private celebId = 0;
   /** futebol feminino: todo mundo em campo é jogadora (escolhido no Meu craque e na tela do time) */
   womens = false;
+  /** estilo "bolinha" (redondo) nesta partida: vale para todo mundo em campo */
+  round = false;
   private lastSetup: Parameters<Pitch['setup']>[0] | null = null;
   private view: 'kick' | 'keep' = 'kick';
   /** Ao defender: câmera atrás do gol ('goal') ou atrás do cobrador ('kicker'). */
@@ -739,7 +841,7 @@ export class Pitch {
     this.tweens = [];
     this.clearPlayers();
     this.ball.visible = false;
-    const b = makeBody(kit, look.number, 1, keeper, look);
+    const b = makeBody(kit, look.number, 1, keeper, look, false, this.round);
     b.root.position.set(0, 0, 6);
     this.scene.add(b.root);
     this.showcaseBody = b;
@@ -842,7 +944,7 @@ export class Pitch {
 
     const dir = Math.atan2(-o.sx, -o.sz); // virado para o gol
     // o boneco da criança usa o "Meu craque" (batedor ou goleiro, conforme o papel)
-    this.kicker = makeBody(o.kickerKit, 7 + (o.seed % 4) * 2, o.seed, false, o.view === 'kick' ? o.look : undefined, this.womens);
+    this.kicker = makeBody(o.kickerKit, 7 + (o.seed % 4) * 2, o.seed, false, o.view === 'kick' ? o.look : undefined, this.womens, this.round);
     // começa atrás e à esquerda da bola (chuta de pé direito)
     const d = Math.hypot(o.sx, o.sz);
     this.back = { x: o.sx / d, z: o.sz / d };
@@ -850,7 +952,7 @@ export class Pitch {
     this.kicker.root.rotation.y = dir;
     this.scene.add(this.kicker.root);
 
-    this.keeper = makeBody(o.keeperKit, 1, o.seed + 2, true, o.view === 'keep' ? o.look : undefined, this.womens);
+    this.keeper = makeBody(o.keeperKit, 1, o.seed + 2, true, o.view === 'keep' ? o.look : undefined, this.womens, this.round);
     this.keeper.root.position.set(0, 0, 0.35);
     this.keeper.root.rotation.y = Math.atan2(o.sx, o.sz) * 0.5;
     this.keeper.armL.rotation.z = 0.5; this.keeper.armR.rotation.z = -0.5;
@@ -858,7 +960,7 @@ export class Pitch {
 
     if (o.wall) {
       for (let i = 0; i < o.wall.count; i++) {
-        const b = makeBody(o.keeperKit, [4, 5, 6, 8, 3][i], o.seed + 5 + i, false, undefined, this.womens);
+        const b = makeBody(o.keeperKit, [4, 5, 6, 8, 3][i], o.seed + 5 + i, false, undefined, this.womens, this.round);
         b.root.position.set(o.wall.x + (i - (o.wall.count - 1) / 2) * PLAYER_W, 0, o.wall.z);
         b.root.rotation.y = Math.atan2(o.sx - o.wall.x, o.sz - o.wall.z);
         b.armL.rotation.x = -0.4; b.armR.rotation.x = -0.4;

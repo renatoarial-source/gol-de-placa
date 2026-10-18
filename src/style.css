@@ -183,3 +183,8 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .bracket li span:last-child { text-align: right; }
 .bracket li.now { outline: 2px solid var(--yellow); }
 .bracket .w { color: var(--yellow); } .bracket .l { opacity: .45; text-decoration: line-through; }
+/* estilo bolinha no álbum */
+.round-row { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px; background: rgba(255, 255, 255, .07); }
+.round-row small { display: block; color: var(--muted); font-size: 13px; }
+.round-row.locked { opacity: .55; }
+.round-kit { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #ffd400 45%, #b38f00); flex: none; }

@@ -42,3 +42,12 @@ describe('torneio de 4', () => {
     expect(bracket(1, 2)).toEqual([[0, 1], [2, 3], [1, 2]]);
   });
 });
+
+describe('estilo bolinha', () => {
+  it('libera com 25 figurinhas e sai em 1 de cada 4 partidas', async () => {
+    const { ROUND, roundUnlocked } = await import('../src/game/rewards');
+    expect(roundUnlocked(ROUND.need - 1)).toBe(false);
+    expect(roundUnlocked(ROUND.need)).toBe(true);
+    expect(ROUND.chance).toBe(0.25);
+  });
+});
