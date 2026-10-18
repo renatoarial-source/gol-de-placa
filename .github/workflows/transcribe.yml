@@ -1,0 +1,43 @@
+name: Ouvir sons candidatos
+
+# Transcreve (Whisper) os sons da branch sons-candidatos, para achar palavrão ou fala antes de usar no jogo.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  listen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: sons-candidatos
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -q faster-whisper
+      - name: Transcrever
+        run: |
+          python - <<'PY'
+          import glob, json, os
+          from faster_whisper import WhisperModel
+          model = WhisperModel("small", device="cpu", compute_type="int8")
+          out = {}
+          for f in sorted(glob.glob("store/sons-candidatos/*.mp3")):
+              segs, info = model.transcribe(f, vad_filter=True, beam_size=1)
+              parts = [{"start": round(s.start, 1), "end": round(s.end, 1), "text": s.text.strip(), "p_speech": round(1 - s.no_speech_prob, 2)} for s in segs]
+              out[os.path.basename(f)] = {"lang": info.language, "lang_p": round(info.language_probability, 2), "segments": parts}
+              print("==", os.path.basename(f), info.language, round(info.language_probability, 2))
+              for p in parts: print("   ", p["start"], "-", p["end"], p["p_speech"], p["text"])
+          json.dump(out, open("store/sons-candidatos/transcricoes.json", "w"), ensure_ascii=False, indent=1)
+          PY
+      - name: Salvar
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add store/sons-candidatos/transcricoes.json
+          git commit -m "Transcrições dos sons candidatos" || echo nada
+          git push origin HEAD:sons-candidatos
