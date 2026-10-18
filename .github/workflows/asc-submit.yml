@@ -1,0 +1,27 @@
+name: Enviar para revisão
+
+# Envia uma versão do Gol de Placa para a revisão da Apple (o build mais novo dessa versão).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão (ex.: 1.0.6)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+      - run: node scripts/asc-submit.mjs
+        env:
+          VERSION: ${{ inputs.version }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
