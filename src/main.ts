@@ -1127,7 +1127,7 @@ function fans() {
       <p class="voice-note">${t('heartInfo')}</p>
     </div>
     <p class="voice-note credits">🎧 ${t('soundCredits')}: Félix Blume, _vk (Maracanã), dacarpe, Bruna32U, AxelTheCocker02, neilraouf, Kinoton,
-      soundrecorder7, Imp_sounds, bittermelonheart (CC0) · Pablo-F, luminadii, gusvelasco, Quistard, juskiddink (CC BY 3.0/4.0)</p>
+      soundrecorder7, Imp_sounds, bittermelonheart (CC0) · Pablo-F, luminadii, gusvelasco, Quistard, juskiddink, polmdx (CC BY 3.0/4.0)</p>
     <button class="btn alt" data-go="back">${t('back')}</button>
   `);
   on('[data-music]', (el) => {

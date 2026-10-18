@@ -180,7 +180,7 @@ export function setCrowdSize(size: 'full' | 'half' | 'few') {
 function crowdClip(kind: 'cheer' | 'ohh' | 'clap'): boolean {
   if (!ctx || !master) return false;
   // no gol, às vezes um torcedor perto grita "goooool" junto com a torcida
-  if (kind === 'cheer' && Math.random() < 0.6) {
+  if (kind === 'cheer' && Math.random() < 0.6 && performance.now() > realShoutUntil) {
     const g = SFX.grito[Math.floor(Math.random() * SFX.grito.length)];
     playRec(g, 0.55 * (0.5 + 0.5 * crowdSize), 0.97 + Math.random() * 0.06, 0.35 + Math.random() * 0.3);
   }
@@ -442,7 +442,7 @@ function loadClip(url: string): Promise<AudioBuffer | null> {
 /** Carrega antes todas as falas do idioma e da voz escolhidos. */
 export function preloadVoice(lang: Lang) {
   if (!ctx || voiceMode === 'off') return;
-  for (const [key, lines] of Object.entries(LANGS[lang].calls)) lines.forEach((_, i) => void loadClip(clipUrl(lang, voiceMode as 'male', key, i)));
+  for (const [key, lines] of Object.entries(LANGS[lang].calls)) lines.forEach((_, i) => void loadClip(realLine(lang, key as CallKey, i, voiceMode) ?? clipUrl(lang, voiceMode as 'male', key, i)));
 }
 
 function playClip(buf: AudioBuffer) {
@@ -486,6 +486,19 @@ function speakSystem(lang: Lang, key: CallKey, text: string) {
   } catch { /* sem voz */ }
 }
 
+/** Narração híbrida: frases que têm gravação gratuita de uma pessoa de verdade (Freesound) tocam
+ * a gravação; as outras, a voz neural. Só no narrador (as gravações são de homens). */
+const REAL: Partial<Record<Lang, Partial<Record<CallKey, Record<number, string>>>>> = {
+  pt: { goal: { 0: './sfx/torcedor-gooool.mp3' } },
+  es: { goal: { 0: './sfx/torcedor-gooool.mp3' } },
+  it: { goal: { 0: './sfx/torcedor-gooool.mp3' } },
+  en: { goal: { 0: './sfx/narrador-goal-en.mp3' } },
+};
+export const realLine = (lang: Lang, key: CallKey, i: number, v: string): string | undefined =>
+  v === 'male' ? REAL[lang]?.[key]?.[i] : undefined;
+/** Enquanto a voz real grita "gol", o torcedor da torcida não grita junto. */
+let realShoutUntil = 0;
+
 /** Fala uma frase da narração e devolve o texto (também mostrado na tela). */
 /** Última fala de cada lance, para a próxima ser diferente (ex.: "Que defesa!" e depois "Que goleiro!"). */
 const lastCall = new Map<string, number>();
@@ -499,7 +512,9 @@ export function call(lang: Lang, key: CallKey): string {
   if (voiceMode === 'off' || !enabled) return text;
   const asked = performance.now();
   const v = voiceMode;
-  void (ctx ? loadClip(clipUrl(lang, v, key, i)) : Promise.resolve(null)).then((buf) => {
+  const real = realLine(lang, key, i, v);
+  if (real) realShoutUntil = asked + 4000;
+  void (ctx ? loadClip(real ?? clipUrl(lang, v, key, i)) : Promise.resolve(null)).then((buf) => {
     if (voiceMode !== v) return;
     if (buf) { if (performance.now() - asked < 700) playClip(buf); } // atrasada demais: deixa passar
     else speakSystem(lang, key, text);

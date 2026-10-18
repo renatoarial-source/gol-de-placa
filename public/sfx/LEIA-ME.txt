@@ -26,3 +26,4 @@ torcida-uhh3.mp3      <- 237684 "Football Crowd - Near miss ooh 2" (Quistard) - 
 vuvuzelas.mp3         <- 100013 "Vuvuzelas.wav" (juskiddink) - CC BY
 
 Todos foram transcritos com reconhecimento de fala (workflow "Ouvir sons candidatos") para não entrar palavrão.
+narrador-goal-en.mp3 <- 219873 "goal shout" (polmdx) - CC BY   https://freesound.org/people/polmdx/sounds/219873/
