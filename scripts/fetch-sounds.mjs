@@ -58,13 +58,21 @@ const ESCONDE2_QUERIES = [
   ['cash register ding', 'campainha'], ['hamster squeak', 'rato'], ['guinea pig squeak', 'rato'], ['macaw', 'papagaio'], ['owl', 'coruja'],
   ['chicks peeping', 'pintinho'], ['dog bark single', 'cachorro'], ['cat meow kitten', 'gato'], ['bear growl', 'urso'],
 ];
-const FS_QUERIES = SET === 'gelada' ? GELADA_QUERIES : SET === 'esconde' ? ESCONDE_QUERIES : SET === 'esconde2' ? ESCONDE2_QUERIES : GOL_QUERIES;
+// Narração de verdade (pessoas reais): busca bem mais larga, em vários idiomas
+const NARRACAO_QUERIES = [
+  'gol', 'goool', 'gooool', 'golaço', 'golazo', 'é gol', 'gol do brasil', 'narrador', 'narração', 'narração futebol', 'narrador futebol',
+  'locutor', 'locutor esportivo', 'radio futebol', 'futebol radio', 'transmissão futebol', 'que defesa', 'defesa goleiro', 'goleiro',
+  'goal shout', 'goal scream', 'man shouting goal', 'goal announcer', 'goal commentator', 'soccer commentator', 'football commentary',
+  'sports announcer', 'sportscaster', 'announcer voice', 'announcer pack', 'commentator voice', 'what a save', 'great save', 'what a goal',
+  'gooooal', 'tor tor tor', 'but commentateur', 'gol telecronaca', 'penalty voice', 'stadium announcer', 'speaker stade',
+].map((q) => [q, 'narracao']);
+const FS_QUERIES = SET === 'narracao' ? NARRACAO_QUERIES : SET === 'gelada' ? GELADA_QUERIES : SET === 'esconde' ? ESCONDE_QUERIES : SET === 'esconde2' ? ESCONDE2_QUERIES : GOL_QUERIES;
 async function freesoundSearch(q) {
   const html = await (await get(`https://freesound.org/search/?q=${encodeURIComponent(q)}&s=Downloads+(most+first)`)).text();
   const ids = [...html.matchAll(/href="\/people\/([^/"]+)\/sounds\/(\d+)\/"/g)].map((m) => [m[1], m[2]]);
   const uniq = [];
   for (const x of ids) if (!uniq.find((u) => u[1] === x[1])) uniq.push(x);
-  return uniq.slice(0, SET === 'gol' ? 6 : 4);
+  return uniq.slice(0, SET === 'gol' ? 6 : SET === 'narracao' ? 12 : 4);
 }
 function licenseOf(html) {
   if (/publicdomain\/zero/i.test(html)) return 'CC0';
@@ -124,6 +132,49 @@ for (const [q, cat] of PX_QUERIES) {
       await sleep(500);
     }
   } catch (e) { console.log('pixabay falhou', q, e.message); }
+}
+
+// ---------- Wikimedia Commons e Internet Archive (só na busca de narração) ----------
+const FREE_LIC = (l) => /^(cc0|public domain|pd|cc[- ]by(-sa)?[- ]?[\d.]*)$/i.test(l.trim()) && !/nc|nd/i.test(l);
+if (SET === 'narracao') {
+  for (const q of ['gol futebol', 'narração futebol', 'futebol rádio', 'goal commentary', 'football commentary', 'soccer goal', 'sports commentary', 'gol locutor']) {
+    try {
+      const api = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrnamespace=6&gsrlimit=15&gsrsearch=${encodeURIComponent(q + ' filetype:audio')}&prop=imageinfo&iiprop=url|extmetadata|size`;
+      const j = await (await get(api)).json();
+      for (const pg of Object.values(j.query?.pages ?? {})) {
+        const ii = pg.imageinfo?.[0]; if (!ii || seen.has(ii.url)) continue; seen.add(ii.url);
+        const lic = ii.extmetadata?.LicenseShortName?.value ?? '?';
+        const item = { src: 'commons', cat: 'narracao', q, title: pg.title, license: lic, url: ii.descriptionurl, author: (ii.extmetadata?.Artist?.value ?? '').replace(/<[^>]+>/g, '').slice(0, 80) };
+        if (FREE_LIC(lic) && ii.size < 8e6) {
+          const ext = ii.url.split('.').pop().toLowerCase();
+          const file = `narracao__wc${manifest.length}.${ext}`;
+          fs.writeFileSync(path.join(OUT, file), Buffer.from(await (await get(ii.url)).arrayBuffer()));
+          item.file = file;
+        }
+        manifest.push(item); console.log('commons', lic, pg.title);
+      }
+    } catch (e) { console.log('commons falhou', q, e.message); }
+  }
+  for (const q of ['futebol narração', 'futebol radio', 'gol narrador', 'soccer radio broadcast', 'football radio commentary', 'copa do mundo radio']) {
+    try {
+      const qs = `(${q}) AND mediatype:audio AND (licenseurl:*publicdomain* OR licenseurl:*licenses/by/* OR licenseurl:*licenses/by-sa/*)`;
+      const j = await (await get(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(qs)}&fl[]=identifier&fl[]=title&fl[]=licenseurl&rows=8&output=json`)).json();
+      for (const d of j.response?.docs ?? []) {
+        if (seen.has(d.identifier)) continue; seen.add(d.identifier);
+        const item = { src: 'archive', cat: 'narracao', q, title: d.title, license: d.licenseurl, url: `https://archive.org/details/${d.identifier}` };
+        try {
+          const meta = await (await get(`https://archive.org/metadata/${d.identifier}`)).json();
+          const mp3 = (meta.files ?? []).find((f) => /\.mp3$/i.test(f.name) && Number(f.size) < 8e6);
+          if (mp3) {
+            const file = `narracao__ia${manifest.length}.mp3`;
+            fs.writeFileSync(path.join(OUT, file), Buffer.from(await (await get(`https://archive.org/download/${d.identifier}/${encodeURIComponent(mp3.name)}`)).arrayBuffer()));
+            item.file = file; item.track = mp3.name;
+          }
+        } catch (e) { console.log('archive arquivo falhou', d.identifier, e.message); }
+        manifest.push(item); console.log('archive', d.licenseurl, d.title);
+      }
+    } catch (e) { console.log('archive falhou', q, e.message); }
+  }
 }
 
 fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2));

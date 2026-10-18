@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       set:
-        description: 'Jogo: gol, gelada ou esconde'
+        description: 'Jogo: gol, gelada, esconde, esconde2 ou narracao'
         default: gol
 
 permissions:
