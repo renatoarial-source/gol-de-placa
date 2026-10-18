@@ -43,12 +43,16 @@ export function nextReward(stickers: number): { e: string; left: number } | unde
 }
 
 /** Eventos "Pênaltis da Copa": aparecem na tela inicial só entre as datas (inclusive). */
-export interface CupEvent { id: string; from: string; to: string; womens?: boolean }
+export interface CupEvent { id: string; from: string; to: string; womens?: boolean; theme?: 'halloween' | 'natal' }
 export const EVENTS: CupEvent[] = [
+  { id: 'halloween2026', from: '2026-10-24', to: '2026-11-02', theme: 'halloween' }, // noite com abóboras e chapéu de bruxa
+  { id: 'natal2026', from: '2026-12-14', to: '2027-01-06', theme: 'natal' }, // neve, árvores de Natal e gorro do Papai Noel
   { id: 'finals2026', from: '2026-11-14', to: '2026-12-13' }, // temporada das finais
   { id: 'summer2027', from: '2027-01-10', to: '2027-02-07' }, // férias de verão
   { id: 'womens2027', from: '2027-06-20', to: '2027-07-25', womens: true }, // Copa do Mundo feminina, no Brasil
+  { id: 'halloween2027', from: '2027-10-24', to: '2027-11-02', theme: 'halloween' },
   { id: 'finals2027', from: '2027-11-13', to: '2027-12-12' },
+  { id: 'natal2027', from: '2027-12-14', to: '2028-01-06', theme: 'natal' },
   { id: 'cup2030', from: '2030-06-08', to: '2030-07-21' },
 ];
 

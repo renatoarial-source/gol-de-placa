@@ -41,7 +41,9 @@ const WEATHERS: Weather[] = ['day', 'night', 'rain', 'snow'];
 function rollWeather() { rollBuild(); rollStyle(); rollWeather0(); }
 /** Estilo "bolinha": depois de liberado no álbum, 1 de cada 4 partidas é com todo mundo redondo. */
 function rollStyle() { pitch.round = roundUnlocked(progress.stickers.length) && Math.random() < ROUND.chance; }
-function rollWeather0() { weather = weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick; }
+function rollWeather0() { weather = seasonWeather ?? (weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick); }
+/** No evento de Halloween é sempre noite; no de Natal, sempre neve. */
+let seasonWeather: Weather | null = null;
 let crowd = store.get('crowd', 'full') as Crowd;
 let keeperCam = store.get('keeperCam', 'goal') as 'goal' | 'kicker';
 /** Ritmo escolhido; 'misto' sorteia um ritmo diferente a cada chute. */
@@ -143,9 +145,11 @@ function atmo(opp?: Team) {
   audio.setCrowdSize(crowd);
   audio.setRain(weather === 'rain');
   const teams = [myKit().shirt, opp?.kit.shirt ?? '#ffffff'];
+  // na época especial a torcida se veste no clima: laranja, roxo e preto; ou vermelho, verde e dourado
+  const fest = pitch.season === 'halloween' ? ['#ff7a00', '#7b1fa2', '#111111'] : pitch.season === 'natal' ? ['#d50000', '#1b8a3a', '#ffd400', '#ffffff'] : [];
   return {
     weather, crowd,
-    colors: heart ? [...heart, ...heart, ...heart, ...teams] : teams,
+    colors: [...(heart ? [...heart, ...heart, ...heart, ...teams] : teams), ...fest, ...fest],
     flag: heart ?? [myKit().shirt, myKit().shorts] as [string, string],
   };
 }
@@ -309,6 +313,9 @@ function home() {
   pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myKit(), keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
   pitch.titleDuo(true, myKit(), myLook());
   const ev = eventFor(today());
+  // Halloween e Natal: enfeites ao lado do gol e chapéu nos jogadores durante toda a época
+  pitch.season = ev?.theme ?? null;
+  seasonWeather = null;
   const langs = (Object.keys(LANGS) as Lang[]).map((l) => `<option value="${l}"${l === lang ? ' selected' : ''}>${LANGS[l].name}</option>`).join('');
   show(`
     <div class="logo"><span class="ball">⚽</span><h1>GOL DE<br>PLACA</h1><p>${t('tagline')}</p>${roundUnlocked(progress.stickers.length) ? '' : `<p class="round-tease">${ROUND.e} ${t('roundStyle')}: 🔒 ${t('roundNeed', { n: ROUND.need })}</p>`}</div>
@@ -317,7 +324,7 @@ function home() {
       <button class="btn alt" data-go="player">${t('myPlayer')}${lock(!unlocked())}</button>
       <button class="btn alt" data-go="fans">${t('fanTitle')}</button>
     </div>
-    ${ev ? `<button class="mode event" data-go="event"><b>${t('eventTitle')}</b><span>${t('eventDesc')}</span></button>` : ''}
+    ${ev ? `<button class="mode event" data-go="event"><b>${evTitle(ev)}</b><span>${t('eventDesc')}</span></button>` : ''}
     <button class="btn alt" data-go="album">${t('album')} · ${progress.stickers.length}/${STICKERS.length}</button>
     ${dailyCard()}
     ${unlocked() ? '' : `<button class="btn gold" data-go="full">${t('fullVersion')}</button>`}
@@ -1071,11 +1078,14 @@ const readScore = (ev: CupEvent): EventScore => {
 };
 let eventPick = store.get('eventTeam', 'BR');
 
+/** Nome do evento: Pênaltis da Copa, de Halloween ou de Natal. */
+const evTitle = (ev: CupEvent) => t(ev.theme === 'halloween' ? 'ev_halloween' : ev.theme === 'natal' ? 'ev_natal' : 'eventTitle');
+
 function eventScreen(ev: CupEvent) {
   const sc = readScore(ev);
   const until = new Date(ev.to + 'T12:00:00').toLocaleDateString(LANGS[lang].voice, { day: 'numeric', month: 'long' });
   show(`
-    <h2>${t('eventTitle')}</h2>
+    <h2>${evTitle(ev)}</h2>
     <p class="sub">${t('eventUntil', { d: until })}</p>
     <div class="card event-score">
       <b>${t('eventScore')}</b>
@@ -1097,7 +1107,9 @@ async function eventMatch(id: number, ev: CupEvent) {
   if (eventTeam.kind !== 'nation') eventTeam = NATIONS[0];
   if (ev.womens) pitch.womens = true;
   const opp = NATIONS.filter((x) => x.id !== eventTeam!.id)[Math.floor(rng() * (NATIONS.length - 1))];
-  callEl.innerHTML = `<b>${t('eventTitle')}</b><span>${eventTeam.badge} × ${opp.badge}</span>`;
+  pitch.season = ev.theme ?? null;
+  seasonWeather = ev.theme === 'halloween' ? 'night' : ev.theme === 'natal' ? 'snow' : null;
+  callEl.innerHTML = `<b>${evTitle(ev)}</b><span>${eventTeam.badge} × ${opp.badge}</span>`;
   callEl.classList.remove('hidden');
   await sleep(1800); guard(id);
   callEl.classList.add('hidden');

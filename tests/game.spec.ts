@@ -418,6 +418,24 @@ test('prêmios das figurinhas: uniforme e estádio liberam com figurinhas', asyn
   expect(await page.evaluate(() => [localStorage.getItem('gol.kit'), localStorage.getItem('gol.stadium')])).toEqual(['gold', 'beach']);
 });
 
+test('Halloween e Natal: o evento da época troca o nome e a partida tem chapéus e enfeites', async ({ page }) => {
+  test.setTimeout(240_000);
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.clock.setFixedTime(new Date('2026-10-28T12:00:00'));
+  await open(page);
+  await expect(page.locator('[data-go=event]')).toContainText('Halloween');
+  await page.click('[data-go=event]');
+  await expect(page.locator('h2')).toContainText('Pênaltis de Halloween');
+  await page.click('[data-go=start]');
+  await expect(page.locator('#hint')).toBeVisible({ timeout: 90_000 });
+  expect(await page.evaluate(() => (window as unknown as { __gol: { pitch: { season: string } } }).__gol.pitch.season)).toBe('halloween');
+  await page.clock.setFixedTime(new Date('2026-12-24T12:00:00'));
+  await page.goto('/');
+  await expect(page.locator('[data-go=event]')).toContainText('Natal');
+  expect(errors).toEqual([]);
+});
+
 test('evento Pênaltis da Copa só aparece nas datas e guarda o placar da vez', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-20T12:00:00'));
   await open(page);

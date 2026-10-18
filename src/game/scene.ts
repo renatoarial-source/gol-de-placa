@@ -51,6 +51,101 @@ export interface Look { skin: number; hair: number; style: HairStyle; boots: num
 /** Expressão do rosto: concentrado antes do chute, feliz no gol, triste no erro, assustado no quase. */
 export type Mood = 'calm' | 'focus' | 'happy' | 'sad' | 'wow';
 export type Weather = 'day' | 'night' | 'rain' | 'snow';
+/** Edição especial da época (Halloween e Natal): chapéus nos jogadores e enfeites ao lado do gol. */
+export type Season = 'halloween' | 'natal';
+
+/** Chapéu da época, preso na cabeça (o centro da cabeça é a origem; o topo fica em ~0,24). */
+function seasonHat(season: Season, round: boolean): THREE.Group {
+  const g = new THREE.Group();
+  const top = round ? 0.25 : 0.23;
+  const lam = (c: string) => new THREE.MeshLambertMaterial({ color: c });
+  if (season === 'halloween') {
+    // chapéu de bruxa: aba larga, cone pontudo um pouco torto e uma faixa roxa
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.03, 20), lam('#1a1024'));
+    brim.position.y = top + 0.01;
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.52, 16), lam('#1a1024'));
+    cone.position.set(0, top + 0.27, -0.02);
+    cone.rotation.x = -0.18;
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.225, 0.23, 0.07, 16), lam('#8e24aa'));
+    band.position.y = top + 0.06;
+    g.add(brim, cone, band);
+  } else {
+    // gorro do Papai Noel: cone vermelho caído para trás, barra branca e pompom
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.46, 16), lam('#d50000'));
+    cone.position.set(0, top + 0.2, -0.05);
+    cone.rotation.x = -0.45;
+    const trim = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.055, 8, 20), lam('#ffffff'));
+    trim.rotation.x = Math.PI / 2;
+    trim.position.y = top + 0.02;
+    const pom = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 10), lam('#ffffff'));
+    pom.position.set(0, top + 0.38, -0.25);
+    g.add(cone, trim, pom);
+  }
+  return g;
+}
+
+/** Abóbora de Halloween com a carinha acesa (brilha à noite). */
+function pumpkin(scale = 1): THREE.Group {
+  const g = new THREE.Group();
+  const face = canvasTex(128, 128, (c) => {
+    c.fillStyle = '#ff7a00'; c.fillRect(0, 0, 128, 128);
+    c.fillStyle = '#ffe066';
+    c.beginPath(); c.moveTo(30, 52); c.lineTo(50, 30); c.lineTo(58, 56); c.fill(); // olho
+    c.beginPath(); c.moveTo(98, 52); c.lineTo(78, 30); c.lineTo(70, 56); c.fill(); // olho
+    c.beginPath(); c.moveTo(26, 72); c.lineTo(102, 72); c.lineTo(88, 100); c.lineTo(74, 88); c.lineTo(64, 104); c.lineTo(54, 88); c.lineTo(40, 100); c.fill(); // boca
+  });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 14), [
+    new THREE.MeshBasicMaterial({ color: '#e86a00' }),
+  ][0]);
+  body.scale.set(1.15, 0.85, 1.05);
+  body.position.y = 0.36;
+  // a carinha fica num disco curvo na frente (virado para o campo, +z)
+  const front = new THREE.Mesh(new THREE.SphereGeometry(0.425, 20, 14, Math.PI / 2 - 0.9, 1.8, Math.PI / 2 - 0.75, 1.5),
+    new THREE.MeshBasicMaterial({ map: face, transparent: true }));
+  front.scale.copy(body.scale);
+  front.position.copy(body.position);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.16, 8), new THREE.MeshLambertMaterial({ color: '#2e7d32' }));
+  stem.position.y = 0.74;
+  g.add(body, front, stem);
+  g.scale.setScalar(scale);
+  return g;
+}
+
+/** Árvore de Natal com pisca-pisca e estrela, e presentes embaixo. */
+function xmasTree(scale = 1, seed = 1): THREE.Group {
+  const g = new THREE.Group();
+  const green = new THREE.MeshLambertMaterial({ color: '#1b6e32' });
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.3, 8), new THREE.MeshLambertMaterial({ color: '#6d4c41' }));
+  trunk.position.y = 0.15;
+  g.add(trunk);
+  const tiers: [number, number, number][] = [[0.95, 0.9, 0.7], [0.75, 0.8, 1.2], [0.52, 0.7, 1.65]];
+  const lights = ['#ff1744', '#ffd400', '#2979ff', '#ffffff', '#00e676'];
+  let k = seed;
+  for (const [r, h, y] of tiers) {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(r, h, 14), green);
+    c.position.y = y;
+    g.add(c);
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * Math.PI * 2 + y;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), new THREE.MeshBasicMaterial({ color: lights[k++ % lights.length] }));
+      bulb.position.set(Math.cos(a) * r * 0.82, y - h * 0.32, Math.sin(a) * r * 0.82);
+      g.add(bulb);
+    }
+  }
+  const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.16), new THREE.MeshBasicMaterial({ color: '#ffd400' }));
+  star.position.y = 2.1;
+  g.add(star);
+  const gifts: [string, string, number, number][] = [['#d50000', '#ffd400', 0.7, 0.35], ['#1e88e5', '#ffffff', -0.6, 0.45], ['#8e24aa', '#ffd400', 0.1, 0.8]];
+  for (const [c1, c2, x, z] of gifts) {
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.28, 0.34), new THREE.MeshLambertMaterial({ color: c1 }));
+    box.position.set(x, 0.14, z);
+    const rib = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.3, 0.07), new THREE.MeshLambertMaterial({ color: c2 }));
+    rib.position.copy(box.position);
+    g.add(box, rib);
+  }
+  g.scale.setScalar(scale);
+  return g;
+}
 export type Celebration = 'jump' | 'plane' | 'dance' | 'flip' | 'robot' | 'knee' | 'fish' | 'spin';
 export const CELEBRATIONS: Celebration[] = ['jump', 'plane', 'dance', 'flip', 'robot', 'knee', 'fish', 'spin'];
 export type Crowd = 'full' | 'half' | 'few';
@@ -504,6 +599,27 @@ export class Pitch {
   womens = false;
   /** estilo "bolinha" (redondo) nesta partida: vale para todo mundo em campo */
   round = false;
+  /** Edição da época: põe os chapéus e os enfeites (null = estádio normal). */
+  private seasonNow: Season | null = null;
+  private seasonDecor: THREE.Group | null = null;
+  get season(): Season | null { return this.seasonNow; }
+  set season(s: Season | null) {
+    if (s === this.seasonNow) return;
+    this.seasonNow = s;
+    if (this.seasonDecor) { this.scene.remove(this.seasonDecor); this.seasonDecor = null; }
+    if (!s) return;
+    const g = new THREE.Group();
+    // ao lado das traves, um pouco atrás da linha do gol (aparecem nas câmeras de batedor e de goleiro)
+    const spots: [number, number, number][] = [[HALF + 1.6, -0.6, 1], [-(HALF + 1.6), -0.6, 1], [HALF + 3.4, 0.4, 0.8], [-(HALF + 3.4), 0.4, 0.8], [HALF + 5.4, -0.2, 0.9], [-(HALF + 5.4), -0.2, 0.9]];
+    spots.forEach(([x, z, k], i) => {
+      const o = s === 'halloween' ? pumpkin(k * 1.6) : xmasTree(k, i + 1);
+      o.position.set(x, 0, z);
+      o.rotation.y = -Math.sign(x) * 0.35;
+      g.add(o);
+    });
+    this.seasonDecor = g;
+    this.scene.add(g);
+  }
   private lastSetup: Parameters<Pitch['setup']>[0] | null = null;
   private view: 'kick' | 'keep' = 'kick';
   /** Ao defender: câmera atrás do gol ('goal') ou atrás do cobrador ('kicker'). */
@@ -1029,6 +1145,8 @@ export class Pitch {
         this.wall.push(b);
       }
     }
+    // edição da época: chapéu de bruxa ou gorro do Papai Noel em todo mundo
+    if (this.seasonNow) for (const b of [this.kicker, this.keeper, ...this.wall]) b.head.add(seasonHat(this.seasonNow, this.round));
     // o batedor da máquina mostra a camisa do outro time quando o jogador é goleiro
     this.ballShadow.position.set(o.sx, 0.012, o.sz);
     this.placeCamera();
