@@ -1,0 +1,31 @@
+name: Envios para revisão
+
+# Lista os envios para revisão de um app; com "cancel" = id, cancela aquele envio.
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'gelada, esconde ou gol'
+        default: gelada
+      cancel:
+        description: 'id do envio a cancelar (vazio = só listar)'
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  subs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+      - run: node scripts/asc-subs.mjs
+        env:
+          APP: ${{ inputs.app }}
+          CANCEL: ${{ inputs.cancel }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
