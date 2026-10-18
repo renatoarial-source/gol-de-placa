@@ -1,9 +1,9 @@
-// Envia uma versão do Gol de Placa para a revisão da Apple: liga o build mais novo dessa versão,
+// Envia uma versão (Gol de Placa, ou APP=gelada/esconde) para a revisão da Apple: liga o build mais novo dessa versão,
 // marca "sem criptografia" e cria o envio. A página da versão (textos, capturas) vem do "App Store listing".
 // Roda no workflow "Enviar para revisão" (repositório público: não gasta minutos pagos).
 import crypto from 'node:crypto';
 
-const APP = '6823608331';
+const APP = { gol: '6823608331', gelada: '6819882963', esconde: '6819893974' }[(process.env.APP || 'gol').trim()];
 const VERSION = (process.env.VERSION || '').trim();
 if (!VERSION) throw new Error('Diga a versão (ex.: 1.0.6)');
 const API = 'https://api.appstoreconnect.apple.com/v1';
