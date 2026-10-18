@@ -1,0 +1,250 @@
+{
+ "buzina__fs105419__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "buzina__fs188039__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "buzina__fs251611__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "buzina__fs27882__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "buzina__fs468443__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "cachorro__fs277058__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "cachorro__fs406085__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "cachorro__fs418106__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "camelo__fs180181__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "camelo__fs215441__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "camelo__fs437937__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.96,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "Bye.",
+    "p_speech": 0.96
+   }
+  ]
+ },
+ "camelo__fs675449__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.65,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "Camels.",
+    "p_speech": 0.82
+   }
+  ]
+ },
+ "campainha__fs116779__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "campainha__fs149268__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "campainha__fs221515__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "campainha__fs360453__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "campainha__fs398281__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "campainha__fs453763__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "coruja__fs465697__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "foca__fs437960__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.95,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 15.6,
+    "text": "28. 29.",
+    "p_speech": 0.81
+   }
+  ]
+ },
+ "gato__fs213889__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "gato__fs260881__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "gato__fs333916__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "gato__fs412016__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "guizo__fs110158__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "guizo__fs265458__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "guizo__fs30158__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "guizo__fs547582__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "papagaio__fs128071__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "papagaio__fs151299__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "papagaio__fs504988__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "pinguim__fs150873__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "pinguim__fs182109__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "pintinho__fs150298__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "pintinho__fs572954__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "rato__fs165906__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "rato__fs435748__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "rato__fs582938__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "rato__fs583078__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "rato__fs815243__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "urso__fs170454__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.51,
+  "segments": []
+ },
+ "urso__fs445983__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "urso__fs49127__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.54,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 1.8,
+    "text": "Coooooooooooood.",
+    "p_speech": 0.6
+   }
+  ]
+ },
+ "urso__fs519599__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ }
+}
