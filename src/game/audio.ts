@@ -487,9 +487,14 @@ function speakSystem(lang: Lang, key: CallKey, text: string) {
 }
 
 /** Fala uma frase da narração e devolve o texto (também mostrado na tela). */
+/** Última fala de cada lance, para a próxima ser diferente (ex.: "Que defesa!" e depois "Que goleiro!"). */
+const lastCall = new Map<string, number>();
 export function call(lang: Lang, key: CallKey): string {
   const lines = LANGS[lang].calls[key];
-  const i = Math.floor(Math.random() * lines.length);
+  const prev = lastCall.get(key) ?? -1;
+  let i = Math.floor(Math.random() * lines.length);
+  if (lines.length > 1 && i === prev) i = (i + 1 + Math.floor(Math.random() * (lines.length - 1))) % lines.length;
+  lastCall.set(key, i);
   const text = lines[i];
   if (voiceMode === 'off' || !enabled) return text;
   const asked = performance.now();
