@@ -25,7 +25,7 @@ export const STADIUMS: Stadium[] = [
 ];
 
 /** Estilo "bolinha" (bonecos redondos): liberado com figurinhas; depois metade das partidas (50%). */
-export const ROUND = { e: '⚪', need: 25, chance: 0.5 };
+export const ROUND = { e: '⚪', need: 10, chance: 0.5 };
 export const roundUnlocked = (stickers: number) => stickers >= ROUND.need;
 
 export const kitUnlocked = (id: string, stickers: number) => (KITS.find((k) => k.id === id)?.need ?? 99) <= stickers;

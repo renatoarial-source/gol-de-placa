@@ -44,7 +44,7 @@ describe('torneio de 4', () => {
 });
 
 describe('estilo bolinha', () => {
-  it('libera com 25 figurinhas e sai em metade das partidas', async () => {
+  it('libera com 10 figurinhas e sai em metade das partidas', async () => {
     const { ROUND, roundUnlocked } = await import('../src/game/rewards');
     expect(roundUnlocked(ROUND.need - 1)).toBe(false);
     expect(roundUnlocked(ROUND.need)).toBe(true);

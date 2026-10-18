@@ -42,6 +42,7 @@ export function initAudio() {
   src.connect(lp).connect(crowdGain).connect(master);
   src.start();
   void loadCrowd(ctx, master);
+  if (rainOn) startRain(); // começou a chover antes do primeiro toque liberar o som
   for (const fn of onReady) fn(ctx, master);
 }
 
@@ -76,6 +77,54 @@ async function loadCrowd(c: AudioContext, out: GainNode) {
   s.connect(crowdBed).connect(out);
   s.start();
   crowdGain.gain.setTargetAtTime(0, c.currentTime, 0.5);
+}
+
+// ---------- chuva: um chiado baixinho de fundo enquanto chove ----------
+let rainSrc: AudioBufferSourceNode | null = null;
+let rainGain: GainNode | null = null;
+let rainOn = false;
+let rainTimer: number | null = null;
+function startRain() {
+  if (!ctx || !master || rainSrc) return;
+  const c = ctx;
+  rainSrc = c.createBufferSource();
+  rainSrc.buffer = noiseBuffer(c, 4);
+  rainSrc.loop = true;
+  const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 500;
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200;
+  rainGain = c.createGain();
+  rainGain.gain.setValueAtTime(0, c.currentTime);
+  rainGain.gain.linearRampToValueAtTime(0.07, c.currentTime + 1.5);
+  rainSrc.connect(hp).connect(lp).connect(rainGain).connect(master);
+  rainSrc.start();
+  // de vez em quando, gotas mais grossas pingando
+  rainTimer = window.setInterval(() => {
+    if (!ctx || !master || !rainGain) return;
+    const t = ctx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      const at = t + Math.random() * 0.3;
+      o.frequency.setValueAtTime(1800 + Math.random() * 1500, at);
+      o.frequency.exponentialRampToValueAtTime(600, at + 0.04);
+      env(g, at, 0.012, 0.001, 0.05);
+      o.connect(g).connect(master);
+      o.start(at); o.stop(at + 0.08);
+    }
+  }, 700);
+}
+function stopRain() {
+  if (rainTimer !== null) { clearInterval(rainTimer); rainTimer = null; }
+  if (!ctx || !rainSrc || !rainGain) return;
+  const s = rainSrc;
+  rainGain.gain.setTargetAtTime(0, ctx.currentTime, 0.4);
+  setTimeout(() => { try { s.stop(); } catch { /* já parou */ } }, 2000);
+  rainSrc = null; rainGain = null;
+}
+/** Chuva no campo: liga ou desliga o som de chuva (baixinho, por baixo da torcida). */
+export function setRain(on: boolean) {
+  rainOn = on;
+  if (on) startRain(); else stopRain();
 }
 
 /** Tamanho da torcida (lotado, média, pouca): muda o volume do fundo e das reações. */

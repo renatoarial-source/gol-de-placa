@@ -8,7 +8,7 @@ const OUT = 'store/sons-candidatos';
 fs.mkdirSync(OUT, { recursive: true });
 const UA = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.9' };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const get = async (url) => { const r = await fetch(url, { headers: UA }); if (!r.ok) throw new Error(`${r.status} ${url}`); return r; };
+const get = async (url) => { const r = await fetch(url, { headers: UA, signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new Error(`${r.status} ${url}`); return r; };
 const manifest = [];
 const seen = new Set();
 
@@ -22,6 +22,12 @@ const FS_QUERIES = [
   ['samba bateria', 'samba'], ['surdo samba', 'samba'], ['batucada', 'samba'], ['torcida bateria', 'samba'],
   ['referee whistle', 'apito'], ['football kick ball', 'chute'], ['soccer ball kick', 'chute'], ['goal net ball', 'rede'],
   ['vuvuzela', 'corneta'], ['air horn stadium', 'corneta'], ['stadium drum fans', 'tambor'],
+  // narração de verdade (gritos de gol, locutor)
+  ['narrador gol', 'narracao'], ['narração futebol', 'narracao'], ['locutor futebol', 'narracao'], ['gol narrador brasil', 'narracao'],
+  ['goal commentator', 'narracao'], ['soccer commentator goal', 'narracao'], ['football announcer', 'narracao'], ['golazo', 'narracao'],
+  ['goool', 'narracao'], ['penalty commentator', 'narracao'],
+  // chuva
+  ['rain light', 'chuva'], ['rain loop', 'chuva'], ['chuva', 'chuva'],
 ];
 async function freesoundSearch(q) {
   const html = await (await get(`https://freesound.org/search/?q=${encodeURIComponent(q)}&s=Downloads+(most+first)`)).text();
@@ -68,6 +74,7 @@ const PX_QUERIES = [
   ['torcida de futebol', 'torcida'], ['torcida', 'torcida'], ['futebol', 'torcida'], ['soccer stadium', 'fundo'], ['soccer stadium goal', 'gol'],
   ['football crowd', 'gol'], ['stadium chant', 'canto'], ['football chant', 'canto'], ['crowd ole', 'canto'],
   ['samba', 'samba'], ['batucada', 'samba'], ['brazil', 'samba'], ['referee whistle', 'apito'], ['soccer kick', 'chute'], ['vuvuzela', 'corneta'],
+  ['narrador', 'narracao'], ['gol narração', 'narracao'], ['goal commentator', 'narracao'], ['sports commentator', 'narracao'], ['rain', 'chuva'],
 ];
 for (const [q, cat] of PX_QUERIES) {
   try {
