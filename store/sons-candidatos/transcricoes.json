@@ -1,0 +1,568 @@
+{
+ "narracao__fs105415__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs135492__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.99,
+  "segments": [
+   {
+    "start": 0.1,
+    "end": 2.1,
+    "text": "This is the captain",
+    "p_speech": 0.9
+   },
+   {
+    "start": 2.1,
+    "end": 4.1,
+    "text": "Red alert red alert",
+    "p_speech": 0.9
+   },
+   {
+    "start": 5.0,
+    "end": 12.2,
+    "text": "Enemy vessel geek cloaking go to red alert fire phasers fire phasers red alert",
+    "p_speech": 0.9
+   }
+  ]
+ },
+ "narracao__fs166487__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs178822__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs178876__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.9,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "Game over.",
+    "p_speech": 0.9
+   }
+  ]
+ },
+ "narracao__fs181347__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.91,
+  "segments": [
+   {
+    "start": 0.5,
+    "end": 2.5,
+    "text": "Amazing!",
+    "p_speech": 0.9
+   },
+   {
+    "start": 2.5,
+    "end": 4.5,
+    "text": "Amazing!",
+    "p_speech": 0.9
+   },
+   {
+    "start": 4.5,
+    "end": 6.5,
+    "text": "Amazing!",
+    "p_speech": 0.9
+   },
+   {
+    "start": 6.5,
+    "end": 8.5,
+    "text": "Amazing!",
+    "p_speech": 0.9
+   }
+  ]
+ },
+ "narracao__fs187908__CC0.mp3": {
+  "lang": "es",
+  "lang_p": 0.95,
+  "segments": [
+   {
+    "start": 0.5,
+    "end": 6.5,
+    "text": "En 1997, después de 150 años de historia y en NNG, decidimos replantearlo en nuestra forma de hacer banca",
+    "p_speech": 0.52
+   },
+   {
+    "start": 6.5,
+    "end": 15.5,
+    "text": "para adaptarnos a los nuevos tiempos, reinventarnos, de desaparecer, para crear un nuevo sistema moderno y eficaz que ya se entiende por todas partes",
+    "p_speech": 0.52
+   },
+   {
+    "start": 15.5,
+    "end": 22.5,
+    "text": "y que nos ha convertido en un banco directo grande, el más grande del mundo. No serás un cliente más, ni yo, ni un banco, ni nada más.",
+    "p_speech": 0.52
+   },
+   {
+    "start": 22.5,
+    "end": 29.5,
+    "text": "El centro de nuestra estrategia son nuestros clientes. ¿Escuchas? ¿Escuchas? ¿Escuchas? Bueno, muchas cosas más.",
+    "p_speech": 0.1
+   },
+   {
+    "start": 29.5,
+    "end": 35.5,
+    "text": "En todos los países y por suerte, también en España, la figura del chef, Quality Officer, se encuentra.",
+    "p_speech": 0.1
+   },
+   {
+    "start": 35.5,
+    "end": 39.5,
+    "text": "Hola, hola, hola. Sí, mira, estoy pensando en muchas cosas y la verdad que no puedo seguir hablando de este modo.",
+    "p_speech": 0.1
+   },
+   {
+    "start": 39.5,
+    "end": 44.5,
+    "text": "Yo recusco costes. ¡Uy, ganas más! Nuestro modelo de negocio se basa en la gestión eficiente de los costes.",
+    "p_speech": 0.1
+   },
+   {
+    "start": 44.5,
+    "end": 48.5,
+    "text": "Gracias a la tecnología de la innovación, a través de canales directos y productos sencillos,",
+    "p_speech": 0.1
+   },
+   {
+    "start": 48.5,
+    "end": 53.5,
+    "text": "podemos reducir nuestros datos evitando curatumilio y reivindiciendo otro deseo de retabilidad para nuestros clientes.",
+    "p_speech": 0.25
+   },
+   {
+    "start": 53.5,
+    "end": 56.5,
+    "text": "Esta es, sin duda, una de las claves para nuestro éxito.",
+    "p_speech": 0.25
+   }
+  ]
+ },
+ "narracao__fs18960__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs219873__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.28,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "Goal!",
+    "p_speech": 0.91
+   }
+  ]
+ },
+ "narracao__fs222993__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.46,
+  "segments": []
+ },
+ "narracao__fs241630__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs249686__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs25304__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs262776__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.99,
+  "segments": [
+   {
+    "start": 0.2,
+    "end": 4.8,
+    "text": "Glorious move by Smokoru! Glorious! Look at the tower dog Smokoru!",
+    "p_speech": 0.75
+   }
+  ]
+ },
+ "narracao__fs271554__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs328864__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs329601__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs329605__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs329607__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs337792__CC-BY.mp3": {
+  "lang": "bs",
+  "lang_p": 0.57,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "Dragi slušelci, dobro došli u program.",
+    "p_speech": 0.98
+   },
+   {
+    "start": 2.0,
+    "end": 9.0,
+    "text": "Ovo je još jedna emisiju u kojoj očakujemo vaše pozive i u kojoj se radojemo da budemo za jedno s vama.",
+    "p_speech": 0.98
+   },
+   {
+    "start": 9.0,
+    "end": 12.0,
+    "text": "Da nas govorimo o muzici, o sportu i o nekim drugim temama.",
+    "p_speech": 0.98
+   },
+   {
+    "start": 12.0,
+    "end": 15.0,
+    "text": "Sarevski radio i dalje uz vas.",
+    "p_speech": 0.98
+   }
+  ]
+ },
+ "narracao__fs36105__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.99,
+  "segments": [
+   {
+    "start": 2.0,
+    "end": 5.0,
+    "text": "Headline edition, July 8, 1947.",
+    "p_speech": 0.96
+   },
+   {
+    "start": 5.0,
+    "end": 11.0,
+    "text": "The Army Air Forces has announced that a flying disc has been found and is now in the possession of the Army.",
+    "p_speech": 0.96
+   },
+   {
+    "start": 11.0,
+    "end": 16.0,
+    "text": "Army officers say the missile found sometime last week has been inspected at Rauswell, New Mexico",
+    "p_speech": 0.96
+   },
+   {
+    "start": 16.0,
+    "end": 19.0,
+    "text": "and sent to Wright Field, Ohio for further inspection.",
+    "p_speech": 0.96
+   }
+  ]
+ },
+ "narracao__fs385747__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs406622__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.84,
+  "segments": [
+   {
+    "start": 0.6,
+    "end": 10.6,
+    "text": "Ready, fight.",
+    "p_speech": 0.25
+   },
+   {
+    "start": 10.6,
+    "end": 17.6,
+    "text": "Ready, fight.",
+    "p_speech": 0.25
+   },
+   {
+    "start": 17.6,
+    "end": 25.6,
+    "text": "Ready, fight.",
+    "p_speech": 0.25
+   },
+   {
+    "start": 25.6,
+    "end": 30.6,
+    "text": "Ready, fight.",
+    "p_speech": 0.91
+   }
+  ]
+ },
+ "narracao__fs416611__CC0.mp3": {
+  "lang": "nn",
+  "lang_p": 0.48,
+  "segments": []
+ },
+ "narracao__fs417783__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs427848__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs433690__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs433703__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.97,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 5.9,
+    "text": "Three two one go let's go",
+    "p_speech": 0.94
+   }
+  ]
+ },
+ "narracao__fs435878__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.98,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.0,
+    "text": "And the winner is...",
+    "p_speech": 0.97
+   }
+  ]
+ },
+ "narracao__fs442815__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.56,
+  "segments": []
+ },
+ "narracao__fs442816__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.49,
+  "segments": []
+ },
+ "narracao__fs442817__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs469141__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs521290__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs529385__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 1.0,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 1.3,
+    "text": "That lady's crazy.",
+    "p_speech": 1.0
+   },
+   {
+    "start": 2.9,
+    "end": 6.6,
+    "text": "That lady is really crazy.",
+    "p_speech": 1.0
+   },
+   {
+    "start": 6.6,
+    "end": 9.6,
+    "text": "I think she's crazy.",
+    "p_speech": 1.0
+   },
+   {
+    "start": 9.6,
+    "end": 10.6,
+    "text": "I really think she's.",
+    "p_speech": 1.0
+   }
+  ]
+ },
+ "narracao__fs533553__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.97,
+  "segments": [
+   {
+    "start": 0.4,
+    "end": 3.4,
+    "text": "my heart goes out to my beautiful friend.",
+    "p_speech": 0.94
+   },
+   {
+    "start": 3.4,
+    "end": 5.0,
+    "text": "Bless the diesel.",
+    "p_speech": 0.94
+   },
+   {
+    "start": 6.0,
+    "end": 7.0,
+    "text": "My resting place.",
+    "p_speech": 0.94
+   }
+  ]
+ },
+ "narracao__fs587947__CC-BY.mp3": {
+  "lang": "ca",
+  "lang_p": 0.49,
+  "segments": [
+   {
+    "start": 10.3,
+    "end": 13.6,
+    "text": "Saló Suárez! Rep la passada!",
+    "p_speech": 0.32
+   },
+   {
+    "start": 13.6,
+    "end": 17.6,
+    "text": "De Sergi Roberto, des de l'extrem dret, ja ho està obtent",
+    "p_speech": 0.32
+   },
+   {
+    "start": 17.6,
+    "end": 22.4,
+    "text": "accedent les prestacions de Sergi Roberto fent de l'etral incorporant-se l'atac",
+    "p_speech": 0.32
+   },
+   {
+    "start": 22.4,
+    "end": 24.7,
+    "text": "la central era arrematada en un...",
+    "p_speech": 0.32
+   }
+  ]
+ },
+ "narracao__fs639474__CC0.mp3": {
+  "lang": "it",
+  "lang_p": 0.8,
+  "segments": [
+   {
+    "start": 0.4,
+    "end": 3.4,
+    "text": "quando vanno un gioco all'altro, vanno sento la marcia",
+    "p_speech": 0.98
+   }
+  ]
+ },
+ "narracao__fs65204__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.29,
+  "segments": []
+ },
+ "narracao__fs667506__CC-BY.mp3": {
+  "lang": "cy",
+  "lang_p": 0.29,
+  "segments": [
+   {
+    "start": 0.8,
+    "end": 9.2,
+    "text": "First door Saturday.",
+    "p_speech": 0.67
+   },
+   {
+    "start": 9.2,
+    "end": 13.8,
+    "text": "You have two minutes.",
+    "p_speech": 0.67
+   },
+   {
+    "start": 13.8,
+    "end": 15.8,
+    "text": "Two minutes.",
+    "p_speech": 0.67
+   }
+  ]
+ },
+ "narracao__fs698410__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs71103__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs715224__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.93,
+  "segments": [
+   {
+    "start": 0.5,
+    "end": 2.5,
+    "text": "This is a Viking Custow!",
+    "p_speech": 0.75
+   }
+  ]
+ },
+ "narracao__fs725398__CC0.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs833636__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.33,
+  "segments": []
+ },
+ "narracao__fs841517__CC0.mp3": {
+  "lang": "ru",
+  "lang_p": 0.4,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 3.5,
+    "text": "Гали-голи-голи-голи-голи-голи-гооль!",
+    "p_speech": 0.84
+   }
+  ]
+ },
+ "narracao__fs89353__CC-BY.mp3": {
+  "lang": "en",
+  "lang_p": 0.99,
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 5.0,
+    "text": "Welcome to the Internet, your gateway to adventure!",
+    "p_speech": 0.97
+   }
+  ]
+ }
+}
