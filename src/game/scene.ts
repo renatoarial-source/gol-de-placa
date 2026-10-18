@@ -838,6 +838,7 @@ export class Pitch {
 
   /** Vitrine do "Meu craque": o boneco girando de perto. */
   showcase(look: Look, kit: Kit, keeper: boolean) {
+    this.titleDuo(false);
     this.tweens = [];
     this.clearPlayers();
     this.ball.visible = false;
@@ -928,7 +929,44 @@ export class Pitch {
   }
 
   /** Arruma a cena para uma cobrança. */
+  /** Tela de abertura: um craque de bloquinhos e um "bolinha", um de cada lado, acenando e pulando. */
+  private duo: Body[] = [];
+  titleDuo(on: boolean, kit?: Kit, look?: Look) {
+    for (const b of this.duo) this.scene.remove(b.root);
+    this.duo = [];
+    if (!on || !kit) return;
+    const block = makeBody(kit, look?.number ?? 10, 3, false, look, this.womens, false);
+    const round = makeBody(kit, 7, 8, false, look ? { ...look, number: 7 } : undefined, this.womens, true);
+    for (const b of [block, round]) { setMood(b, 'happy'); this.scene.add(b.root); this.duo.push(b); }
+  }
+  private animateDuo(t: number) {
+    // presos à câmera, um de cada lado do título (na faixa de cima da tela, acima dos botões)
+    const cam = this.camera;
+    cam.updateMatrixWorld();
+    const d = 6;
+    const halfH = d * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
+    const halfW = halfH * cam.aspect;
+    this.duo.forEach((b, i) => {
+      const side = i === 0 ? -1 : 1;
+      const s = Math.min(0.5, halfW * 0.24); // cabe em telas estreitas
+      b.root.scale.setScalar(s);
+      b.root.position.copy(new THREE.Vector3(side * halfW * 0.74, halfH * 0.36, -d).applyMatrix4(cam.matrixWorld));
+      b.root.quaternion.copy(cam.quaternion);
+      b.root.rotateY(-side * 0.35);
+      breathe(b, t);
+      // cada um, na sua vez, acena e dá um pulinho
+      const k = ((t + i * 2) % 4) / 4;
+      if (k < 0.35) {
+        const q = k / 0.35;
+        const arm = i === 0 ? b.armR : b.armL;
+        arm.rotation.z = (i === 0 ? 1 : -1) * (Math.PI * 0.85 + Math.sin(q * Math.PI * 6) * 0.25);
+        b.pose.position.y = Math.abs(Math.sin(q * Math.PI * 2)) * 0.35;
+      }
+    });
+  }
+
   setup(o: { sx: number; sz: number; view: 'kick' | 'keep'; kickerKit: Kit; keeperKit: Kit; wall: Wall | null; seed: number; look?: Look }) {
+    this.titleDuo(false);
     this.lastSetup = o;
     this.tweens = [];
     this.clearPlayers();
@@ -988,6 +1026,7 @@ export class Pitch {
       if (k < 1) this.tweens.push(tw); else tw.done();
     }
     this.idle += dt;
+    if (this.duo.length) this.animateDuo(this.idle);
     const T = this.idle;
     // goleiro esperando: agachado, braços prontos, passa o peso de um pé para o outro e olha a bola
     const gk = this.keeper;

@@ -24,8 +24,8 @@ export const STADIUMS: Stadium[] = [
   { id: 'golden', e: '🏆', need: 90, seatA: '#ffca28', seatB: '#c49000', ground: '#3a8a35' },
 ];
 
-/** Estilo "bolinha" (bonecos redondos): liberado com figurinhas; depois sai em 1 de cada 4 partidas. */
-export const ROUND = { e: '⚪', need: 25, chance: 0.25 };
+/** Estilo "bolinha" (bonecos redondos): liberado com figurinhas; depois metade das partidas (50%). */
+export const ROUND = { e: '⚪', need: 25, chance: 0.5 };
 export const roundUnlocked = (stickers: number) => stickers >= ROUND.need;
 
 export const kitUnlocked = (id: string, stickers: number) => (KITS.find((k) => k.id === id)?.need ?? 99) <= stickers;

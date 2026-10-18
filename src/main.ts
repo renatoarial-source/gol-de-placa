@@ -296,10 +296,11 @@ function home() {
   enforceFree();
   hud.classList.add('hidden'); hint.classList.add('hidden'); callEl.classList.add('hidden'); touch.classList.add('hidden');
   pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myKit(), keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
+  pitch.titleDuo(true, myKit(), myLook());
   const ev = eventFor(today());
   const langs = (Object.keys(LANGS) as Lang[]).map((l) => `<option value="${l}"${l === lang ? ' selected' : ''}>${LANGS[l].name}</option>`).join('');
   show(`
-    <div class="logo"><span class="ball">⚽</span><h1>GOL DE<br>PLACA</h1><p>${t('tagline')}</p></div>
+    <div class="logo"><span class="ball">⚽</span><h1>GOL DE<br>PLACA</h1><p>${t('tagline')}</p>${roundUnlocked(progress.stickers.length) ? '' : `<p class="round-tease">${ROUND.e} ${t('roundStyle')}: 🔒 ${t('roundNeed', { n: ROUND.need })}</p>`}</div>
     <button class="btn big" data-go="play">${t('play')}</button>
     <div class="row">
       <button class="btn alt" data-go="player">${t('myPlayer')}${lock(!unlocked())}</button>

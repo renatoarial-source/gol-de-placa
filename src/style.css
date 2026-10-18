@@ -188,3 +188,6 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .round-row small { display: block; color: var(--muted); font-size: 13px; }
 .round-row.locked { opacity: .55; }
 .round-kit { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #ffd400 45%, #b38f00); flex: none; }
+.logo .round-tease { margin-top: 6px; font-size: 13px; opacity: .85; }
+/* tela inicial: o topo fica mais claro para ver os dois craques ao lado do título */
+.screen.full:has(.logo) { background: linear-gradient(180deg, rgba(5, 25, 12, .1), rgba(5, 25, 12, .25) 28%, rgba(5, 25, 12, .88) 42%); }
