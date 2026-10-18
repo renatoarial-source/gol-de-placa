@@ -3,14 +3,14 @@
  */
 import type { Kit } from './teams';
 
-/** Uniformes especiais: cada um libera com um número de figurinhas. Valem para qualquer time. */
+/** Uniformes especiais: cada um libera com um número de figurinhas (espalhados pelo álbum de 100). Valem para qualquer time. */
 export const KITS: { id: string; e: string; need: number; kit: Kit }[] = [
-  { id: 'gold', e: '🥇', need: 2, kit: { shirt: '#f5c518', shorts: '#1b1b1b', socks: '#f5c518', keeper: '#7b1fa2' } },
-  { id: 'stripes', e: '🍬', need: 4, kit: { shirt: '#ffffff', shorts: '#e53935', socks: '#ffffff', stripe: '#e53935', keeper: '#1e88e5' } },
-  { id: 'galaxy', e: '🌌', need: 6, kit: { shirt: '#1a1a5e', shorts: '#0d0d30', socks: '#1a1a5e', stripe: '#8e7cff', keeper: '#ffd400' } },
-  { id: 'neon', e: '💚', need: 9, kit: { shirt: '#39ff14', shorts: '#111111', socks: '#39ff14', keeper: '#ff00c8' } },
-  { id: 'melon', e: '🍉', need: 12, kit: { shirt: '#ff5a6e', shorts: '#2e7d32', socks: '#2e7d32', keeper: '#ffd400' } },
-  { id: 'fire', e: '🔥', need: 15, kit: { shirt: '#ff3d00', shorts: '#111111', socks: '#ff3d00', stripe: '#ffd400', keeper: '#00b0ff' } },
+  { id: 'gold', e: '🥇', need: 3, kit: { shirt: '#f5c518', shorts: '#1b1b1b', socks: '#f5c518', keeper: '#7b1fa2' } },
+  { id: 'stripes', e: '🍬', need: 10, kit: { shirt: '#ffffff', shorts: '#e53935', socks: '#ffffff', stripe: '#e53935', keeper: '#1e88e5' } },
+  { id: 'galaxy', e: '🌌', need: 20, kit: { shirt: '#1a1a5e', shorts: '#0d0d30', socks: '#1a1a5e', stripe: '#8e7cff', keeper: '#ffd400' } },
+  { id: 'neon', e: '💚', need: 35, kit: { shirt: '#39ff14', shorts: '#111111', socks: '#39ff14', keeper: '#ff00c8' } },
+  { id: 'melon', e: '🍉', need: 50, kit: { shirt: '#ff5a6e', shorts: '#2e7d32', socks: '#2e7d32', keeper: '#ffd400' } },
+  { id: 'fire', e: '🔥', need: 70, kit: { shirt: '#ff3d00', shorts: '#111111', socks: '#ff3d00', stripe: '#ffd400', keeper: '#00b0ff' } },
 ];
 
 export interface Stadium { id: string; e: string; need: number; seatA: string; seatB: string; ground: string }
@@ -18,10 +18,10 @@ export interface Stadium { id: string; e: string; need: number; seatA: string; s
 /** Estádios: muda a cor das arquibancadas e do chão em volta do gramado. O primeiro é o de sempre. */
 export const STADIUMS: Stadium[] = [
   { id: 'classic', e: '🏟️', need: 0, seatA: '#8a96a3', seatB: '#5b6672', ground: '#3a8a35' },
-  { id: 'beach', e: '🏖️', need: 3, seatA: '#ffd54f', seatB: '#4fc3f7', ground: '#e8d29a' },
-  { id: 'forest', e: '🌳', need: 7, seatA: '#66bb6a', seatB: '#2e7d32', ground: '#2f6b2a' },
-  { id: 'neon', e: '🌃', need: 11, seatA: '#ab47bc', seatB: '#311b92', ground: '#1b3d1a' },
-  { id: 'golden', e: '🏆', need: 16, seatA: '#ffca28', seatB: '#c49000', ground: '#3a8a35' },
+  { id: 'beach', e: '🏖️', need: 6, seatA: '#ffd54f', seatB: '#4fc3f7', ground: '#e8d29a' },
+  { id: 'forest', e: '🌳', need: 15, seatA: '#66bb6a', seatB: '#2e7d32', ground: '#2f6b2a' },
+  { id: 'neon', e: '🌃', need: 30, seatA: '#ab47bc', seatB: '#311b92', ground: '#1b3d1a' },
+  { id: 'golden', e: '🏆', need: 90, seatA: '#ffca28', seatB: '#c49000', ground: '#3a8a35' },
 ];
 
 export const kitUnlocked = (id: string, stickers: number) => (KITS.find((k) => k.id === id)?.need ?? 99) <= stickers;

@@ -398,10 +398,10 @@ test('torneio de amigos pede a versão completa no download', async ({ page }) =
 
 test('prêmios das figurinhas: uniforme e estádio liberam com figurinhas', async ({ page }) => {
   await open(page);
-  await page.evaluate(() => localStorage.setItem('gol.progress', JSON.stringify({ stickers: ['first_goal', 'corner', 'ground'], goals: 3 })));
+  await page.evaluate(() => localStorage.setItem('gol.progress', JSON.stringify({ stickers: ['first_goal', 'corner', 'ground', 'curve', 'free_goal', 'first_save'], goals: 3 })));
   await page.reload();
   await page.click('[data-go=album]');
-  await expect(page.locator('.rewards')).toContainText('Faltam 1 figurinhas');
+  await expect(page.locator('.rewards')).toContainText('Faltam 4 figurinhas'); // próximo: listrado, com 10
   await expect(page.locator('[data-kit=gold]')).not.toHaveClass(/locked/);
   await expect(page.locator('[data-kit=stripes]')).toHaveClass(/locked/);
   await page.click('[data-kit=stripes]'); // trancado: não escolhe

@@ -3,19 +3,20 @@ import { KITS, STADIUMS, addMatch, bracket, emptyScore, eventFor, nextReward, sp
 
 describe('prêmios das figurinhas', () => {
   it('uniforme só vale depois de juntar as figurinhas', () => {
-    expect(specialKit('gold', 1)).toBeUndefined();
-    expect(specialKit('gold', 2)).toEqual(KITS[0].kit);
+    expect(specialKit('gold', 2)).toBeUndefined();
+    expect(specialKit('gold', 3)).toEqual(KITS[0].kit);
     expect(specialKit('nada', 18)).toBeUndefined();
   });
-  it('estádio clássico sempre liberado; o de ouro pede 16', () => {
+  it('estádio clássico sempre liberado; o de ouro pede 90', () => {
     expect(stadiumUnlocked('classic', 0)).toBe(true);
-    expect(stadiumUnlocked('golden', 15)).toBe(false);
-    expect(stadiumUnlocked('golden', 16)).toBe(true);
+    expect(stadiumUnlocked('golden', 89)).toBe(false);
+    expect(stadiumUnlocked('golden', 90)).toBe(true);
   });
   it('próximo prêmio e todos liberados com o álbum completo', () => {
-    expect(nextReward(0)).toEqual({ e: '🥇', left: 2 });
-    expect(nextReward(18)).toBeUndefined();
-    expect(Math.max(...KITS.map((k) => k.need), ...STADIUMS.map((s) => s.need))).toBeLessThanOrEqual(18);
+    expect(nextReward(0)).toEqual({ e: '🥇', left: 3 });
+    expect(nextReward(100)).toBeUndefined();
+    // prêmios espalhados pelo álbum de 100: o último pede 90
+    expect(Math.max(...KITS.map((k) => k.need), ...STADIUMS.map((s) => s.need))).toBe(90);
   });
 });
 
