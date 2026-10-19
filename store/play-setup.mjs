@@ -117,7 +117,11 @@ await step('Salvar tudo na Google Play', () => api('POST', `${E}:commit`));
 await step('Compra Versão completa (R$ 4,90)', async () => {
   const id = 'com.arial.goldeplaca.completo';
   const conv = await api('POST', `${BASE}/${PKG}/pricing:convertRegionPrices`, { price: { currencyCode: 'BRL', units: '4', nanos: 900000000 } });
-  const regions = Object.values(conv.convertedRegionPrices || {}).map((r) => ({ regionCode: r.regionCode, price: r.price, availability: 'AVAILABLE' }));
+  // no Brasil vale o preço exato (a conversão da Google arredondava para R$ 4,89)
+  const regions = Object.values(conv.convertedRegionPrices || {}).map((r) => ({
+    regionCode: r.regionCode, availability: 'AVAILABLE',
+    price: r.regionCode === 'BR' ? { currencyCode: 'BRL', units: '4', nanos: 900000000 } : r.price,
+  }));
   if (!regions.length) throw new Error('a Google não devolveu os preços por país');
   const body = {
     packageName: PKG, productId: id,
