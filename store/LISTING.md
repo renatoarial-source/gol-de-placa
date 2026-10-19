@@ -44,7 +44,7 @@ Dia, noite com refletores, chuva e neve. Estádio lotado ou mais vazio, com batu
 Narrador ou narradora em 8 idiomas: "Gol! No ângulo! Que defesa!"
 
 📒 FIGURINHAS E DESAFIOS DO DIA
-18 figurinhas para colecionar e 3 desafios novos todo dia.
+100 figurinhas para colecionar, que liberam uniformes e estádios, e 3 desafios novos todo dia.
 
 🌎 16 seleções e 12 times · 8 idiomas: português, inglês, espanhol, alemão, francês, italiano, chinês e japonês.
 
@@ -87,7 +87,7 @@ Day, night under floodlights, rain and snow. Packed or half-empty stadium, with 
 Male or female commentator in 8 languages.
 
 📒 STICKERS AND DAILY CHALLENGES
-18 stickers to collect and 3 new challenges every day.
+100 stickers to collect, unlocking kits and stadiums, and 3 new challenges every day.
 
 🌎 16 nations and 12 clubs · 8 languages: Portuguese, English, Spanish, German, French, Italian, Chinese and Japanese.
 
@@ -130,7 +130,7 @@ Día, noche con reflectores, lluvia y nieve. Estadio lleno o más vacío, con ba
 Narrador o narradora en 8 idiomas.
 
 📒 FIGURITAS Y DESAFÍOS DEL DÍA
-18 figuritas para coleccionar y 3 desafíos nuevos cada día.
+100 figuritas para coleccionar, que desbloquean uniformes y estadios, y 3 desafíos nuevos cada día.
 
 🌎 16 selecciones y 12 clubes · 8 idiomas.
 
@@ -173,7 +173,7 @@ Tag, Flutlicht bei Nacht, Regen und Schnee. Volles oder halbleeres Stadion, mit 
 Sprecher oder Sprecherin in 8 Sprachen.
 
 📒 STICKER UND TAGESAUFGABEN
-18 Sticker zum Sammeln und jeden Tag 3 neue Aufgaben.
+100 Sticker zum Sammeln, die Trikots und Stadien freischalten, und jeden Tag 3 neue Aufgaben.
 
 🌎 16 Länder und 12 Vereine · 8 Sprachen.
 
@@ -216,7 +216,7 @@ Jour, nuit sous les projecteurs, pluie et neige. Stade plein ou à moitié vide,
 Commentateur ou commentatrice en 8 langues.
 
 📒 VIGNETTES ET DÉFIS DU JOUR
-18 vignettes à collectionner et 3 nouveaux défis chaque jour.
+100 vignettes à collectionner, qui débloquent maillots et stades, et 3 nouveaux défis chaque jour.
 
 🌎 16 sélections et 12 clubs · 8 langues.
 
@@ -259,7 +259,7 @@ Giorno, notte con i riflettori, pioggia e neve. Stadio pieno o mezzo vuoto, con 
 Telecronista uomo o donna in 8 lingue.
 
 📒 FIGURINE E SFIDE DEL GIORNO
-18 figurine da collezionare e 3 nuove sfide ogni giorno.
+100 figurine da collezionare, che sbloccano maglie e stadi, e 3 nuove sfide ogni giorno.
 
 🌎 16 nazionali e 12 squadre · 8 lingue.
 
@@ -302,7 +302,7 @@ Il download include i rigori come tiratore, la Coppa, il meteo e i tifosi. Un ac
 8 种语言的男声或女声解说。
 
 📒 贴纸和每日挑战
-18 张贴纸等你收集，每天 3 个新挑战。
+100 张贴纸等你收集，可解锁球衣和球场，每天还有 3 个新挑战。
 
 🌎 16 支国家队和 12 支俱乐部 · 8 种语言。
 
@@ -345,7 +345,7 @@ Il download include i rigori come tiratore, la Coppa, il meteo e i tifosi. Un ac
 8言語の男性・女性の実況。
 
 📒 シールと今日のチャレンジ
-集めるシールは18枚、毎日3つの新しいチャレンジ。
+集めるシールは100枚、ユニフォームやスタジアムが解放され、毎日3つの新しいチャレンジも。
 
 🌎 16の代表と12のクラブ · 8言語。
 
