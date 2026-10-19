@@ -60,6 +60,7 @@ const step = async (name, fn) => {
   try { await fn(); console.log(`✅ ${name}`); } catch (e) { problems.push(name); console.log(`⚠️ ${name}: ${e.message}`); }
 };
 
+if (process.env.ONLY !== 'iap') {
 // Testadores do Esconde (mesmo grupo)
 let testers = null;
 await step('Testadores do Esconde lidos', async () => {
@@ -109,20 +110,29 @@ await step('Versão 1.0.0 no teste fechado (rascunho)', async () => {
 
 await step('Salvar tudo na Google Play', () => api('POST', `${E}:commit`));
 
-// Compra "Versão completa" (fora da edição)
+}
+
+// Compra "Versão completa" pela API nova de produtos únicos (onetimeproducts), com o preço
+// convertido pela própria Google para todos os países.
 await step('Compra Versão completa (R$ 4,90)', async () => {
-  const sku = 'com.arial.goldeplaca.completo';
+  const id = 'com.arial.goldeplaca.completo';
+  const conv = await api('POST', `${BASE}/${PKG}/pricing:convertRegionPrices`, { price: { currencyCode: 'BRL', units: '4', nanos: 900000000 } });
+  const regions = Object.values(conv.convertedRegionPrices || {}).map((r) => ({ regionCode: r.regionCode, price: r.price, availability: 'AVAILABLE' }));
+  if (!regions.length) throw new Error('a Google não devolveu os preços por país');
   const body = {
-    packageName: PKG, sku, status: 'active', purchaseType: 'managedUser', defaultLanguage: 'pt-BR',
-    defaultPrice: { priceMicros: '4900000', currency: 'BRL' },
-    listings: {
-      'pt-BR': { title: 'Versão completa', description: 'Faltas, seleções, goleiro, craque e 2 jogadores.' },
-      'en-US': { title: 'Full version', description: 'Free kicks, all teams, keeper mode and your player.' },
-    },
+    packageName: PKG, productId: id,
+    listings: [
+      { languageCode: 'pt-BR', title: 'Versão completa', description: 'Faltas, seleções, goleiro, craque e 2 jogadores.' },
+      { languageCode: 'en-US', title: 'Full version', description: 'Free kicks, all teams, keeper mode and your player.' },
+    ],
+    purchaseOptions: [{ purchaseOptionId: 'compra', buyOption: { legacyCompatible: true, multiQuantityEnabled: false }, regionalPricingAndAvailabilityConfigs: regions }],
   };
-  const exists = await fetch(`${BASE}/${PKG}/inappproducts/${sku}`, { headers: { Authorization: `Bearer ${TOKEN}` } });
-  if (exists.ok) await api('PUT', `${BASE}/${PKG}/inappproducts/${sku}?autoConvertMissingPrices=true`, body);
-  else await api('POST', `${BASE}/${PKG}/inappproducts?autoConvertMissingPrices=true`, body);
+  const q = 'allowMissing=true&regionsVersion.version=2022%2F02&updateMask=listings,purchaseOptions';
+  await api('PATCH', `${BASE}/${PKG}/oneTimeProducts/${id}?${q}`, body);
+  console.log(`   preço em ${regions.length} países`);
+  await api('POST', `${BASE}/${PKG}/oneTimeProducts/${id}/purchaseOptions:batchUpdateStates`, {
+    requests: [{ activatePurchaseOptionRequest: { packageName: PKG, productId: id, purchaseOptionId: 'compra' } }],
+  });
 });
 
 console.log(problems.length ? `\nFaltou: ${problems.join(' · ')}` : '\nTudo configurado pela API.');
