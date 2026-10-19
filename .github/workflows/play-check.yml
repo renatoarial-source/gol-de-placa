@@ -1,0 +1,23 @@
+name: Google Play access check
+
+# Confere se o secret PLAY_SERVICE_ACCOUNT_JSON tem acesso ao Gol de Placa na Google Play (não muda nada na loja).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: store
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: node store/play-check.mjs
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
