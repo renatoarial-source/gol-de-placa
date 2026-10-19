@@ -27,3 +27,21 @@ if (!res.ok) {
 }
 await fetch(`${api}/${body.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${tok.access_token}` } });
 console.log(`✅ Acesso ao app ${PKG} confirmado (edição de teste aberta e apagada).`);
+
+// Situação: faixas de teste, testadores, fichas e a compra
+const H = { Authorization: `Bearer ${tok.access_token}` };
+const e2 = await (await fetch(api, { method: 'POST', headers: H })).json();
+const get = async (p) => { const r = await fetch(`${api}/${e2.id}/${p}`, { headers: H }); return r.ok ? r.json() : { erro: r.status }; };
+const tracks = await get('tracks');
+for (const t of tracks.tracks || []) {
+  console.log(`Faixa ${t.track}: ` + (t.releases || []).map((r) => `${r.name || '?'} [${r.status}] builds ${r.versionCodes || '-'}`).join(' · '));
+}
+for (const t of ['alpha', 'internal']) console.log(`Testadores ${t}:`, JSON.stringify(await get(`testers/${t}`)));
+const ls = await get('listings');
+console.log(`Fichas: ${(ls.listings || []).map((l) => l.language).join(', ')}`);
+const det = await get('details');
+console.log(`Contato: ${det.contactEmail || '-'} · idioma padrão ${det.defaultLanguage || '-'}`);
+await fetch(`${api}/${e2.id}`, { method: 'DELETE', headers: H });
+const p = await fetch(`https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PKG}/oneTimeProducts/com.arial.goldeplaca.completo`, { headers: H });
+const pj = await p.json();
+console.log(`Compra: ${p.ok ? (pj.purchaseOptions || []).map((o) => `${o.purchaseOptionId} ${o.state}`).join(', ') : p.status}`);
