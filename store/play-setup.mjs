@@ -127,7 +127,9 @@ await step('Compra Versão completa (R$ 4,90)', async () => {
     ],
     purchaseOptions: [{ purchaseOptionId: 'compra', buyOption: { legacyCompatible: true, multiQuantityEnabled: false }, regionalPricingAndAvailabilityConfigs: regions }],
   };
-  const q = 'allowMissing=true&regionsVersion.version=2022%2F02&updateMask=listings,purchaseOptions';
+  // a mesma tabela de países usada pela Google na conversão (ex.: a Bulgária passou para o euro)
+  const ver = encodeURIComponent(conv.regionVersion?.version || '2022/02');
+  const q = `allowMissing=true&regionsVersion.version=${ver}&updateMask=listings,purchaseOptions`;
   await api('PATCH', `${BASE}/${PKG}/onetimeproducts/${id}?${q}`, body);
   console.log(`   preço em ${regions.length} países`);
   await api('POST', `${BASE}/${PKG}/oneTimeProducts/${id}/purchaseOptions:batchUpdateStates`, {
