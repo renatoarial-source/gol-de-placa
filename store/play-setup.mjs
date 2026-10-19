@@ -128,7 +128,7 @@ await step('Compra Versão completa (R$ 4,90)', async () => {
     purchaseOptions: [{ purchaseOptionId: 'compra', buyOption: { legacyCompatible: true, multiQuantityEnabled: false }, regionalPricingAndAvailabilityConfigs: regions }],
   };
   const q = 'allowMissing=true&regionsVersion.version=2022%2F02&updateMask=listings,purchaseOptions';
-  await api('PATCH', `${BASE}/${PKG}/oneTimeProducts/${id}?${q}`, body);
+  await api('PATCH', `${BASE}/${PKG}/onetimeproducts/${id}?${q}`, body);
   console.log(`   preço em ${regions.length} países`);
   await api('POST', `${BASE}/${PKG}/oneTimeProducts/${id}/purchaseOptions:batchUpdateStates`, {
     requests: [{ activatePurchaseOptionRequest: { packageName: PKG, productId: id, purchaseOptionId: 'compra' } }],
