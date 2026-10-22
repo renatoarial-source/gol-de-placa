@@ -14,7 +14,7 @@ function token() {
 }
 const TOKEN = token();
 async function api(path) {
-  const res = await fetch(API + path, { headers: { Authorization: `Bearer ${TOKEN}` } });
+  const res = await fetch(path.startsWith('/v2/') ? API.replace('/v1', '') + path : API + path, { headers: { Authorization: `Bearer ${TOKEN}` } });
   const text = await res.text();
   if (!res.ok) throw new Error(`${path} → ${res.status} ${text.slice(0, 200)}`);
   return JSON.parse(text);
@@ -31,6 +31,17 @@ for (const [app, name] of Object.entries(APPS)) {
       .map((x) => ({ build: x.attributes.version, state: x.attributes.processingState, uploaded: x.attributes.uploadedDate.slice(0, 16) }));
     out[name] = { versions, latest };
     console.log(`${name}: ` + versions.map((x) => `${x.version} = ${x.state}${x.build ? ` (build ${x.build})` : ''}`).join(' · '));
+    try {
+      const av = (await api(`/apps/${app}/appAvailabilityV2`)).data;
+      const ts = [];
+      for (let url = `/v2/appAvailabilities/${av.id}/territoryAvailabilities?limit=200&include=territory`; url; ) {
+        const r = await api(url); ts.push(...r.data); url = r.links?.next ? r.links.next.replace(/^https:\/\/[^/]+/, '') : null;
+      }
+      const on = ts.filter((t) => t.attributes.available);
+      const br = ts.find((t) => t.relationships?.territory?.data?.id === 'BRA');
+      const st = {}; for (const t of ts) for (const c of t.attributes.contentStatuses || []) st[c] = (st[c] || 0) + 1;
+      console.log(`   disponível em ${on.length} de ${ts.length} países · Brasil: ${br ? (br.attributes.available ? 'sim' : 'não') + ' ' + (br.attributes.contentStatuses || []).join(',') + (br.attributes.releaseDate ? ' lançamento ' + br.attributes.releaseDate : '') : 'sem registro'} · situações: ${JSON.stringify(st)}`);
+    } catch (e) { console.log(`   disponibilidade: não deu para ver (${e.message})`); }
     console.log('   builds mais novos: ' + latest.map((x) => `${x.build} ${x.state} ${x.uploaded}`).join(' · '));
   } catch (e) { console.log(`${name}: não deu para ver (${e.message})`); }
 }
