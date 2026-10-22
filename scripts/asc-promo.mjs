@@ -1,7 +1,7 @@
 // Divulgação na App Store (robô grátis): texto promocional e indicações para destaque (Featuring Nominations).
 // ACTION=list    → mostra o texto promocional de cada idioma da versão à venda e as indicações já feitas
-// ACTION=promo   → troca o texto promocional (não precisa de revisão da Apple) pelos textos de PROMO abaixo
-// ACTION=nominate → cria e envia as indicações de NOMINATIONS abaixo (pula as que já existem com o mesmo nome)
+// ACTION=promo   → troca o texto promocional da versão à venda (não precisa de revisão da Apple) pelos de store/promo.json
+// ACTION=nominate → cria e envia as indicações de store/promo.json (pula as que já existem com o mesmo nome)
 import crypto from 'node:crypto';
 
 const APPS = { gol: '6823608331', gelada: '6819882963', esconde: '6819893974' };
@@ -46,7 +46,7 @@ for (const [key, app] of Object.entries(APPS)) {
     console.log(`\n${key} ${v.version} (${v.state})`);
     for (const l of v.locs) {
       const want = PROMO[key]?.[l.attributes.locale] ?? PROMO[key]?.[l.attributes.locale.slice(0, 2)];
-      if (action === 'promo' && want && want !== l.attributes.promotionalText) {
+      if (action === 'promo' && want && want !== l.attributes.promotionalText && /READY_/.test(v.state)) {
         try {
           await api('PATCH', `/v1/appStoreVersionLocalizations/${l.id}`, { data: { type: 'appStoreVersionLocalizations', id: l.id, attributes: { promotionalText: want } } });
           console.log(`  ${l.attributes.locale}: trocado → ${want}`);
@@ -58,7 +58,7 @@ for (const [key, app] of Object.entries(APPS)) {
 
 let existing = [];
 try {
-  existing = await all('/v1/nominations?limit=200&filter[state]=DRAFT,SUBMITTED,ARCHIVED');
+  existing = await all('/v1/nominations?limit=200&filter[state]=DRAFT,SUBMITTED');
   console.log(`\nIndicações já feitas: ${existing.length}`);
   for (const n of existing) console.log(` - ${n.attributes.name} | ${n.attributes.type} | ${n.attributes.state} | ${n.attributes.publishStartDate || ''}`);
 } catch (e) { console.log(`\nIndicações: não deu para ver (${e.message.slice(0, 300)})`); }
