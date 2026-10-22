@@ -1,63 +1,40 @@
 {
  "promo": {
   "gol": {
-   "pt-BR": "⚽ Novo! Bata no ângulo! Pênaltis em 3D com Copa, chuva, torcida e música. Na Versão Completa: faltas, goleiro, 16 seleções, 12 times e 2 jogadores.",
-   "en-US": "⚽ New! Hit the top corner! 3D penalties with a Cup, weather, crowd and music. Full Version adds free kicks, goalkeeper mode, 16 national teams, 12 clubs and 2 players.",
-   "es-ES": "⚽ ¡Nuevo! ¡Clávala al ángulo! Penales en 3D con Copa, lluvia, afición y música. La Versión Completa suma tiros libres, portero, 16 selecciones, 12 equipos y 2 jugadores.",
-   "fr-FR": "⚽ En pleine lucarne ! Penaltys en 3D avec Coupe, météo, supporters et musique. La version complète ajoute coups francs, gardien, 16 sélections, 12 clubs et 2 joueurs.",
-   "de-DE": "⚽ Neu! Triff in den Winkel! Elfmeter in 3D mit Pokal, Wetter, Fans und Musik. Die Vollversion bringt Freistöße, Torwart, 16 Nationalteams, 12 Klubs und 2 Spieler.",
-   "it": "⚽ Novità! Tira nel sette! Rigori in 3D con Coppa, meteo, tifosi e musica. La Versione Completa aggiunge punizioni, portiere, 16 nazionali, 12 squadre e 2 giocatori.",
-   "zh-Hans": "⚽ 全新上线！射进死角！3D 点球，有杯赛、天气、球迷和音乐。完整版还有任意球、守门员模式、16 支国家队、12 支俱乐部和双人对战。",
-   "ja": "⚽ 新登場！すみに決めろ！カップ戦、天気、サポーター、音楽つきの3D PK。完全版ではフリーキック、キーパー、代表16チーム、クラブ12チーム、2人プレイも。",
-   "es-MX": "⚽ ¡Nuevo! ¡Clávala al ángulo! Penales en 3D con Copa, lluvia, afición y música. La Versión Completa suma tiros libres, portero, 16 selecciones, 12 equipos y 2 jugadores."
+   "pt-BR": "Novo! Bata no ângulo! Pênaltis em 3D com Copa, chuva, torcida e música. Na Versão Completa: faltas, goleiro, 16 seleções, 12 times e 2 jogadores.",
+   "en-US": "New! Hit the top corner! 3D penalties with a Cup, weather, crowd and music. Full Version adds free kicks, goalkeeper mode, 16 national teams, 12 clubs and 2 players.",
+   "es-ES": "¡Nuevo! ¡Clávala al ángulo! Penales en 3D con Copa, lluvia, afición y música. La Versión Completa suma tiros libres, portero, 16 selecciones, 12 equipos y 2 jugadores.",
+   "fr-FR": "En pleine lucarne ! Penaltys en 3D avec Coupe, météo, supporters et musique. La version complète ajoute coups francs, gardien, 16 sélections, 12 clubs et 2 joueurs.",
+   "de-DE": "Neu! Triff in den Winkel! Elfmeter in 3D mit Pokal, Wetter, Fans und Musik. Die Vollversion bringt Freistöße, Torwart, 16 Nationalteams, 12 Klubs und 2 Spieler.",
+   "it": "Novità! Tira nel sette! Rigori in 3D con Coppa, meteo, tifosi e musica. La Versione Completa aggiunge punizioni, portiere, 16 nazionali, 12 squadre e 2 giocatori.",
+   "zh-Hans": "全新上线！射进死角！3D 点球，有杯赛、天气、球迷和音乐。完整版还有任意球、守门员模式、16 支国家队、12 支俱乐部和双人对战。",
+   "ja": "新登場！すみに決めろ！カップ戦、天気、サポーター、音楽つきの3D PK。完全版ではフリーキック、キーパー、代表16チーム、クラブ12チーム、2人プレイも。",
+   "es-MX": "¡Nuevo! ¡Clávala al ángulo! Penales en 3D con Copa, lluvia, afición y música. La Versión Completa suma tiros libres, portero, 16 selecciones, 12 equipos y 2 jugadores."
   },
   "gelada": {
-   "pt-BR": "🎃 Halloween no Gelada: drinks assustadores, enfeites e música sinistra! 100 bebidas, barman que fala e drink do dia. Beba com moderação.",
-   "en-US": "🎃 Halloween in Gelada: spooky drinks, decorations and creepy music! 100 drinks, a talking bartender and a Drink of the Day. Drink responsibly.",
-   "es-ES": "🎃 Halloween en Gelada: tragos terroríficos, adornos y música siniestra. 100 bebidas, barman que habla y trago del día. Bebe con moderación.",
-   "fr-FR": "🎃 Halloween dans Gelada : cocktails effrayants, déco et musique sinistre ! 100 boissons, un barman qui parle et un cocktail du jour. Avec modération.",
-   "de-DE": "🎃 Halloween in Gelada: gruselige Drinks, Deko und schaurige Musik! 100 Drinks, ein sprechender Barkeeper und ein Drink des Tages.",
-   "it": "🎃 Halloween in Gelada: drink da paura, decorazioni e musica sinistra! 100 bevande, un barista che parla e il drink del giorno. Bevi responsabilmente.",
-   "zh-Hans": "🎃 Gelada 万圣节：惊悚饮品、节日装饰和诡异音乐！100 款饮品、会说话的调酒师和每日饮品。请适量饮酒。",
-   "ja": "🎃 Geladaでハロウィン：こわ〜いドリンク、飾りつけ、不気味な音楽！100種類のドリンク、しゃべるバーテンダー、今日の一杯。お酒はほどほどに。",
-   "es-MX": "🎃 Halloween en Gelada: tragos terroríficos, adornos y música siniestra. 100 bebidas, barman que habla y trago del día. Bebe con moderación."
+   "pt-BR": "Halloween no Gelada: drinks assustadores, enfeites e música sinistra! 100 bebidas, barman que fala e drink do dia. Beba com moderação.",
+   "en-US": "Halloween in Gelada: spooky drinks, decorations and creepy music! 100 drinks, a talking bartender and a Drink of the Day. Drink responsibly.",
+   "es-ES": "Halloween en Gelada: tragos terroríficos, adornos y música siniestra. 100 bebidas, barman que habla y trago del día. Bebe con moderación.",
+   "fr-FR": "Halloween dans Gelada : cocktails effrayants, déco et musique sinistre ! 100 boissons, un barman qui parle et un cocktail du jour. Avec modération.",
+   "de-DE": "Halloween in Gelada: gruselige Drinks, Deko und schaurige Musik! 100 Drinks, ein sprechender Barkeeper und ein Drink des Tages.",
+   "it": "Halloween in Gelada: drink da paura, decorazioni e musica sinistra! 100 bevande, un barista che parla e il drink del giorno. Bevi responsabilmente.",
+   "zh-Hans": "Gelada 万圣节：惊悚饮品、节日装饰和诡异音乐！100 款饮品、会说话的调酒师和每日饮品。请适量饮酒。",
+   "ja": "Geladaでハロウィン：こわ〜いドリンク、飾りつけ、不気味な音楽！100種類のドリンク、しゃべるバーテンダー、今日の一杯。お酒はほどほどに。",
+   "es-MX": "Halloween en Gelada: tragos terroríficos, adornos y música siniestra. 100 bebidas, barman que habla y trago del día. Bebe con moderación."
   },
   "esconde": {
-   "pt-BR": "🎃 Halloween chegou: casa assombrada, abóboras e fantasmas! 22 lugares e 342 esconderijos. Brinque em família no modo Festa ou desafie a máquina.",
-   "en-US": "🎃 Halloween is here: haunted house, pumpkins and ghosts! 22 places and 342 hiding spots. Play as a family in Party mode or challenge the computer.",
-   "es-ES": "🎃 ¡Llegó Halloween: casa embrujada, calabazas y fantasmas! 22 lugares y 342 escondites. Juega en familia en el modo Fiesta o reta a la máquina.",
-   "fr-FR": "🎃 Halloween est là : maison hantée, citrouilles et fantômes ! 22 lieux et 342 cachettes. Jouez en famille en mode Fête ou défiez la machine.",
-   "de-DE": "🎃 Halloween ist da: Spukhaus, Kürbisse und Gespenster! 22 Orte und 342 Verstecke. Spielt als Familie im Party-Modus oder gegen den Computer.",
-   "it": "🎃 È arrivato Halloween: casa stregata, zucche e fantasmi! 22 luoghi e 342 nascondigli. Gioca in famiglia in modalità Festa o sfida la macchina.",
-   "zh-Hans": "🎃 万圣节来了：鬼屋、南瓜和幽灵！22 个场景、342 个藏身处。派对模式全家一起玩，也可以挑战电脑。",
-   "ja": "🎃 ハロウィンがやってきた：おばけ屋敷、かぼちゃ、ゆうれい！22のステージと342のかくれ場所。パーティーモードで家族と、またはコンピューターと対戦。",
-   "es-MX": "🎃 ¡Llegó Halloween: casa embrujada, calabazas y fantasmas! 22 lugares y 342 escondites. Juega en familia en el modo Fiesta o reta a la máquina."
+   "pt-BR": "Halloween chegou: casa assombrada, abóboras e fantasmas! 22 lugares e 342 esconderijos. Brinque em família no modo Festa ou desafie a máquina.",
+   "en-US": "Halloween is here: haunted house, pumpkins and ghosts! 22 places and 342 hiding spots. Play as a family in Party mode or challenge the computer.",
+   "es-ES": "¡Llegó Halloween: casa embrujada, calabazas y fantasmas! 22 lugares y 342 escondites. Juega en familia en el modo Fiesta o reta a la máquina.",
+   "fr-FR": "Halloween est là : maison hantée, citrouilles et fantômes ! 22 lieux et 342 cachettes. Jouez en famille en mode Fête ou défiez la machine.",
+   "de-DE": "Halloween ist da: Spukhaus, Kürbisse und Gespenster! 22 Orte und 342 Verstecke. Spielt als Familie im Party-Modus oder gegen den Computer.",
+   "it": "È arrivato Halloween: casa stregata, zucche e fantasmi! 22 luoghi e 342 nascondigli. Gioca in famiglia in modalità Festa o sfida la macchina.",
+   "zh-Hans": "万圣节来了：鬼屋、南瓜和幽灵！22 个场景、342 个藏身处。派对模式全家一起玩，也可以挑战电脑。",
+   "ja": "ハロウィンがやってきた：おばけ屋敷、かぼちゃ、ゆうれい！22のステージと342のかくれ場所。パーティーモードで家族と、またはコンピューターと対戦。",
+   "es-MX": "¡Llegó Halloween: casa embrujada, calabazas y fantasmas! 22 lugares y 342 escondites. Juega en familia en el modo Fiesta o reta a la máquina."
   }
  },
  "nominations": [
-  {
-   "name": "Gol de Placa – Launch",
-   "type": "APP_LAUNCH",
-   "apps": [
-    "gol"
-   ],
-   "start": "2026-10-22T12:00:00Z",
-   "end": "2026-12-31T23:59:00Z",
-   "description": "Gol de Placa is a new 3D penalty and free-kick game from Brazil, made for the whole family. Shoot or save, play a Cup, collect 100 stickers, unlock kits and stadiums, and play a 4-friend tournament on one phone. Rain, snow and night matches, a real stadium crowd recorded at the Maracanã, short commentary in 8 languages, Game Center achievements and leaderboard. No ads, no subscriptions.",
-   "notes": "Indie developer from Brazil. Fully localized in 8 languages. Halloween and Christmas editions arrive in version 1.0.7."
-  },
-  {
-   "name": "Esconde-Esconde – Christmas 2026",
-   "type": "NEW_CONTENT",
-   "apps": [
-    "esconde"
-   ],
-   "start": "2026-12-14T12:00:00Z",
-   "end": "2027-01-06T23:59:00Z",
-   "hasInAppEvents": true,
-   "description": "Hide & Seek (Esconde-Esconde) turns Christmas: hide in Santa's village with snow, a sleigh and presents. 22 places and 342 hiding spots, a real narrator and Party mode for 2 to 4 players on one phone. A family game for all ages, including a 'Hide the toy' mode for kids aged 3 to 5. No ads.",
-   "notes": "Christmas in-app event planned. Family and kids friendly, localized in 8 languages."
-  },
   {
    "name": "Gol de Placa – Christmas 2026",
    "type": "NEW_CONTENT",
