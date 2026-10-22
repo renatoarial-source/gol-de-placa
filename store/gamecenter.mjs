@@ -1,6 +1,6 @@
 // Game Center no App Store Connect: liga o Game Center, cria as conquistas (uma por figurinha do
 // álbum) e o ranking de gols. Pode rodar de novo: só cria o que falta.
-// Uso: ACTION=list|create node store/gamecenter.mjs   (secrets ASC_* no ambiente)
+// Uso: ACTION=list|create|release (VERSION=1.0.7) node store/gamecenter.mjs   (secrets ASC_* no ambiente)
 // Nomes das conquistas: as figurinhas (st_*) de src/game/i18n.ts. Imagens: store/gamecenter/<id>.png.
 // Os identificadores precisam bater com src/game/gamecenter.ts.
 import crypto from 'node:crypto';
@@ -109,7 +109,40 @@ const boards = await all(`/gameCenterDetails/${gcd}/gameCenterLeaderboards?limit
 console.log(`Conquistas: ${achievements.length} · Rankings: ${boards.length}`);
 for (const a of achievements) console.log(` - ${a.attributes.vendorIdentifier} (${a.attributes.points} pts)`);
 for (const b of boards) console.log(` - ranking ${b.attributes.vendorIdentifier}`);
+if (action === 'release') await release();
 if (action !== 'create') process.exit(0);
+
+// Marca o Game Center na versão (VERSION) e libera conquistas e ranking com ela.
+async function release() {
+  const V = (process.env.VERSION || '').trim();
+  if (!V) throw new Error('Informe a versão (VERSION)');
+  const vs = (await api('GET', `/apps/${APP}/appStoreVersions?filter[versionString]=${V}&filter[platform]=IOS`)).data;
+  if (!vs.length) throw new Error(`versão ${V} não existe no App Store Connect`);
+  const vid = vs[0].id;
+  let linked = null;
+  try { linked = (await api('GET', `/appStoreVersions/${vid}/gameCenterAppVersion`)).data; } catch (e) { if (!/→ 404/.test(e.message)) throw e; }
+  if (linked) console.log(`Game Center já marcado na versão ${V}`);
+  else {
+    await api('POST', '/gameCenterAppVersions', { data: { type: 'gameCenterAppVersions', relationships: { appStoreVersion: rel('appStoreVersions', vid) } } });
+    console.log(`Game Center marcado na versão ${V}`);
+  }
+  const done = async (kind, type, relName, relType, items) => {
+    let ok = 0, already = 0;
+    for (const it of items) {
+      try {
+        await api('POST', `/${type}`, { data: { type, relationships: { gameCenterDetail: rel('gameCenterDetails', gcd), [relName]: rel(relType, it.id) } } });
+        ok++;
+      } catch (e) {
+        if (/→ 409/.test(e.message)) already++;
+        else console.log(`  ${kind} ${it.attributes.vendorIdentifier}: ${e.message.split('\n').slice(0, 2).join(' ')}`);
+      }
+    }
+    console.log(`${kind}: ${ok} liberados agora, ${already} já estavam`);
+  };
+  await done('Conquistas', 'gameCenterAchievementReleases', 'gameCenterAchievement', 'gameCenterAchievements', achievements);
+  await done('Ranking', 'gameCenterLeaderboardReleases', 'gameCenterLeaderboard', 'gameCenterLeaderboards', boards);
+  process.exit(0);
+}
 
 for (const [id, points] of Object.entries(ACHIEVEMENTS)) {
   const vendorIdentifier = PREFIX + id;

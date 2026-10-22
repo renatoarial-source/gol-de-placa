@@ -6,10 +6,14 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'list = ver; create = criar o que falta'
+        description: 'list = ver; create = criar o que falta; release = marcar na versão e liberar'
         type: choice
-        options: [list, create]
+        options: [list, create, release]
         default: list
+      version:
+        description: 'Versão (só para release)'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -30,6 +34,7 @@ jobs:
       - run: node store/gamecenter.mjs
         env:
           ACTION: ${{ inputs.action }}
+          VERSION: ${{ inputs.version }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
