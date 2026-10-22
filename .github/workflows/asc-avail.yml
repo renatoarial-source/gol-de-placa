@@ -1,0 +1,36 @@
+name: Países e preço
+
+# Mostra em quantos países o app está à venda e se tem preço. fix=1 libera em todos os
+# países e, se faltar preço, usa o preço informado (em reais, base Brasil).
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'gol, gelada ou esconde'
+        default: gol
+      fix:
+        description: '1 = liberar em todos os países (e pôr o preço se faltar)'
+        default: '0'
+      price:
+        description: 'Preço em reais se o app ainda não tiver (ex.: 1.90; 0 = grátis)'
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  avail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts
+      - run: node scripts/asc-avail.mjs
+        env:
+          APP: ${{ inputs.app }}
+          FIX: ${{ inputs.fix }}
+          PRICE: ${{ inputs.price }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
