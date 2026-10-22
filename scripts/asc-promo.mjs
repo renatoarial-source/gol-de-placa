@@ -18,7 +18,7 @@ const TOKEN = token();
 async function api(method, path, body) {
   const res = await fetch(path.startsWith('http') ? path : HOST + path, { method, headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) });
   const text = await res.text();
-  if (!res.ok) { const e = new Error(`${method} ${path} → ${res.status} ${text.slice(0, 800)}`); e.status = res.status; throw e; }
+  if (!res.ok) { let d = text; try { d = JSON.parse(text).errors.map((x) => `${x.code}: ${x.title} — ${x.detail || ''}`).join(' | '); } catch {} const e = new Error(`${method} ${path} → ${res.status} ${d.slice(0, 800)}`); e.status = res.status; throw e; }
   return text ? JSON.parse(text) : {};
 }
 async function all(path) { const out = []; for (let u = path; u; ) { const r = await api('GET', u); out.push(...r.data); u = r.links?.next; } return out; }
@@ -50,7 +50,7 @@ for (const [key, app] of Object.entries(APPS)) {
         try {
           await api('PATCH', `/v1/appStoreVersionLocalizations/${l.id}`, { data: { type: 'appStoreVersionLocalizations', id: l.id, attributes: { promotionalText: want } } });
           console.log(`  ${l.attributes.locale}: trocado → ${want}`);
-        } catch (e) { console.log(`  ${l.attributes.locale}: não deu (${e.message.slice(0, 200)})`); }
+        } catch (e) { console.log(`  ${l.attributes.locale}: não deu (${e.message.slice(0, 500)})`); }
       } else console.log(`  ${l.attributes.locale}: ${l.attributes.promotionalText || '(vazio)'}`);
     }
   }
@@ -58,7 +58,7 @@ for (const [key, app] of Object.entries(APPS)) {
 
 let existing = [];
 try {
-  existing = await all('/v1/nominations?limit=200&filter[state]=DRAFT,SUBMITTED');
+  for (const st of ['DRAFT', 'SUBMITTED']) existing.push(...await all(`/v1/nominations?limit=200&filter[state]=${st}`));
   console.log(`\nIndicações já feitas: ${existing.length}`);
   for (const n of existing) console.log(` - ${n.attributes.name} | ${n.attributes.type} | ${n.attributes.state} | ${n.attributes.publishStartDate || ''}`);
 } catch (e) { console.log(`\nIndicações: não deu para ver (${e.message.slice(0, 300)})`); }
