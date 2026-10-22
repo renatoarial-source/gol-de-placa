@@ -68,7 +68,7 @@ if (action === 'nominate') for (const n of NOMINATIONS) {
   try {
     const r = await api('POST', '/v1/nominations', { data: { type: 'nominations',
       attributes: { name: n.name, type: n.type, description: n.description, notes: n.notes, publishStartDate: n.start, publishEndDate: n.end,
-        deviceFamilies: ['IPHONE', 'IPAD'], locales: ['pt-BR', 'en-US', 'es-MX'], hasInAppEvents: !!n.hasInAppEvents, launchInSelectInternalMarketsFirst: false, preOrderEnabled: false, submitted: true },
+        deviceFamilies: ['IPHONE', 'IPAD'], locales: ['pt-BR', 'en-US', 'es-MX'], hasInAppEvents: !!n.hasInAppEvents, preOrderEnabled: false, submitted: true },
       relationships: { relatedApps: { data: n.apps.map((a) => ({ type: 'apps', id: APPS[a] })) } } } });
     console.log(`indicação enviada: ${n.name} (${r.data.attributes.state})`);
   } catch (e) { console.log(`indicação ${n.name}: não deu (${e.message.slice(0, 600)})`); }
