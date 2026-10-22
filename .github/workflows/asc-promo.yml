@@ -1,0 +1,34 @@
+name: Divulgação na App Store
+
+# list = ver textos promocionais e indicações; promo = trocar o texto promocional; nominate = indicar para destaque.
+# Os textos ficam em store/promo.json.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [list, promo, nominate]
+        default: list
+
+permissions:
+  contents: read
+
+jobs:
+  promo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            scripts
+            store/promo.json
+      - run: |
+          export PROMO_JSON="$(node -e "console.log(JSON.stringify(require('./store/promo.json').promo))")"
+          export NOMINATIONS_JSON="$(node -e "console.log(JSON.stringify(require('./store/promo.json').nominations))")"
+          node scripts/asc-promo.mjs
+        env:
+          ACTION: ${{ inputs.action }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
