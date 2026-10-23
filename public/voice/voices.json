@@ -30,5 +30,29 @@
  "ja": {
   "male": "ja-JP-Chirp3-HD-Puck",
   "female": "ja-JP-Chirp3-HD-Kore"
+ },
+ "es419": {
+  "male": "es-US-Chirp3-HD-Puck",
+  "female": "es-US-Chirp3-HD-Kore"
+ },
+ "ptpt": {
+  "male": "pt-PT-Wavenet-F",
+  "female": "pt-PT-Wavenet-E"
+ },
+ "ar": {
+  "male": "ar-XA-Chirp3-HD-Puck",
+  "female": "ar-XA-Chirp3-HD-Kore"
+ },
+ "ko": {
+  "male": "ko-KR-Chirp3-HD-Puck",
+  "female": "ko-KR-Chirp3-HD-Kore"
+ },
+ "nl": {
+  "male": "nl-NL-Chirp3-HD-Puck",
+  "female": "nl-NL-Chirp3-HD-Kore"
+ },
+ "tr": {
+  "male": "tr-TR-Chirp3-HD-Puck",
+  "female": "tr-TR-Chirp3-HD-Kore"
  }
 }

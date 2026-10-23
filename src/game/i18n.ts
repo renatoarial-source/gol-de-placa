@@ -490,9 +490,21 @@ const EXTRA4 = {
   ja: { ev_halloween: '🎃 ハロウィンPK戦', ev_natal: '🎅 クリスマスPK戦', mus_misto: '🎲 ミックス（キックごとに変わる）', mus_estadio: '🏟️ 本物のスタジアム', soundCredits: '録音した音（Freesound、Pixabay）', roundStyle: 'まんまるスタイル', roundInfo: '半分の試合でまるい選手になるよ！', roundNeed: 'シール {n} 枚で解放', roundUnlocked: 'まんまるスタイル解放！', body_lanky: 'ひょろ長', body_random: '🎲 ランダム', hs_quiff: 'リーゼント', hs_dreads: 'ドレッド', hs_bob: 'ボブ', hs_pigtails: 'ツインテール', hs_topknot: 'おだんご', body_strong: 'がっしり', cel_fish: '🐟 ヘッドスライディング', cel_spin: '🌀 コマ回り' },
 } satisfies Record<Lang, Record<string, string>>;
 
+// ---------- idioma da narração (pode ser diferente do jogo) ----------
+const EXTRA5 = {
+  pt: { narrLang: '🗣️ Narrador', narrSame: 'Igual ao jogo' },
+  en: { narrLang: '🗣️ Commentator', narrSame: 'Same as game' },
+  es: { narrLang: '🗣️ Narrador', narrSame: 'Igual que el juego' },
+  de: { narrLang: '🗣️ Kommentator', narrSame: 'Wie das Spiel' },
+  fr: { narrLang: '🗣️ Commentateur', narrSame: 'Comme le jeu' },
+  it: { narrLang: '🗣️ Telecronista', narrSame: 'Come il gioco' },
+  zh: { narrLang: '🗣️ 解说语言', narrSame: '与游戏相同' },
+  ja: { narrLang: '🗣️ 実況の言語', narrSame: 'ゲームと同じ' },
+} satisfies Record<Lang, Record<string, string>>;
+
 export const LANGS: Record<Lang, Pack> = { pt, en, es, de, fr, it, zh, ja };
-for (const l of Object.keys(EXTRA) as Lang[]) Object.assign(LANGS[l].ui, EXTRA[l], EXTRA2[l], EXTRA3[l], EXTRA4[l]);
-export type UiKey = keyof Pack['ui'] | keyof (typeof EXTRA)['pt'] | keyof (typeof EXTRA2)['pt'] | keyof (typeof EXTRA3)['pt'] | keyof (typeof EXTRA4)['pt'];
+for (const l of Object.keys(EXTRA) as Lang[]) Object.assign(LANGS[l].ui, EXTRA[l], EXTRA2[l], EXTRA3[l], EXTRA4[l], EXTRA5[l]);
+export type UiKey = keyof Pack['ui'] | keyof (typeof EXTRA)['pt'] | keyof (typeof EXTRA2)['pt'] | keyof (typeof EXTRA3)['pt'] | keyof (typeof EXTRA4)['pt'] | keyof (typeof EXTRA5)['pt'];
 /** Texto da interface no idioma escolhido. */
 export const uiText = (l: Lang, k: UiKey): string => (LANGS[l].ui as Record<string, string>)[k];
 

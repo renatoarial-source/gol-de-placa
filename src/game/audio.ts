@@ -4,7 +4,8 @@
  */
 import { Capacitor } from '@capacitor/core';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
-import { LANGS, type CallKey, type Lang } from './i18n';
+import { type CallKey } from './i18n';
+import { NARR, type NarrLang } from './narration';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -395,9 +396,9 @@ function pickVoice(lang: string, want: 'male' | 'female'): { voice?: V; pitch: n
 }
 
 /** Qual voz está sendo usada (mostrada embaixo da escolha de narração). */
-export function voiceInfo(lang: Lang): { name: string; real: boolean } | null {
+export function voiceInfo(lang: NarrLang): { name: string; real: boolean } | null {
   if (voiceMode === 'off') return null;
-  const p = pickVoice(LANGS[lang].voice, voiceMode);
+  const p = pickVoice(NARR[lang].voice, voiceMode);
   return { name: p.voice?.name.replace(/\s*\(.*\)$/, '') ?? '', real: p.real };
 }
 
@@ -423,7 +424,7 @@ let onSpeakFn: (secs: number) => void = () => {};
 /** Avisa quando o narrador começa a falar (para abaixar a música). */
 export function onSpeak(fn: (secs: number) => void) { onSpeakFn = fn; }
 
-function clipUrl(lang: Lang, v: 'male' | 'female', key: string, i: number) {
+function clipUrl(lang: NarrLang, v: 'male' | 'female', key: string, i: number) {
   return `./voice/${lang}/${v}/${key}-${i}.mp3`;
 }
 function loadClip(url: string): Promise<AudioBuffer | null> {
@@ -440,9 +441,9 @@ function loadClip(url: string): Promise<AudioBuffer | null> {
   return clips.get(url)!;
 }
 /** Carrega antes todas as falas do idioma e da voz escolhidos. */
-export function preloadVoice(lang: Lang) {
+export function preloadVoice(lang: NarrLang) {
   if (!ctx || voiceMode === 'off') return;
-  for (const [key, lines] of Object.entries(LANGS[lang].calls)) lines.forEach((_, i) => void loadClip(realLine(lang, key as CallKey, i, voiceMode) ?? clipUrl(lang, voiceMode as 'male', key, i)));
+  for (const [key, lines] of Object.entries(NARR[lang].calls)) lines.forEach((_, i) => void loadClip(realLine(lang, key as CallKey, i, voiceMode) ?? clipUrl(lang, voiceMode as 'male', key, i)));
 }
 
 function playClip(buf: AudioBuffer) {
@@ -459,8 +460,8 @@ function playClip(buf: AudioBuffer) {
 }
 
 /** Voz do sistema (reserva, se o áudio gravado não carregar). */
-function speakSystem(lang: Lang, key: CallKey, text: string) {
-  const code = LANGS[lang].voice;
+function speakSystem(lang: NarrLang, key: CallKey, text: string) {
+  const code = NARR[lang].voice;
   const { voice, pitch, rate } = pickVoice(code, voiceMode as 'male');
   const hype = key === 'goal' || key === 'corner' || key === 'champion';
   const p = Math.min(2, pitch * (hype ? 1.1 : 1));
@@ -488,13 +489,15 @@ function speakSystem(lang: Lang, key: CallKey, text: string) {
 
 /** Narração híbrida: frases que têm gravação gratuita de uma pessoa de verdade (Freesound) tocam
  * a gravação; as outras, a voz neural. Só no narrador (as gravações são de homens). */
-const REAL: Partial<Record<Lang, Partial<Record<CallKey, Record<number, string>>>>> = {
+const REAL: Partial<Record<NarrLang, Partial<Record<CallKey, Record<number, string>>>>> = {
   pt: { goal: { 0: './sfx/torcedor-gooool.mp3' } },
+  ptpt: { goal: { 0: './sfx/torcedor-gooool.mp3' } },
+  es419: { goal: { 0: './sfx/torcedor-gooool.mp3' } },
   es: { goal: { 0: './sfx/torcedor-gooool.mp3' } },
   it: { goal: { 0: './sfx/torcedor-gooool.mp3' } },
   en: { goal: { 0: './sfx/narrador-goal-en.mp3' } },
 };
-export const realLine = (lang: Lang, key: CallKey, i: number, v: string): string | undefined =>
+export const realLine = (lang: NarrLang, key: CallKey, i: number, v: string): string | undefined =>
   v === 'male' ? REAL[lang]?.[key]?.[i] : undefined;
 /** Enquanto a voz real grita "gol", o torcedor da torcida não grita junto. */
 let realShoutUntil = 0;
@@ -502,8 +505,8 @@ let realShoutUntil = 0;
 /** Fala uma frase da narração e devolve o texto (também mostrado na tela). */
 /** Última fala de cada lance, para a próxima ser diferente (ex.: "Que defesa!" e depois "Que goleiro!"). */
 const lastCall = new Map<string, number>();
-export function call(lang: Lang, key: CallKey): string {
-  const lines = LANGS[lang].calls[key];
+export function call(lang: NarrLang, key: CallKey): string {
+  const lines = NARR[lang].calls[key];
   const prev = lastCall.get(key) ?? -1;
   let i = Math.floor(Math.random() * lines.length);
   if (lines.length > 1 && i === prev) i = (i + 1 + Math.floor(Math.random() * (lines.length - 1))) % lines.length;

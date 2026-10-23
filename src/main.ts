@@ -4,6 +4,7 @@
 import './style.css';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { NARR, NARR_ORDER, isNarrLang, type NarrLang } from './game/narration';
 import { LANGS, detectLang, fmt, uiText, type CallKey, type Lang, type UiKey } from './game/i18n';
 import { allTeams, findTeam, teamName, type Team } from './game/teams';
 import {
@@ -32,6 +33,10 @@ const store = {
 let lang = store.get('lang', detectLang()) as Lang;
 if (!(lang in LANGS)) lang = 'pt';
 let sound = store.get('sound', '1') === '1';
+/** Idioma do narrador: 'auto' = o mesmo do jogo. */
+let narrPick = store.get('narrLang', 'auto');
+if (narrPick !== 'auto' && !isNarrLang(narrPick)) narrPick = 'auto';
+const nl = (): NarrLang => (narrPick === 'auto' ? lang : narrPick as NarrLang);
 let voice = store.get('voice', store.get('narration', '1') === '0' ? 'off' : 'male') as audio.Voice;
 let diff = store.get('diff', 'easy') as Difficulty;
 let weatherPick = store.get('weather', 'random') as Weather | 'random';
@@ -62,7 +67,7 @@ const HEART_COLORS = ['#111111', '#ffffff', '#d50000', '#0d47a1', '#1b8a3a', '#f
 let heart: [string, string] | null = (() => { try { const h = JSON.parse(store.get('heart', 'null')); return Array.isArray(h) ? h as [string, string] : null; } catch { return null; } })();
 music.setStyle(musicStyle === 'misto' ? randomStyle() : musicStyle);
 // narração gravada: carrega as falas do idioma/voz e abaixa a música quando o narrador fala
-audio.whenAudioReady(() => audio.preloadVoice(lang));
+audio.whenAudioReady(() => audio.preloadVoice(nl()));
 audio.onSpeak((secs) => music.duck(secs));
 let teamKind = store.get('teamKind', 'club') as 'nation' | 'club';
 let myTeam: Team = findTeam(store.get('team', FREE_TEAM));
@@ -335,6 +340,7 @@ function home() {
       <b class="set-title">${t('narration')}</b>
       <div class="seg">${(['male', 'female', 'off'] as audio.Voice[]).map((v) =>
         `<button data-voice="${v}" class="${v === voice ? 'on' : ''}">${t(v === 'male' ? 'voiceMale' : v === 'female' ? 'voiceFemale' : 'voiceOff')}</button>`).join('')}</div>
+      ${voice === 'off' ? '' : `<label class="set">${t('narrLang')} <select id="narrLang"><option value="auto"${narrPick === 'auto' ? ' selected' : ''}>${t('narrSame')}</option>${NARR_ORDER.map((n) => `<option value="${n}"${n === narrPick ? ' selected' : ''}>${NARR[n].name}</option>`).join('')}</select></label>`}
     </div>
     <button class="promo" data-go="promo"><span class="e">🙈</span><span><b>${t('promoTitle')}</b><span>${t('promoText')}</span></span></button>
   `);
@@ -351,14 +357,20 @@ function home() {
     voice = el.dataset.voice as audio.Voice;
     store.set('voice', voice);
     audio.setNarration(voice);
-    audio.preloadVoice(lang);
-    audio.call(lang, 'goal'); // amostra da voz escolhida
+    audio.preloadVoice(nl());
+    audio.call(nl(), 'goal'); // amostra da voz escolhida
     home();
+  });
+  document.getElementById('narrLang')?.addEventListener('change', (e) => {
+    narrPick = (e.target as HTMLSelectElement).value;
+    store.set('narrLang', narrPick);
+    audio.preloadVoice(nl());
+    audio.call(nl(), 'goal'); // amostra do narrador escolhido
   });
   ($('lang') as HTMLSelectElement).addEventListener('change', (e) => {
     lang = (e.target as HTMLSelectElement).value as Lang;
     store.set('lang', lang);
-    audio.preloadVoice(lang);
+    audio.preloadVoice(nl());
     document.documentElement.lang = LANGS[lang].voice;
     home();
   });
@@ -478,7 +490,7 @@ function board(rows: Row[], slots = Math.max(5, ...rows.map((r) => r.marks.lengt
 }
 
 function showCall(outcome: Outcome, good: boolean, key: CallKey) {
-  const said = audio.call(lang, key);
+  const said = audio.call(nl(), key);
   callEl.innerHTML = `<b class="${good ? '' : 'bad'}">${t(outcome)}</b><span>${said}</span>`;
   callEl.classList.remove('hidden');
 }
@@ -634,7 +646,7 @@ async function myKeep(id: number, kind: Kind, sx: number, sz: number, wall: Wall
   music.setIntensity(0.75);
   await sleep(tutKeep ? 2200 : 900);
   guard(id);
-  audio.call(lang, 'ready');
+  audio.call(nl(), 'ready');
   await sleep(700);
   guard(id);
   audio.whistle();
@@ -725,7 +737,7 @@ async function single(id: number, m: 'penalty' | 'free', r: Role) {
   track({ t: 'match', won, perfect: n === 5, role: r, team: myTeam.id });
   onMatchFinished(won);
   if (won) confetti();
-  audio.call(lang, won ? 'win' : 'lose');
+  audio.call(nl(), won ? 'win' : 'lose');
   const stars = n >= 5 ? 3 : n >= 4 ? 2 : n >= 3 ? 1 : 0;
   show(`
     ${resultCard(r === 'kicker' ? '⚽' : '🧤', won ? 'win' : 'lose', `${myTeam.badge} ${n} × ${5 - n} ${opp.badge}`,
@@ -758,7 +770,7 @@ async function shootout(id: number, opp: Team): Promise<[boolean, number, number
     if (w) return score(w);
     if (!sudden && so.a.length >= 5) {
       sudden = true;
-      callEl.innerHTML = `<b>${t('sudden')}</b><span>${audio.call(lang, 'sudden')}</span>`;
+      callEl.innerHTML = `<b>${t('sudden')}</b><span>${audio.call(nl(), 'sudden')}</span>`;
       callEl.classList.remove('hidden');
       await sleep(1800); guard(id);
       callEl.classList.add('hidden');
@@ -781,7 +793,7 @@ async function cup(id: number) {
     guard(id);
     const score = `${myTeam.badge} ${ga} × ${gb} ${opp.badge}`;
     if (!won) {
-      audio.call(lang, 'lose');
+      audio.call(nl(), 'lose');
       show(`
         ${resultCard('😢', 'eliminated', score, `<div class="sub">${t(rounds[i])}</div>`)}
         <button class="btn big" data-go="again">${t('again')}</button>
@@ -792,7 +804,7 @@ async function cup(id: number) {
       return;
     }
     if (i < rounds.length - 1) {
-      audio.call(lang, 'win');
+      audio.call(nl(), 'win');
       await new Promise<void>((next) => {
         show(`
           ${resultCard('🎉', 'win', score, `<div class="sub">→ ${t(rounds[i + 1])}</div>`)}
@@ -806,7 +818,7 @@ async function cup(id: number) {
     }
   }
   confetti();
-  audio.call(lang, 'champion');
+  audio.call(nl(), 'champion');
   track({ t: 'cup', diff, team: myTeam.id });
   onMatchFinished(true);
   show(`
@@ -959,7 +971,7 @@ async function duoMatch(id: number) {
   onMatchFinished(true);
   const champ = players[r.winner];
   confetti();
-  audio.call(lang, 'champion');
+  audio.call(nl(), 'champion');
   show(`
     ${resultCard('🏆', 'win', `${players[0].team.badge} ${r.a} × ${r.b} ${players[1].team.badge}`, `<h2>${esc(t('winnerIs', { name: champ.name }))}</h2>`)}
     <button class="btn big" data-go="again">${t('again')}</button>
@@ -1041,7 +1053,7 @@ async function tournament(id: number) {
     guard(id);
     won[g] = r.winner === 0 ? x : y;
     if (g < 2) {
-      audio.call(lang, 'win');
+      audio.call(nl(), 'win');
       await new Promise<void>((next) => {
         show(`
           ${resultCard('🎉', 'win', `${players[x].team.badge} ${r.a} × ${r.b} ${players[y].team.badge}`, `<h2>${esc(t('winnerIs', { name: players[won[g]!].name }))}</h2>`)}
@@ -1058,7 +1070,7 @@ async function tournament(id: number) {
   onMatchFinished(true);
   const champ = players[won[2]!];
   confetti();
-  audio.call(lang, 'champion');
+  audio.call(nl(), 'champion');
   show(`
     ${resultCard('🏆', 'champion', `${champ.team.badge} ${esc(champ.name)}`, `<h2>${esc(t('tourChamp', { name: champ.name }))}</h2>`)}
     <button class="btn big" data-go="again">${t('again')}</button>
@@ -1120,7 +1132,7 @@ async function eventMatch(id: number, ev: CupEvent) {
   track({ t: 'match', won, perfect: false, role: 'kicker', team: eventTeam?.id });
   onMatchFinished(won);
   if (won) confetti();
-  audio.call(lang, won ? 'win' : 'lose');
+  audio.call(nl(), won ? 'win' : 'lose');
   show(`
     ${resultCard(won ? '🏆' : '😢', won ? 'win' : 'lose', `${eventTeam.badge} ${ga} × ${gb} ${opp.badge}`,
       `<div class="sub">${t('eventScore')}: ${sc.goals} ${t('goals')} · ${sc.wins} ${t('eventWins')}${sc.streak > 1 ? ` · 🔥 ${sc.streak}` : ''}</div>`)}

@@ -193,6 +193,24 @@ test('narração gravada: escolher a narradora toca o áudio dela no idioma do j
   await expect.poll(() => clips.filter((c) => c.startsWith('pt/female/')).length, { timeout: 10_000 }).toBeGreaterThan(20);
 });
 
+test('narrador em outro idioma: jogo em português com narrador latino', async ({ page }) => {
+  const clips: string[] = [];
+  page.on('response', (r) => { if (r.url().includes('/voice/') && r.ok()) clips.push(r.url().split('/voice/')[1]); });
+  await page.goto('/');
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.lang', 'pt'); });
+  await page.reload();
+  await page.click('[data-voice=male]');
+  await expect(page.locator('#narrLang option')).toHaveCount(15); // "igual ao jogo" + 14 narradores
+  await page.selectOption('#narrLang', 'es419');
+  expect(await page.evaluate(() => localStorage.getItem('gol.narrLang'))).toBe('es419');
+  await expect.poll(() => clips.filter((c) => c.startsWith('es419/male/')).length, { timeout: 10_000 }).toBeGreaterThan(20);
+  // o jogo continua em português
+  await expect(page.locator('[data-go=play]')).toContainText('Jogar');
+  // sem narração, a escolha do narrador some
+  await page.click('[data-voice=off]');
+  await expect(page.locator('#narrLang')).toHaveCount(0);
+});
+
 test('tutorial: na primeira cobrança aparece a mãozinha, que some ao chutar e não volta', async ({ page }) => {
   await open(page);
   await start(page, 'penalty', 'kicker');
