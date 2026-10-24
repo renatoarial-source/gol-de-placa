@@ -21,10 +21,12 @@ async function open(page, lang, extra = {}) {
   await page.goto(BASE);
   await page.evaluate(([l, x]) => {
     localStorage.clear();
-    const set = { lang: l, 'unlocked.v1': '1', sound: '0', tutKick: '1', tutKeep: '1', diff: 'easy', ...x };
+    const set = { lang: l, 'unlocked.v1': '1', sound: '0', tutKick: '1', tutKeep: '1', diff: 'easy', mode: 'kids', ...x };
     for (const [k, v] of Object.entries(set)) localStorage.setItem('gol.' + k, v);
   }, [lang, extra]);
   await page.reload();
+  // versão adulta: espera os jogadores realistas carregarem
+  if (extra.mode === 'adult') await page.waitForFunction(() => window.__gol.realReady(), null, { timeout: 120000 });
   await sleep(900);
 }
 
@@ -71,6 +73,13 @@ for (const [store, vp] of Object.entries(SIZES)) {
     await kickTo(page, 3.1, 2.1, 0.62);
     await shot('1-angulo');
 
+    // 1b) versão adulta: jogador realista e torcida realista, à noite
+    await open(page, lang, { mode: 'adult', team: 'AR', teamKind: 'nation', weather: 'night', crowd: 'full', look: JSON.stringify({ number: 10, name: 'Arial', cel: 'jump' }) });
+    await startMatch(page, 'penalty', 'kicker');
+    await hideHud();
+    await kickTo(page, -3.0, 2.0, 0.45);
+    await shot('1b-adulta-chute');
+
     // 2) goleiro mergulhando, à noite com refletores
     await open(page, lang, { team: 'AR', teamKind: 'nation', weather: 'night', crowd: 'full', keeperCam: 'kicker' });
     await startMatch(page, 'penalty', 'keeper');
@@ -99,6 +108,12 @@ for (const [store, vp] of Object.entries(SIZES)) {
     await sleep(1500);
     await shot('5-meu-craque');
 
+    // 5b) Meu craque na versão adulta (jogadora)
+    await open(page, lang, { mode: 'adult', team: 'BR', teamKind: 'nation', look: JSON.stringify({ number: 9, name: 'Arial', female: true, cel: 'jump' }) });
+    await page.click('[data-go=player]');
+    await sleep(1500);
+    await shot('5b-adulta-craque');
+
     // 6) álbum de figurinhas
     await open(page, lang, { progress: JSON.stringify({ stickers: ['first_goal', 'corner', 'ground', 'curve', 'free_goal', 'first_save', 'three_saves', 'post', 'cup', 'rain', 'snow', 'night'], goals: 30, saveStreak: 0, day: '', daily: [] }) });
     await page.click('[data-go=album]');
@@ -112,6 +127,11 @@ for (const [store, vp] of Object.entries(SIZES)) {
     await page.click('[data-role=kicker]');
     await sleep(500);
     await shot('7-times');
+
+    // 8) primeira tela: versão infantil ou adulta
+    await open(page, lang, { mode: '' });
+    await sleep(600);
+    await shot('8-escolha');
 
     await page.close();
     console.log(store, lang, 'ok');
