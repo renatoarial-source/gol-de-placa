@@ -22,6 +22,9 @@ Categoria: **Jogos → Esportes** (Play e App Store), categoria secundária **Fa
 
 Arraste o dedo da bola até o canto do gol e solte o chute! Gol de Placa é um jogo de pênaltis e faltas em 3D, com bonecos de blocos, feito para crianças e para toda a família.
 
+🎮 VERSÃO INFANTIL OU ADULTA
+Na primeira vez você escolhe: bonequinhos coloridos e divertidos, ou jogadores e jogadoras realistas, com o uniforme do seu time e uma torcida de verdade. Dá para trocar quando quiser.
+
 ⚽ CHUTE DE VERDADE
 A bola vai exatamente para onde você mirar: no ângulo, rasteira rolando na grama, com curva para contornar a barreira… ou para fora e por cima, se exagerar! A bola sobe e cai com a gravidade, bate na trave e estufa a rede.
 
@@ -41,7 +44,7 @@ Pele, cabelo, chuteira, número e nome na camisa, e a comemoração: aviãozinho
 Dia, noite com refletores, chuva e neve. Estádio lotado ou mais vazio, com batucada, charanga ou palmas, a "ola" e a festa no gol. Escolha as cores do seu time do coração para a torcida.
 
 🎙️ NARRAÇÃO
-Narrador ou narradora em 8 idiomas: "Gol! No ângulo! Que defesa!"
+Narrador ou narradora em 14 idiomas, escolhidos à parte do idioma do jogo: "Gol! No ângulo! Que defesa!"
 
 📒 FIGURINHAS E DESAFIOS DO DIA
 100 figurinhas para colecionar, que liberam uniformes e estádios, e 3 desafios novos todo dia.
@@ -65,6 +68,9 @@ O download já inclui o pênalti como batedor, a Copa, o clima e a torcida. Uma 
 
 Drag from the ball to the corner of the goal and let it fly! Gol de Placa is a 3D penalty and free-kick game with blocky players, made for kids and the whole family.
 
+🎮 KIDS OR ADULT VERSION
+The first time you play, choose fun, colorful little players or realistic male and female players wearing your team's kit, with a realistic crowd. Switch anytime.
+
 ⚽ REAL SHOTS
 The ball goes exactly where you aim: top corner, low along the grass, curled around the wall… or wide and over the bar if you overdo it! It rises and falls with gravity, hits the post and ripples the net.
 
@@ -84,7 +90,7 @@ Skin, hair, boots, number and name on the shirt, plus the celebration: airplane,
 Day, night under floodlights, rain and snow. Packed or half-empty stadium, with drums, brass band or claps, the wave and a party for every goal. Pick your favorite team's colors for the fans.
 
 🎙️ COMMENTARY
-Male or female commentator in 8 languages.
+Male or female commentator in 14 languages, chosen separately from the game language.
 
 📒 STICKERS AND DAILY CHALLENGES
 100 stickers to collect, unlocking kits and stadiums, and 3 new challenges every day.
@@ -108,6 +114,9 @@ The download includes penalties as the kicker, the Cup, weather and fans. A sing
 
 ¡Arrastra el dedo desde la pelota hasta la esquina de la portería y patea! Gol de Placa es un juego de penales y tiros libres en 3D, con muñecos de bloques, hecho para niños y para toda la familia.
 
+🎮 VERSIÓN INFANTIL O ADULTA
+La primera vez eliges: muñequitos coloridos y divertidos, o jugadores y jugadoras realistas con la camiseta de tu equipo y una hinchada realista. Puedes cambiarla cuando quieras.
+
 ⚽ TIROS DE VERDAD
 La pelota va exactamente adonde apuntas: al ángulo, rasante por el césped, con efecto para esquivar la barrera… ¡o afuera y por arriba si te pasas! Sube y baja con la gravedad, pega en el palo e infla la red.
 
@@ -127,7 +136,7 @@ Piel, pelo, botines, número y nombre en la camiseta, y el festejo: avioncito, b
 Día, noche con reflectores, lluvia y nieve. Estadio lleno o más vacío, con batucada, charanga o palmas, la ola y la fiesta en cada gol.
 
 🎙️ NARRACIÓN
-Narrador o narradora en 8 idiomas.
+Narrador o narradora en 14 idiomas, elegidos aparte del idioma del juego.
 
 📒 FIGURITAS Y DESAFÍOS DEL DÍA
 100 figuritas para coleccionar, que desbloquean uniformes y estadios, y 3 desafíos nuevos cada día.
@@ -151,6 +160,9 @@ La descarga incluye los penales como pateador, la Copa, el clima y la hinchada. 
 
 Zieh vom Ball bis in die Torecke und schieß! Gol de Placa ist ein 3D-Spiel mit Elfmetern und Freistößen und Spielern aus Blöcken, gemacht für Kinder und die ganze Familie.
 
+🎮 KINDER- ODER ERWACHSENENVERSION
+Beim ersten Start wählst du: bunte, lustige Spielfiguren oder realistische Spieler und Spielerinnen im Trikot deines Teams, mit realistischen Fans. Jederzeit umschaltbar.
+
 ⚽ ECHTE SCHÜSSE
 Der Ball fliegt genau dorthin, wohin du zielst: in den Winkel, flach über den Rasen, mit Effet um die Mauer… oder daneben und drüber, wenn du übertreibst! Er steigt und fällt mit der Schwerkraft, trifft den Pfosten und lässt das Netz zappeln.
 
@@ -170,7 +182,7 @@ Haut, Haare, Schuhe, Nummer und Name auf dem Trikot, dazu der Torjubel: Flieger,
 Tag, Flutlicht bei Nacht, Regen und Schnee. Volles oder halbleeres Stadion, mit Trommeln, Blaskapelle oder Klatschen, La-Ola-Welle und Jubel bei jedem Tor.
 
 🎙️ KOMMENTAR
-Sprecher oder Sprecherin in 8 Sprachen.
+Sprecher oder Sprecherin in 14 Sprachen, unabhängig von der Spielsprache wählbar.
 
 📒 STICKER UND TAGESAUFGABEN
 100 Sticker zum Sammeln, die Trikots und Stadien freischalten, und jeden Tag 3 neue Aufgaben.
@@ -194,6 +206,9 @@ Im Download enthalten: Elfmeter als Schütze, Pokal, Wetter und Fans. Ein einmal
 
 Glisse du ballon jusqu’à la lucarne et tire ! Gol de Placa est un jeu de penaltys et de coups francs en 3D, avec des joueurs en blocs, pour les enfants et toute la famille.
 
+🎮 VERSION ENFANTS OU ADULTE
+Au premier lancement, choisis de petits joueurs colorés et rigolos, ou des joueurs et joueuses réalistes aux couleurs de ton équipe, avec un public réaliste. Modifiable à tout moment.
+
 ⚽ DE VRAIS TIRS
 Le ballon va exactement où tu vises : en lucarne, à ras de terre, enroulé autour du mur… ou à côté et au-dessus si tu en fais trop ! Il monte et retombe avec la gravité, touche le poteau et fait trembler les filets.
 
@@ -213,7 +228,7 @@ Peau, cheveux, crampons, numéro et nom sur le maillot, et la célébration : av
 Jour, nuit sous les projecteurs, pluie et neige. Stade plein ou à moitié vide, avec batucada, fanfare ou applaudissements, la ola et la fête à chaque but.
 
 🎙️ COMMENTAIRES
-Commentateur ou commentatrice en 8 langues.
+Commentateur ou commentatrice en 14 langues, au choix indépendamment de la langue du jeu.
 
 📒 VIGNETTES ET DÉFIS DU JOUR
 100 vignettes à collectionner, qui débloquent maillots et stades, et 3 nouveaux défis chaque jour.
@@ -237,6 +252,9 @@ Le téléchargement inclut les penaltys en tant que tireur, la Coupe, la météo
 
 Trascina dal pallone fino all’angolo della porta e tira! Gol de Placa è un gioco di rigori e punizioni in 3D, con giocatori a blocchi, fatto per i bambini e per tutta la famiglia.
 
+🎮 VERSIONE BAMBINI O ADULTI
+Al primo avvio scegli omini colorati e divertenti, oppure giocatori e giocatrici realistici con la maglia della tua squadra e tifosi realistici. Puoi cambiare quando vuoi.
+
 ⚽ TIRI VERI
 Il pallone va esattamente dove miri: nel sette, rasoterra sull’erba, a giro attorno alla barriera… o fuori e alto se esageri! Sale e scende con la gravità, colpisce il palo e gonfia la rete.
 
@@ -256,7 +274,7 @@ Pelle, capelli, scarpini, numero e nome sulla maglia, e l’esultanza: aeroplano
 Giorno, notte con i riflettori, pioggia e neve. Stadio pieno o mezzo vuoto, con tamburi, banda o applausi, la ola e la festa a ogni gol.
 
 🎙️ TELECRONACA
-Telecronista uomo o donna in 8 lingue.
+Telecronista uomo o donna in 14 lingue, scelte separatamente dalla lingua del gioco.
 
 📒 FIGURINE E SFIDE DEL GIORNO
 100 figurine da collezionare, che sbloccano maglie e stadi, e 3 nuove sfide ogni giorno.
@@ -280,6 +298,9 @@ Il download include i rigori come tiratore, la Coppa, il meteo e i tifosi. Un ac
 
 从球滑到球门的角落，射门！Gol de Placa 是一款 3D 点球和任意球游戏，方块小人造型，适合孩子和全家一起玩。
 
+🎮 儿童版或成人版
+第一次进入时选择：可爱多彩的小球员，或穿着你球队球衣的逼真男女球员，还有逼真的观众。随时可以切换。
+
 ⚽ 真实的射门
 球会准确飞向你瞄准的位置：死角、贴地滚动、绕过人墙的弧线球……用力过猛就会偏出或高出！球会随重力起落，击中门柱，打进球网。
 
@@ -299,7 +320,7 @@ Il download include i rigori come tiratore, la Coppa, il meteo e i tifosi. Un ac
 白天、灯光下的夜晚、下雨和下雪。满场或半满的球场，鼓乐、铜管乐或掌声，人浪和每个进球的欢呼。
 
 🎙️ 解说
-8 种语言的男声或女声解说。
+14 种语言的男声或女声解说，可与游戏语言分开选择。
 
 📒 贴纸和每日挑战
 100 张贴纸等你收集，可解锁球衣和球场，每天还有 3 个新挑战。
@@ -323,6 +344,9 @@ Il download include i rigori come tiratore, la Coppa, il meteo e i tifosi. Un ac
 
 ボールからゴールのすみまで指をスライドしてシュート！Gol de Placa は、ブロックの選手たちが活躍する3DのPK・フリーキックゲーム。子どもも家族みんなで楽しめます。
 
+🎮 キッズ版か大人版
+初回にカラフルでかわいい選手たちか、チームのユニフォームを着たリアルな男子・女子選手とリアルな観客かを選べます。いつでも切り替え可能。
+
 ⚽ 本物みたいなシュート
 ボールはねらった場所へまっすぐ飛びます。ゴールのすみ、グラウンダー、壁をよけるカーブ…やりすぎると枠の外やバーの上！重力で上がって落ち、ポストに当たり、ネットをゆらします。
 
@@ -342,7 +366,7 @@ Il download include i rigori come tiratore, la Coppa, il meteo e i tifosi. Un ac
 昼、照明の夜、雨と雪。満員またはすいたスタジアム、打楽器・ブラスバンド・手拍子、ウェーブ、ゴールのたびにお祭り。
 
 🎙️ 実況
-8言語の男性・女性の実況。
+14言語の男性・女性の実況（ゲームの言語とは別に選べます）。
 
 📒 シールと今日のチャレンジ
 集めるシールは100枚、ユニフォームやスタジアムが解放され、毎日3つの新しいチャレンジも。
