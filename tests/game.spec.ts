@@ -57,7 +57,8 @@ test('pênalti como batedor: o chute conta no placar batedor x goleiro', async (
   await expect(page.locator('#hud .line')).toHaveCount(2);
   await expect(page.locator('#hint')).toContainText('Sua vez de bater');
   await swipe(page, 40);
-  await expect(page.locator('#call b')).toHaveText(OUTCOME, { timeout: 20_000 });
+  // no robô do GitHub o navegador desenha poucos quadros por segundo e o lance anda devagar
+  await expect(page.locator('#call b')).toHaveText(OUTCOME, { timeout: 45_000 });
   await expect(page.locator(marks)).toHaveCount(1, { timeout: 20_000 });
   expect(errors).toEqual([]);
 });

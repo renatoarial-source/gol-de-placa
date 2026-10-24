@@ -196,8 +196,8 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .ver { display: flex; align-items: center; gap: 14px; min-height: 120px; padding: 10px 14px 10px 10px; border-radius: 20px; text-align: left;
   border: 2px solid var(--line); background: var(--panel); color: var(--text); font: inherit; cursor: pointer; }
 .ver .pic { flex: 0 0 104px; height: 104px; border-radius: 14px; background: #2a6 center/cover no-repeat; }
-.ver.kids .pic { background-image: url(ver-kids.jpg); }
-.ver.adult .pic { background-image: url(ver-adult.jpg); }
+.ver.kids .pic { background-image: url(/ver-kids.jpg); }
+.ver.adult .pic { background-image: url(/ver-adult.jpg); }
 .ver b { display: block; font-size: 22px; }
 .ver small { display: block; color: var(--muted); font-size: 15px; margin-top: 2px; }
 .screen:has(.ver) { align-content: center; }
