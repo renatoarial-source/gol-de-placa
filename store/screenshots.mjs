@@ -17,6 +17,14 @@ const LANGS = (process.env.LANGS || 'pt,en,es,de,fr,it,zh,ja').split(',');
 const STORES = (process.env.STORES || 'play,appstore').split(',');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Data fixa e neutra (sem Halloween nem Natal): as capturas da loja valem o ano todo. */
+const NEUTRAL = '2026-09-15T12:00:00';
+const fixDate = (page) => page.addInitScript((t) => {
+  const D = Date, off = new D(t).getTime() - D.now();
+  class F extends D { constructor(...a) { if (a.length) super(...a); else super(D.now() + off); } static now() { return D.now() + off; } }
+  window.Date = F;
+}, NEUTRAL);
+
 async function open(page, lang, extra = {}) {
   await page.goto(BASE);
   await page.evaluate(([l, x]) => {
@@ -61,6 +69,7 @@ for (const [store, vp] of Object.entries(SIZES)) {
     const dir = join(HERE, 'screenshots', store, lang);
     mkdirSync(dir, { recursive: true });
     const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.deviceScaleFactor, isMobile: true, hasTouch: true });
+    await fixDate(page);
     const shot = (n) => page.screenshot({ path: join(dir, `${n}.png`) });
     // telas grandes demoram mais para desenhar aqui: as esperas crescem junto
     const slow = store === 'ipad' ? 2.6 : 1;
@@ -73,8 +82,8 @@ for (const [store, vp] of Object.entries(SIZES)) {
     await kickTo(page, 3.1, 2.1, 0.62);
     await shot('1-angulo');
 
-    // 1b) versão adulta: jogador realista e torcida realista, à noite
-    await open(page, lang, { mode: 'adult', team: 'AR', teamKind: 'nation', weather: 'night', crowd: 'full', look: JSON.stringify({ number: 10, name: 'Arial', cel: 'jump' }) });
+    // 1b) versão adulta: jogador realista e torcida realista
+    await open(page, lang, { mode: 'adult', team: 'AR', teamKind: 'nation', weather: 'day', crowd: 'full', look: JSON.stringify({ number: 10, name: 'Arial', cel: 'jump' }) });
     await startMatch(page, 'penalty', 'kicker');
     await hideHud();
     await kickTo(page, -3.0, 2.0, 0.45);
