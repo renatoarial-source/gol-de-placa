@@ -16,6 +16,7 @@ import { BOOT_COLORS, BUILDS, type Build, CELEBRATIONS, HAIR_COLORS, HAIR_STYLES
 import { STICKERS, apply as applyProgress, emptyState, ensureDay, findSticker, needOf, type Ev, type State as ProgressState, type Sticker } from './game/progress';
 import { FREE_TEAM, store as shop } from './game/store';
 import * as audio from './game/audio';
+import { loadReal, realReady } from './game/real';
 import { onMatchFinished } from './game/rating';
 import * as gc from './game/gamecenter';
 import { MUSIC_STYLES, music, type MusicStyle } from './game/music';
@@ -45,7 +46,7 @@ const WEATHERS: Weather[] = ['day', 'night', 'rain', 'snow'];
 /** No clima aleatório, cada partida sorteia o seu. */
 function rollWeather() { rollBuild(); rollStyle(); rollWeather0(); }
 /** Estilo "bolinha": depois de liberado no álbum, 1 de cada 4 partidas é com todo mundo redondo. */
-function rollStyle() { pitch.round = roundUnlocked(progress.stickers.length) && Math.random() < ROUND.chance; }
+function rollStyle() { pitch.round = !adult() && roundUnlocked(progress.stickers.length) && Math.random() < ROUND.chance; }
 function rollWeather0() { weather = seasonWeather ?? (weatherPick === 'random' ? WEATHERS[Math.floor(Math.random() * WEATHERS.length)] : weatherPick); }
 /** No evento de Halloween é sempre noite; no de Natal, sempre neve. */
 let seasonWeather: Weather | null = null;
@@ -91,6 +92,36 @@ const touch = $('touch');
 const trail = $('trail') as HTMLCanvasElement;
 const pitch = new Pitch($('pitch') as HTMLCanvasElement);
 pitch.keeperCam = keeperCam;
+
+// ---------- versão infantil ou adulta ----------
+/** '' = ainda não escolheu (primeira vez: é a primeira pergunta do jogo). */
+let gameMode = store.get('mode', '') as '' | 'kids' | 'adult';
+const adult = () => gameMode === 'adult';
+/** Troca tudo: jogadores (bonequinhos ou realistas), fundo e o visual das telas. */
+function applyMode() {
+  document.body.classList.toggle('adult', adult());
+  pitch.real = adult();
+  if (adult() && !realReady()) void loadReal().then((ok) => { if (ok && adult() && ui.querySelector('.logo')) home(); });
+}
+function setMode(m: 'kids' | 'adult') {
+  gameMode = m;
+  store.set('mode', m);
+  applyMode();
+}
+/** Primeira tela: escolher a versão. Depois dá para trocar na tela inicial. */
+function modePick(back?: () => void) {
+  run++;
+  pitch.titleDuo(false);
+  show(`
+    <div class="logo"><span class="ball">⚽</span><h1>GOL DE<br>PLACA</h1></div>
+    <h2>${t('verTitle')}</h2>
+    <button class="ver kids" data-ver="kids"><span class="pic"></span><span><b>${t('verKids')}</b><small>${t('verKidsDesc')}</small></span></button>
+    <button class="ver adult" data-ver="adult"><span class="pic"></span><span><b>${t('verAdult')}</b><small>${t('verAdultDesc')}</small></span></button>
+    ${back ? `<button class="btn alt" data-go="back">${t('back')}</button>` : ''}
+  `);
+  on('[data-ver]', (el) => { setMode(el.dataset.ver as 'kids' | 'adult'); home(); });
+  if (back) on('[data-go=back]', back);
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const native = Capacitor.isNativePlatform();
 const rng = Math.random;
@@ -317,13 +348,15 @@ function home() {
   hud.classList.add('hidden'); hint.classList.add('hidden'); callEl.classList.add('hidden'); touch.classList.add('hidden');
   pitch.setup({ sx: 0, sz: PENALTY_Z, view: 'kick', kickerKit: myKit(), keeperKit: findTeam('lions').kit, wall: null, seed: 1, look: myLook() });
   pitch.titleDuo(true, myKit(), myLook());
+  // fundo da tela inicial na versão adulta: estádio à noite, com refletores
+  if (adult()) { weather = 'night'; pitch.setAtmosphere(atmo()); }
   const ev = eventFor(today());
   // Halloween e Natal: enfeites ao lado do gol e chapéu nos jogadores durante toda a época
   pitch.season = ev?.theme ?? null;
   seasonWeather = null;
   const langs = (Object.keys(LANGS) as Lang[]).map((l) => `<option value="${l}"${l === lang ? ' selected' : ''}>${LANGS[l].name}</option>`).join('');
   show(`
-    <div class="logo"><span class="ball">⚽</span><h1>GOL DE<br>PLACA</h1><p>${t('tagline')}</p>${roundUnlocked(progress.stickers.length) ? '' : `<p class="round-tease">${ROUND.e} ${t('roundStyle')}: 🔒 ${t('roundNeed', { n: ROUND.need })}</p>`}</div>
+    <div class="logo"><span class="ball">⚽</span><h1>GOL DE<br>PLACA</h1><p>${t('tagline')}</p>${adult() || roundUnlocked(progress.stickers.length) ? '' : `<p class="round-tease">${ROUND.e} ${t('roundStyle')}: 🔒 ${t('roundNeed', { n: ROUND.need })}</p>`}</div>
     <button class="btn big" data-go="play">${t('play')}</button>
     <div class="row">
       <button class="btn alt" data-go="player">${t('myPlayer')}${lock(!unlocked())}</button>
@@ -337,13 +370,16 @@ function home() {
       <label class="set">🌐 ${t('language')} <select id="lang">${langs}</select></label>
       <label class="set">${t('sound')} <button class="toggle${sound ? ' on' : ''}" data-tg="sound">${sound ? 'ON' : 'OFF'}</button></label>
       ${native ? `<label class="set">${t('vibration')} <button class="toggle${vibe ? ' on' : ''}" data-vibe>${vibe ? 'ON' : 'OFF'}</button></label>` : ''}
+      <b class="set-title">${t('verSetting')}</b>
+      <div class="seg">${(['kids', 'adult'] as const).map((m) => `<button data-ver="${m}" class="${gameMode === m ? 'on' : ''}">${t(m === 'kids' ? 'verKids' : 'verAdult')}</button>`).join('')}</div>
       <b class="set-title">${t('narration')}</b>
       <div class="seg">${(['male', 'female', 'off'] as audio.Voice[]).map((v) =>
         `<button data-voice="${v}" class="${v === voice ? 'on' : ''}">${t(v === 'male' ? 'voiceMale' : v === 'female' ? 'voiceFemale' : 'voiceOff')}</button>`).join('')}</div>
       ${voice === 'off' ? '' : `<label class="set">${t('narrLang')} <select id="narrLang"><option value="auto"${narrPick === 'auto' ? ' selected' : ''}>${t('narrSame')}</option>${NARR_ORDER.map((n) => `<option value="${n}"${n === narrPick ? ' selected' : ''}>${NARR[n].name}</option>`).join('')}</select></label>`}
     </div>
-    <button class="promo" data-go="promo"><span class="e">🙈</span><span><b>${t('promoTitle')}</b><span>${t('promoText')}</span></span></button>
+    ${adult() ? '' : `<button class="promo" data-go="promo"><span class="e">🙈</span><span><b>${t('promoTitle')}</b><span>${t('promoText')}</span></span></button>`}
   `);
+  on('[data-ver]', (el) => { const m = el.dataset.ver as 'kids' | 'adult'; if (m !== gameMode) { setMode(m); home(); } });
   on('[data-go=play]', modes);
   on('[data-go=player]', () => (unlocked() ? builder() : unlock(home)));
   on('[data-go=fans]', fans);
@@ -1203,11 +1239,11 @@ function builder() {
       <h2>${t('myPlayer')}</h2>
       <div class="builder card">
         <b>${t('playerKind')}</b><div class="seg"><button data-kind2="boy" class="${draft.female ? '' : 'on'}">${t('kind_boy')}</button><button data-kind2="girl" class="${draft.female ? 'on' : ''}">${t('kind_girl')}</button></div>
-        <b>${t('skin')}</b>${swatches('skin', SKIN_COLORS)}
+        ${adult() ? '' : `<b>${t('skin')}</b>${swatches('skin', SKIN_COLORS)}
         <b>${t('hairStyle')}</b><div class="seg wrap">${HAIR_STYLES.map((h) => `<button data-style="${h}" class="${draft.style === h ? 'on' : ''}">${t(('hs_' + h) as UiKey)}</button>`).join('')}</div>
         <b>${t('hairColor')}</b>${swatches('hair', HAIR_COLORS)}
         <b>${t('boots')}</b>${swatches('boots', BOOT_COLORS)}
-        <b>${t('body')}</b><div class="seg wrap">${[...BUILDS, 'random' as const].map((b) => `<button data-build="${b}" class="${(draft.build ?? 'normal') === b ? 'on' : ''}">${t(('body_' + b) as UiKey)}</button>`).join('')}</div>
+        <b>${t('body')}</b><div class="seg wrap">${[...BUILDS, 'random' as const].map((b) => `<button data-build="${b}" class="${(draft.build ?? 'normal') === b ? 'on' : ''}">${t(('body_' + b) as UiKey)}</button>`).join('')}</div>`}
         <b>${t('celebration')}</b><div class="seg wrap">${[...CELEBRATIONS, 'random' as const].map((c) => `<button data-cel="${c}" class="${draft.cel === c ? 'on' : ''}">${t(('cel_' + c) as UiKey)}</button>`).join('')}</div>
         <div class="row">
           <div><b>${t('number')}</b><input id="pnum" class="numin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${draft.number}" autocomplete="off" aria-label="${t('number')}"></div>
@@ -1328,7 +1364,8 @@ function parentGate(ok: () => void) {
 shop.onChange(() => { if (ui.querySelector('.logo')) home(); });
 void shop.init();
 void gc.start(progress.stickers.filter((id) => findSticker(id)?.base), progress.goals);
-home();
+applyMode();
+if (gameMode) home(); else modePick();
 
 // ganchos para os testes automáticos
-(window as unknown as { __gol: object }).__gol = { pitch, home };
+(window as unknown as { __gol: object }).__gol = { pitch, home, realReady };

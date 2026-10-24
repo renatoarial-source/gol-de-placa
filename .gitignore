@@ -7,3 +7,4 @@ playwright-report
 store/screenshots/
 store/fastlane/
 store/videos/
+public/models/

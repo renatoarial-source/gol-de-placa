@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 async function open(page: Page, full = false) {
   await page.goto('/');
   await page.evaluate((f) => {
-    localStorage.clear();
+    localStorage.clear(); localStorage.setItem('gol.mode', 'kids');
     localStorage.setItem('gol.lang', 'pt');
     localStorage.setItem('gol.sound', '0');
     localStorage.setItem('gol.weather', 'day'); // testes previsíveis (o padrão do jogo é aleatório)
@@ -185,7 +185,7 @@ test('narração gravada: escolher a narradora toca o áudio dela no idioma do j
   const clips: string[] = [];
   page.on('response', (r) => { if (r.url().includes('/voice/') && r.ok()) clips.push(r.url().split('/voice/')[1]); });
   await page.goto('/');
-  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.lang', 'pt'); });
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.mode', 'kids'); localStorage.setItem('gol.lang', 'pt'); });
   await page.reload();
   await page.click('[data-voice=female]');
   await expect.poll(() => clips.some((c) => /^pt\/female\/goal-\d\.mp3$/.test(c)), { timeout: 10_000 }).toBe(true);
@@ -197,7 +197,7 @@ test('narrador em outro idioma: jogo em português com narrador latino', async (
   const clips: string[] = [];
   page.on('response', (r) => { if (r.url().includes('/voice/') && r.ok()) clips.push(r.url().split('/voice/')[1]); });
   await page.goto('/');
-  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.lang', 'pt'); });
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.mode', 'kids'); localStorage.setItem('gol.lang', 'pt'); });
   await page.reload();
   await page.click('[data-voice=male]');
   await expect(page.locator('#narrLang option')).toHaveCount(15); // "igual ao jogo" + 14 narradores
@@ -302,7 +302,7 @@ test('2 jogadores: cada um escolhe o time, entre seleções ou clubes', async ({
 
 test('quem abre o jogo pela primeira vez já começa no clima aleatório', async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.lang', 'pt'); localStorage.setItem('gol.sound', '0'); localStorage.setItem('gol.unlocked.v1', '1'); });
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.mode', 'kids'); localStorage.setItem('gol.lang', 'pt'); localStorage.setItem('gol.sound', '0'); localStorage.setItem('gol.unlocked.v1', '1'); });
   await page.reload();
   const w = await page.evaluate(() => (window as unknown as { __gol: { pitch: { weather: string } } }).__gol.pitch.weather);
   expect(['day', 'night', 'rain', 'snow']).toContain(w);
@@ -479,4 +479,25 @@ test('álbum com 100 figurinhas, todas com nome, inclusive as de time', async ({
   expect(names).toContain('Vitória com Brasil');
   expect(names).toContain('10 gols');
   expect(names).toContain('Primeira vitória');
+});
+
+test('primeira vez: escolhe versão infantil ou adulta, e dá para trocar depois', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('gol.lang', 'pt'); localStorage.setItem('gol.sound', '0'); });
+  await page.reload();
+  await expect(page.locator('[data-ver]')).toHaveCount(2);
+  await expect(page.locator('[data-go=play]')).toHaveCount(0);
+  await page.click('[data-ver=adult]');
+  await expect(page.locator('[data-go=play]')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('gol.mode'))).toBe('adult');
+  await expect(page.locator('body')).toHaveClass(/adult/);
+  // a propaganda do jogo infantil some na versão adulta
+  await expect(page.locator('[data-go=promo]')).toHaveCount(0);
+  // abre de novo direto na tela inicial, na versão escolhida
+  await page.reload();
+  await expect(page.locator('[data-go=play]')).toBeVisible();
+  await page.click('.seg [data-ver=kids]');
+  expect(await page.evaluate(() => localStorage.getItem('gol.mode'))).toBe('kids');
+  await expect(page.locator('body')).not.toHaveClass(/adult/);
+  await expect(page.locator('[data-go=promo]')).toBeVisible();
 });

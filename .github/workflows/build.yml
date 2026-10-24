@@ -24,6 +24,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Jogadores realistas (versão adulta)
+        run: scripts/modelos.sh
+        env:
+          ARIAL_TOKEN: ${{ secrets.ARIAL_TOKEN }}
       - run: npm ci
       - name: Unit tests (physics, album, challenges)
         run: npm run typecheck && npm test
@@ -47,6 +51,10 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - name: Jogadores realistas (versão adulta)
+        run: scripts/modelos.sh
+        env:
+          ARIAL_TOKEN: ${{ secrets.ARIAL_TOKEN }}
       - run: npm ci && npm run build && npx cap sync android
       - name: Build debug APK
         working-directory: android
@@ -67,6 +75,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Jogadores realistas (versão adulta)
+        run: scripts/modelos.sh
+        env:
+          ARIAL_TOKEN: ${{ secrets.ARIAL_TOKEN }}
       - run: npm ci && npm run build && npx cap sync ios
       - name: Build (no code signing)
         run: |

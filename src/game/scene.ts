@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { BALL_R, G, GOAL_H, HALF, PLAYER_W, WALL_JUMP, ballAtTime, flightTime, velocityAt, type Outcome, type Shot, type Wall } from './physics';
 import type { Kit } from './teams';
+import { CROWD_H, CROWD_W, RealBody, crowdAtlas, crowdMaterial, realReady, type RealWho } from './real';
 
 const GOAL_W_T = 2 * HALF + 0.24;
 const SKINS = ['#ffdbac', '#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#5c3a1e'];
@@ -161,6 +162,8 @@ interface Body {
   busy?: number;
   /** fase própria, para os bonecos não respirarem todos juntos */
   phase: number;
+  /** jogador realista (versão adulta), que segue este boneco invisível */
+  real?: RealBody;
 }
 
 const smooth = (q: number) => q * q * (3 - 2 * q);
@@ -500,6 +503,16 @@ function roundBody(o: {
   };
 }
 
+/** Versão adulta: esconde os blocos e põe o jogador realista no lugar (mesmas articulações). */
+function dress(b: Body, who: RealWho, kit: Kit, number: number, keeper: boolean, name?: string): Body {
+  b.pose.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.visible = false; });
+  b.real = new RealBody(who, { kit, number, keeper, name });
+  // desfaz a escala do tipo de corpo (o modelo realista tem o corpo dele)
+  b.real.obj.scale.set(1 / b.pose.scale.x, 1 / b.pose.scale.y, 1 / b.pose.scale.z);
+  b.pose.add(b.real.obj);
+  return b;
+}
+
 function setMood(b: Body | null, mood: Mood) {
   if (!b || b.face.mood === mood) return;
   b.face.mood = mood;
@@ -561,6 +574,10 @@ export class Pitch {
   private crowdBX!: Float32Array; // posição de cada torcedor na cadeira
   private crowdBZ!: Float32Array;
   private crowdR!: Float32Array; // jeito de cada um (0..1): ritmo, altura do pulo, quem gira
+  private crowdYaw!: Float32Array; // para onde a arquibancada olha
+  /** torcida realista (versão adulta): fotos dos jogadores realistas, uma por torcedor */
+  private crowdReal: THREE.InstancedMesh | null = null;
+  private crowdPose: THREE.InstancedBufferAttribute | null = null;
   private ohh = 0; // torcida lamentando (mãos na cabeça)
   private tension = false; // cobrança prestes a sair: a torcida levanta e segura a respiração
   private tense = 0;
@@ -586,6 +603,8 @@ export class Pitch {
   private idle = 0;
   private spot = { sx: 0, sz: 11 };
   private keeperDiving = false;
+  /** goleiro realista segurando a bola (não larga para comemorar) */
+  private holding = false;
   /** Velocidade do tempo (0,55 no replay em câmera lenta). */
   timeScale = 1;
   /** Comemoração de quem bate, para o próximo gol. */
@@ -599,6 +618,50 @@ export class Pitch {
   womens = false;
   /** estilo "bolinha" (redondo) nesta partida: vale para todo mundo em campo */
   round = false;
+  /** versão adulta: jogadores realistas (se os modelos carregaram) */
+  real = false;
+  private get useReal() { return this.real && realReady(); }
+  /** Cria um jogador: boneco de blocos/bolinha ou, na versão adulta, o realista por cima dele. */
+  private body(kit: Kit, number: number, seed: number, keeper: boolean, look: Look | undefined, round: boolean, who?: RealWho): Body {
+    const real = this.useReal;
+    const b = makeBody(kit, number, seed, keeper, look, this.womens, real ? false : round);
+    if (!real) return b;
+    const w: RealWho = who ?? ((look ? !!look.female : this.womens) ? 'f' : 'm');
+    return dress(b, w, kit, look ? look.number : number, keeper, look?.name);
+  }
+  /** Versão adulta: troca a torcida de bloquinhos pela realista (monta na primeira vez). */
+  private syncCrowd() {
+    const want = this.useReal;
+    if (want && !this.crowdReal) {
+      const a = crowdAtlas(this.renderer);
+      if (!a) return;
+      const n = this.crowdY.length;
+      const g = new THREE.PlaneGeometry(CROWD_W, CROWD_H);
+      g.translate(0, CROWD_H / 2, 0);
+      this.crowdPose = new THREE.InstancedBufferAttribute(new Float32Array(n), 1);
+      this.crowdPose.setUsage(THREE.DynamicDrawUsage);
+      g.setAttribute('aPose', this.crowdPose);
+      const v = new Float32Array(n * 2);
+      for (let i = 0; i < n; i++) { const r = this.crowdR[i]; v[i * 2] = (r * 7.31) % 1 < 0.42 ? 1 : 0; v[i * 2 + 1] = (r * 13.7) % 1; }
+      g.setAttribute('aVar', new THREE.InstancedBufferAttribute(v, 2));
+      this.crowdReal = new THREE.InstancedMesh(g, crowdMaterial(a), n);
+      this.crowdReal.frustumCulled = false;
+      this.scene.add(this.crowdReal);
+      this.copyCrowdColors();
+    }
+    if (this.crowdReal) this.crowdReal.visible = want;
+    this.crowd.visible = !want || !this.crowdReal;
+  }
+  private copyCrowdColors() {
+    const r = this.crowdReal, src = this.crowd.instanceColor;
+    if (!r || !src) return;
+    if (!r.instanceColor) r.setColorAt(0, new THREE.Color());
+    (r.instanceColor!.array as Float32Array).set(src.array as Float32Array);
+    r.instanceColor!.needsUpdate = true;
+  }
+
+  /** Tamanho com que a bola é desenhada (maior no estilo infantil, para a criança ver bem). */
+  private get ballK() { return this.useReal ? 1.12 : 1.5; }
   /** Edição da época: põe os chapéus e os enfeites (null = estádio normal). */
   private seasonNow: Season | null = null;
   private seasonDecor: THREE.Group | null = null;
@@ -786,12 +849,14 @@ export class Pitch {
     stand(0, -16, 64, 0); stand(0, 52, 64, Math.PI); stand(-34, 18, 70, Math.PI / 2); stand(34, 18, 70, -Math.PI / 2);
     const seats: THREE.Vector3[] = [];
     const along: number[] = [];
+    const yaws: number[] = [];
     let offset = 0;
     for (const s of stands) {
       for (let r = 0; r < 8; r++) {
         for (let x = -s.w / 2 + 1; x < s.w / 2 - 1; x += 0.75) {
           seats.push(new THREE.Vector3(x + (Math.random() - 0.5) * 0.2, 0.9 + r * 0.9 + 0.3, -r * 1.4).applyMatrix4(s.g.matrixWorld));
           along.push(offset + x + s.w / 2);
+          yaws.push(s.g.rotation.y);
         }
       }
       offset += s.w;
@@ -805,6 +870,7 @@ export class Pitch {
     this.crowdBX = new Float32Array(n);
     this.crowdBZ = new Float32Array(n);
     this.crowdR = new Float32Array(n);
+    this.crowdYaw = new Float32Array(n);
     const m = new THREE.Matrix4();
     order.forEach((si, i) => {
       const p = seats[si];
@@ -815,6 +881,7 @@ export class Pitch {
       this.crowdBX[i] = p.x;
       this.crowdBZ[i] = p.z;
       this.crowdR[i] = Math.random();
+      this.crowdYaw[i] = yaws[si];
     });
     this.scene.add(this.crowd);
 
@@ -952,6 +1019,7 @@ export class Pitch {
     const c = new THREE.Color();
     for (let i = 0; i < this.crowdY.length; i++) this.crowd.setColorAt(i, c.set(pal[Math.floor(Math.random() * pal.length)]));
     if (this.crowd.instanceColor) this.crowd.instanceColor.needsUpdate = true;
+    this.copyCrowdColors();
   }
 
   /** Vitrine do "Meu craque": o boneco girando de perto. */
@@ -960,7 +1028,7 @@ export class Pitch {
     this.tweens = [];
     this.clearPlayers();
     this.ball.visible = false;
-    const b = makeBody(kit, look.number, 1, keeper, look, false, this.round);
+    const b = this.body(kit, look.number, 1, keeper, look, this.round);
     b.root.position.set(0, 0, 6);
     this.scene.add(b.root);
     this.showcaseBody = b;
@@ -969,6 +1037,8 @@ export class Pitch {
     this.camera.position.set(0, 5.9, 15.6);
     this.camera.lookAt(0, -2.5, 6);
     this.camera.fov = 52;
+    // jogador realista: câmera mais perto (ele é mais fino que o boneco de blocos)
+    if (b.real) { this.camera.position.set(0, 2.2, 15.5); this.camera.lookAt(0, -1.2, 6); this.camera.fov = 40; }
     this.camera.updateProjectionMatrix();
   }
 
@@ -1073,8 +1143,9 @@ export class Pitch {
     for (const b of this.duo) this.scene.remove(b.root);
     this.duo = [];
     if (!on || !kit) return;
-    const block = makeBody(kit, look?.number ?? 10, 3, false, look, this.womens, false);
-    const round = makeBody(kit, 7, 8, false, look ? { ...look, number: 7 } : undefined, this.womens, true);
+    // versão adulta: um jogador e uma jogadora; infantil: um de bloquinhos e um "bolinha"
+    const block = this.body(kit, look?.number ?? 10, 3, false, look, false, 'm');
+    const round = this.body(kit, 7, 8, false, look ? { ...look, number: 7 } : undefined, true, 'f');
     for (const b of [block, round]) { setMood(b, 'happy'); this.scene.add(b.root); this.duo.push(b); }
   }
   private animateDuo(t: number) {
@@ -1111,16 +1182,18 @@ export class Pitch {
     this.spot = { sx: o.sx, sz: o.sz };
     this.view = o.view;
     this.keeperDiving = false;
+    this.holding = false;
     this.celebCam = null;
     this.net.scale.set(1, 1, 1);
     this.bp.set(o.sx, BALL_R, o.sz);
-    this.ball.position.set(o.sx, BALL_R * 1.5, o.sz);
+    this.ball.position.set(o.sx, BALL_R * this.ballK, o.sz);
+    this.ball.scale.setScalar(this.ballK / 1.5);
     this.ball.rotation.set(0, 0, 0);
     this.ball.visible = true;
 
     const dir = Math.atan2(-o.sx, -o.sz); // virado para o gol
     // o boneco da criança usa o "Meu craque" (batedor ou goleiro, conforme o papel)
-    this.kicker = makeBody(o.kickerKit, 7 + (o.seed % 4) * 2, o.seed, false, o.view === 'kick' ? o.look : undefined, this.womens, this.round);
+    this.kicker = this.body(o.kickerKit, 7 + (o.seed % 4) * 2, o.seed, false, o.view === 'kick' ? o.look : undefined, this.round);
     // começa atrás e à esquerda da bola (chuta de pé direito)
     const d = Math.hypot(o.sx, o.sz);
     this.back = { x: o.sx / d, z: o.sz / d };
@@ -1128,15 +1201,16 @@ export class Pitch {
     this.kicker.root.rotation.y = dir;
     this.scene.add(this.kicker.root);
 
-    this.keeper = makeBody(o.keeperKit, 1, o.seed + 2, true, o.view === 'keep' ? o.look : undefined, this.womens, this.round);
+    this.keeper = this.body(o.keeperKit, 1, o.seed + 2, true, o.view === 'keep' ? o.look : undefined, this.round);
     this.keeper.root.position.set(0, 0, 0.35);
     this.keeper.root.rotation.y = Math.atan2(o.sx, o.sz) * 0.5;
     this.keeper.armL.rotation.z = 0.5; this.keeper.armR.rotation.z = -0.5;
+    this.keeper.real?.play('goleiro-parado', { loop: true, from: (o.seed % 7) * 0.5 });
     this.scene.add(this.keeper.root);
 
     if (o.wall) {
       for (let i = 0; i < o.wall.count; i++) {
-        const b = makeBody(o.keeperKit, [4, 5, 6, 8, 3][i], o.seed + 5 + i, false, undefined, this.womens, this.round);
+        const b = this.body(o.keeperKit, [4, 5, 6, 8, 3][i], o.seed + 5 + i, false, undefined, this.round);
         b.root.position.set(o.wall.x + (i - (o.wall.count - 1) / 2) * PLAYER_W, 0, o.wall.z);
         b.root.rotation.y = Math.atan2(o.sx - o.wall.x, o.sz - o.wall.z);
         b.armL.rotation.x = -0.4; b.armR.rotation.x = -0.4;
@@ -1146,7 +1220,7 @@ export class Pitch {
       }
     }
     // edição da época: chapéu de bruxa ou gorro do Papai Noel em todo mundo
-    if (this.seasonNow) for (const b of [this.kicker, this.keeper, ...this.wall]) b.head.add(seasonHat(this.seasonNow, this.round));
+    if (this.seasonNow) for (const b of [this.kicker, this.keeper, ...this.wall]) { const hat = seasonHat(this.seasonNow, this.round); if (b.real) b.real.addHat(hat); else b.head.add(hat); }
     // o batedor da máquina mostra a camisa do outro time quando o jogador é goleiro
     this.ballShadow.position.set(o.sx, 0.012, o.sz);
     this.placeCamera();
@@ -1157,6 +1231,7 @@ export class Pitch {
   }
 
   private tick(dt: number) {
+    if (this.useReal !== !!this.crowdReal?.visible) this.syncCrowd();
     const live = this.tweens;
     this.tweens = [];
     for (const tw of live) {
@@ -1174,8 +1249,9 @@ export class Pitch {
       const sway = Math.sin(T * 1.7 + gk.phase);
       gk.pose.position.x = sway * 0.13;
       gk.pose.position.y = -0.06 + Math.abs(Math.sin(T * 3.4 + gk.phase)) * 0.035;
-      gk.pose.rotation.z = -sway * 0.05;
-      gk.pose.rotation.x = 0.12;
+      gk.pose.rotation.z = gk.real ? 0 : -sway * 0.05;
+      gk.pose.rotation.x = gk.real ? 0 : 0.12;
+      if (gk.real) gk.pose.position.y = 0; // o goleiro realista já se mexe na animação dele
       gk.armL.rotation.set(-0.35, 0, -0.55 - Math.sin(T * 3.4) * 0.05);
       gk.armR.rotation.set(-0.35, 0, 0.55 + Math.sin(T * 3.4) * 0.05);
       gk.legL.rotation.z = -0.08; gk.legR.rotation.z = 0.08;
@@ -1191,6 +1267,8 @@ export class Pitch {
     if (this.kicker && !this.kicker.busy) breathe(this.kicker, T);
     for (const w of this.wall) if (!w.busy) breathe(w, T, -0.25);
     if (this.showcaseBody && !this.showcaseBody.busy) breathe(this.showcaseBody, T);
+    // jogadores realistas seguem os bonecos (ou tocam a animação deles)
+    for (const b of [this.kicker, this.keeper, this.showcaseBody, ...this.wall, ...this.duo]) if (b?.real) b.real.update(dt, b);
     // torcida: cada um balança no seu ritmo, faz a "ola" de tempos em tempos e explode no gol
     // (pula, levanta os braços, vai de um lado para o outro e alguns giram); no lance perdido, murcha
     this.cheer = Math.max(0, this.cheer - dt);
@@ -1201,6 +1279,11 @@ export class Pitch {
     const sad = Math.min(1, this.ohh / 0.8);
     this.tense += ((this.tension ? 1 : 0) - this.tense) * Math.min(1, dt * 3);
     const CT = this.idle;
+    // torcida realista: mesma coreografia, mas trocando a foto (pose) em vez de esticar o boneco
+    const real = this.crowdReal?.visible ? this.crowdReal : null;
+    const rarr = real ? real.instanceMatrix.array as Float32Array : null;
+    const parr = this.crowdPose?.array as Float32Array | undefined;
+    if (real) real.count = this.crowd.count;
     for (let i = 0; i < this.crowd.count; i++) {
       const r = this.crowdR[i];
       const ph = r * 40;
@@ -1208,11 +1291,12 @@ export class Pitch {
       const kind = r < 0.28 ? 0 : r < 0.5 ? 1 : r < 0.7 ? 2 : r < 0.82 ? 3 : 4;
       let y = Math.sin(CT * (1.8 + r * 1.2) + ph) * 0.04 * (1 - this.tense * 0.7);
       let sx = 1, sy = 1, xo = 0, zo = 0, rot = 0;
+      let pose = this.tense > 0.5 && r < 0.12 ? 3 : 0; // 0 parado, 1 braços para cima, 2 palmas, 3 mãos na cabeça
       // antes da cobrança: todo mundo levanta e fica parado, na ponta do pé
       y += this.tense * 0.12; sy += this.tense * 0.08;
       // ola
       const dw = Math.abs(this.crowdX[i] - wave);
-      if (dw < 6) { const k = 1 - dw / 6; y += k * 0.5; sy += k * 0.3; }
+      if (dw < 6) { const k = 1 - dw / 6; y += k * 0.5; sy += k * 0.3; if (k > 0.3) pose = 1; }
       // ninguém fica parado: de vez em quando um torcedor sozinho pula, acena, vira para o lado ou levanta os braços
       const slot = Math.floor(CT * 0.4 + r * 97);
       const roll = (Math.sin(slot * 12.9898 + i * 78.233) * 43758.5453) % 1;
@@ -1221,18 +1305,20 @@ export class Pitch {
         const f = (CT * 0.4 + r * 97) % 1; // quanto do "momento" já passou
         const bump = Math.sin(Math.PI * f);
         if (ev < 0.015) y += bump * 0.45; // pulinho
-        else if (ev < 0.03) { sy += bump * 0.4; sx -= bump * 0.1; } // braços para cima
-        else if (ev < 0.04) rot = Math.sin(CT * 10) * 0.5 * bump; // acenando
+        else if (ev < 0.03) { sy += bump * 0.4; sx -= bump * 0.1; if (bump > 0.3) pose = 1; } // braços para cima
+        else if (ev < 0.04) { rot = Math.sin(CT * 10) * 0.5 * bump; if (bump > 0.3) pose = 2; } // acenando
         else rot = bump * 1.2; // vira para conversar com o vizinho
       }
       if (party) {
         const j = Math.max(0, Math.sin(CT * (7 + r * 7) + ph));
+        pose = kind === 2 ? (Math.sin(CT * 14 + ph) > 0 ? 2 : 0) : kind === 3 ? (j > 0.5 ? 1 : 2) : 1;
         if (kind === 0) { y += j * (0.4 + 0.5 * r) * party; sy += j * 0.45 * party; sx -= j * 0.12 * party; }
         else if (kind === 1) { xo = Math.sin(CT * 5 + ph) * 0.35 * party; sy += 0.35 * party; rot = Math.sin(CT * 5 + ph) * 0.4 * party; }
         else if (kind === 2) { sx += Math.abs(Math.sin(CT * 14 + ph)) * 0.25 * party; sy += 0.2 * party; y += j * 0.15 * party; }
         else if (kind === 3) { xo = Math.sin(CT * 2 + ph) * 0.3 * party; zo = Math.cos(CT * 2 + ph) * 0.1 * party; y += j * 0.25 * party; rot = Math.sin(CT * 2 + ph) * 0.3 * party; }
         else { rot = (CT * (5 + r * 6) + ph) * party; y += j * 0.3 * party; }
       }
+      if (sad > 0.3) pose = kind <= 1 ? 3 : 0;
       if (sad) {
         if (kind <= 1) { y -= 0.12 * sad; sy -= 0.18 * sad; } // mãos na cabeça
         else if (kind <= 3) { y -= 0.3 * sad; sy -= 0.3 * sad; } // senta de desânimo
@@ -1245,7 +1331,18 @@ export class Pitch {
       arr[o + 12] = this.crowdBX[i] + xo;
       arr[o + 13] = this.crowdY[i] + y + (sy - 1) * 0.31;
       arr[o + 14] = this.crowdBZ[i] + zo;
+      if (rarr && parr) {
+        // de frente para o campo; gira pouco (é uma foto) e espelha metade para variar
+        const a = this.crowdYaw[i] + Math.max(-0.5, Math.min(0.5, rot * 0.35));
+        const ca = Math.cos(a), sa = Math.sin(a), fx = (r * 31.7) % 1 < 0.5 ? -1 : 1, ky = 1 + (sy - 1) * 0.12;
+        rarr[o] = ca * fx; rarr[o + 1] = 0; rarr[o + 2] = -sa * fx; rarr[o + 3] = 0;
+        rarr[o + 4] = 0; rarr[o + 5] = ky; rarr[o + 6] = 0; rarr[o + 7] = 0;
+        rarr[o + 8] = sa; rarr[o + 9] = 0; rarr[o + 10] = ca; rarr[o + 11] = 0;
+        rarr[o + 12] = arr[o + 12]; rarr[o + 13] = this.crowdY[i] - 0.36 + y; rarr[o + 14] = arr[o + 14]; rarr[o + 15] = 1;
+        parr[i] = pose;
+      }
     }
+    if (real) { real.instanceMatrix.needsUpdate = true; this.crowdPose!.needsUpdate = true; }
     this.updatePaper(dt);
     this.crowd.instanceMatrix.needsUpdate = true;
     if (this.fall) {
@@ -1294,6 +1391,8 @@ export class Pitch {
     const dur = Math.max(0.12, contactIn);
     const mode: 'dive' | 'up' | 'low' = ax < 0.9 && ty < 1.0 ? 'low' : ax < 1.2 ? 'up' : 'dive';
     this.keeperMode = mode;
+    if (k.real && mode === 'dive') { this.realDive(k, tx, ty, dur); return; }
+    k.real?.puppet();
     // pés (fx, fy) e inclinação do corpo para as luvas chegarem na bola
     let fx = tx * 0.85, fy = 0, rot = 0;
     if (mode === 'up') {
@@ -1333,9 +1432,35 @@ export class Pitch {
     });
   }
 
+  /** Mergulho do goleiro realista: a animação do Mixamo, com o corpo indo para o lado e para cima
+   * para as mãos chegarem na bola na hora certa. */
+  private realDive(k: Body, tx: number, ty: number, dur: number) {
+    const r = k.real!;
+    const side = Math.sign(tx) || 1;
+    // o modelo olha para +z: o "pulo" vai para +x (esquerda dele) e o "pulo-direita" para -x
+    const left = side > 0;
+    const C = left ? 1.0 : 0.95; // instante (s) em que as mãos estão mais longe, no clipe
+    const from = Math.max(0.25, C - dur);
+    r.play(left ? 'goleiro-pulo' : 'goleiro-pulo-direita', { from, to: 2.05, speed: THREE.MathUtils.clamp((C - from) / dur, 0.6, 2.6) });
+    const x0 = k.pose.position.x;
+    const fx = THREE.MathUtils.clamp(tx - side * 1.15, -HALF + 0.6, HALF - 0.6);
+    const fy = THREE.MathUtils.clamp(ty - 1.05, 0, 1.0);
+    const rot = -side * THREE.MathUtils.clamp((ty - 1.1) * 0.3, 0, 0.35);
+    void this.tween(dur, (q) => {
+      const e = 1 - (1 - q) * (1 - q);
+      k.pose.position.x = x0 + (fx - x0) * e;
+      k.pose.position.y = fy * Math.sin((Math.PI / 2) * q);
+      k.pose.rotation.z = rot * e;
+    }).then(() => {
+      const y1 = k.pose.position.y, r1 = k.pose.rotation.z;
+      void this.tween(0.4, (q) => { const e = q * q; k.pose.position.y = y1 * (1 - e); k.pose.rotation.z = r1 * (1 - e); });
+    });
+  }
+
   /** Ponto entre as luvas do goleiro (para a bola encaixar nas mãos). */
   private gloves(): THREE.Vector3 {
     const k = this.keeper!;
+    if (k.real) return k.real.hands().add(new THREE.Vector3(0, 0, 0.08));
     k.root.updateMatrixWorld(true);
     const a = k.armL.localToWorld(new THREE.Vector3(0.05, -0.62, 0.12));
     const b = k.armR.localToWorld(new THREE.Vector3(-0.05, -0.62, 0.12));
@@ -1355,7 +1480,7 @@ export class Pitch {
 
   /** A bola já saiu do pé? (usado nos testes e nas capturas da loja) */
   ballMoving(): boolean {
-    return this.lastSetup !== null && this.ball.position.distanceTo(new THREE.Vector3(this.lastSetup.sx, BALL_R * 1.5, this.lastSetup.sz)) > 0.3;
+    return this.lastSetup !== null && this.ball.position.distanceTo(new THREE.Vector3(this.lastSetup.sx, BALL_R * this.ballK, this.lastSetup.sz)) > 0.3;
   }
 
   /** Quanto do caminho até o gol a bola já percorreu (0 = no pé, 1 = na linha). */
@@ -1372,10 +1497,10 @@ export class Pitch {
   /** Bola: posição física (centro) e desenho (a esfera é desenhada 1,5x maior, apoiada no chão). */
   private bp = new THREE.Vector3();
   private drawBall(dt: number, v: { x: number; z: number }) {
-    this.ball.position.set(this.bp.x, this.bp.y + BALL_R * 0.5, this.bp.z);
+    this.ball.position.set(this.bp.x, this.bp.y + BALL_R * (this.ballK - 1), this.bp.z);
     // gira como se rolasse na direção do movimento
-    this.ball.rotation.x += (v.z * dt) / (BALL_R * 1.5);
-    this.ball.rotation.z -= (v.x * dt) / (BALL_R * 1.5);
+    this.ball.rotation.x += (v.z * dt) / (BALL_R * this.ballK);
+    this.ball.rotation.z -= (v.x * dt) / (BALL_R * this.ballK);
   }
 
   /** Continua o movimento da bola com gravidade, quiques, atrito e a rede (se entrou no gol). */
@@ -1419,6 +1544,9 @@ export class Pitch {
     k.busy = (k.busy ?? 0) + 1;
     k.head.rotation.set(0, 0, 0);
     setMood(k, 'focus'); setMood(this.keeper, 'focus');
+    // jogador realista: a animação do chute, no ritmo da corrida (o pé chega na bola junto com o boneco)
+    const KICK_AT = 0.78;
+    k.real?.play('chute', { from: 0, to: 1.45, speed: THREE.MathUtils.clamp(KICK_AT / (o.runUp + 0.09), 0.45, 2.4) });
     const strides = Math.max(1, o.runUp * 4);
     await this.tween(o.runUp, (q) => {
       // acelera no começo e chega firme na bola
@@ -1428,8 +1556,9 @@ export class Pitch {
       k.legL.rotation.x = w * 0.75; k.legR.rotation.x = -w * 0.75;
       k.armL.rotation.set(-w * 0.7, 0, -0.12); k.armR.rotation.set(w * 0.7, 0, 0.12);
       k.pose.position.y = Math.abs(Math.cos(ph)) * 0.07; // sobe e desce a cada passada
-      k.pose.rotation.x = 0.16 * Math.min(1, q * 3); // corpo inclinado para a frente
-      k.pose.rotation.z = Math.sin(ph) * 0.04;
+      k.pose.rotation.x = k.real ? 0 : 0.16 * Math.min(1, q * 3); // corpo inclinado para a frente
+      k.pose.rotation.z = k.real ? 0 : Math.sin(ph) * 0.04;
+      if (k.real) k.pose.position.y = 0;
       // última passada: puxa a perna do chute para trás
       if (q > 0.82) { const e = (q - 0.82) / 0.18; k.legR.rotation.x = 0.9 * e; k.legL.rotation.x = -0.2 * e; }
     });
@@ -1439,16 +1568,17 @@ export class Pitch {
     await this.tween(0.09, (q) => {
       k.legR.rotation.x = 0.9 - 1.5 * q;
       k.armL.rotation.set(-0.2, 0, -0.6 * q);
-      k.pose.rotation.x = 0.16 - 0.1 * q;
+      k.pose.rotation.x = k.real ? 0 : 0.16 - 0.1 * q;
     });
+    if (k.real) k.real.speed = 1;
     // acompanha o movimento depois do chute e volta ao normal
     void this.tween(0.36, (q) => {
       k.legR.rotation.x = -0.6 - 1.0 * Math.sin((Math.PI / 2) * Math.min(1, q * 2)) * (q < 0.5 ? 1 : 1 - (q - 0.5));
-      k.pose.rotation.x = 0.06 - 0.22 * Math.sin(Math.PI * q);
-      k.pose.position.y = 0.04 * Math.sin(Math.PI * q);
+      k.pose.rotation.x = k.real ? 0 : 0.06 - 0.22 * Math.sin(Math.PI * q);
+      k.pose.position.y = k.real ? 0 : 0.04 * Math.sin(Math.PI * q);
       k.armL.rotation.set(-0.2, 0, -0.6 - 0.3 * Math.sin(Math.PI * q));
       k.armR.rotation.set(-0.5 * Math.sin(Math.PI * q), 0, 0.5 * Math.sin(Math.PI * q));
-    }).then(() => easeToRest((d, fn) => this.tween(d, fn), k, 0.45)).then(() => { k.busy = (k.busy ?? 1) - 1; });
+    }).then(() => { if (k.real && k.real.mode === 'clip') return this.tween(0.25, () => {}); }).then(() => easeToRest((d, fn) => this.tween(d, fn), k, 0.45)).then(() => { k.busy = (k.busy ?? 1) - 1; k.real?.puppet(); });
     o.onKick?.();
     for (const w of this.wall) {
       void this.tween(0.5, (q) => { w.root.position.y = WALL_JUMP * Math.sin(Math.PI * q); });
@@ -1492,6 +1622,7 @@ export class Pitch {
       if (!this.keeperDiving) this.keeperDive(this.bp.x, this.bp.y, 0.12);
       const catchIt = this.keeperMode !== 'dive' || (Math.abs(s.tx) < 1.8 && s.ty < 1.8 && s.speed < 20);
       if (catchIt) {
+        if (this.keeper?.real && this.keeperMode !== 'dive') { this.keeper.real.play('goleiro-parado-com-bola', { loop: true, from: 0.2 }); this.holding = true; }
         // encaixa: a bola fica nas luvas
         await this.tween(0.9, () => { this.bp.copy(this.gloves()); this.ball.position.set(this.bp.x, this.bp.y, this.bp.z); });
       } else {
@@ -1569,6 +1700,7 @@ export class Pitch {
   private lament(b: Body | null, mood: Mood) {
     if (!b) return;
     setMood(b, mood);
+    b.real?.puppet();
     b.busy = (b.busy ?? 0) + 1;
     void this.tween(0.25, () => {}).then(() => this.tween(1.7, (q) => {
       const up = smooth(Math.min(1, q * 4)); // as mãos sobem rápido
@@ -1586,6 +1718,7 @@ export class Pitch {
   private dejected(b: Body | null) {
     if (!b) return;
     setMood(b, 'sad');
+    if (!this.keeperDiving) b.real?.puppet();
     void this.tween(0.5, () => {}).then(() => this.tween(1.6, (q) => {
       b.head.rotation.x = 0.5 * smooth(Math.min(1, q * 3));
       if (!this.keeperDiving) { b.pose.rotation.x = 0.25 * smooth(Math.min(1, q * 3)); b.armL.rotation.z = -0.05; b.armR.rotation.z = 0.05; }
@@ -1652,7 +1785,7 @@ export class Pitch {
     this.cheer = Math.max(this.cheer, 3);
     const b = goal ? this.kicker : this.keeper;
     if (b) setMood(b, 'happy');
-    if (!b || (!goal && this.keeperMode === 'dive')) return; // goleiro que mergulhou fica no chão
+    if (!b || (!goal && (this.keeperMode === 'dive' || this.holding))) return; // goleiro que mergulhou fica no chão; com a bola, fica com ela
     const style: Celebration = goal ? this.kickerCelebration : 'jump';
     // gol da criança no jogo: primeiro ela vê a bola na rede, depois a câmera vira para o jogador comemorando de frente
     const front = goal && b === this.kicker && b !== this.showcaseBody && this.view === 'kick' && !this.replayCam;
@@ -1697,7 +1830,14 @@ export class Pitch {
     const r0 = b.root.rotation.y;
     const fwd = new THREE.Vector3(Math.sin(r0), 0, Math.cos(r0)); // para onde o boneco olha
     const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
-    const dur = { jump: 1.7, plane: 2.1, dance: 1.9, flip: 1.6, robot: 1.9, knee: 2.0, fish: 2.0, spin: 1.8 }[style];
+    let dur = { jump: 1.7, plane: 2.1, dance: 1.9, flip: 1.6, robot: 1.9, knee: 2.0, fish: 2.0, spin: 1.8 }[style];
+    // jogador realista: no "pulo" comemora com a animação de vitória do Mixamo (o goleiro, com a de boxe)
+    const clip = !!b.real && style === 'jump';
+    if (clip) {
+      if (b === this.keeper) b.real!.play('comemoracao-boxe', { from: 0.5, to: 3.4 });
+      else b.real!.play('comemoracao', { from: 1.3, to: 5.6 });
+      dur = b === this.keeper ? 2.9 : 4.0;
+    } else b.real?.puppet();
     // na vitrine do Meu craque o boneco fica perto da câmera: corre e desliza menos para não sair do quadro
     const reach = b === this.showcaseBody ? 0.4 : 1;
     // braços para cima em "V": o esquerdo (x negativo) abre girando no sentido negativo, o direito no positivo
@@ -1708,7 +1848,9 @@ export class Pitch {
       b.legL.rotation.set(0, 0, 0); b.legR.rotation.set(0, 0, 0);
       b.pose.rotation.set(0, 0, 0); b.pose.position.set(0, 0, 0);
       b.head.rotation.set(0, 0, 0);
-      if (style === 'jump') {
+      if (clip) {
+        // a animação do jogador realista cuida de tudo
+      } else if (style === 'jump') {
         // três pulos socando o ar, encolhendo as pernas lá em cima
         const ph = q * Math.PI * 3;
         const air = Math.abs(Math.sin(ph));
@@ -1818,6 +1960,7 @@ export class Pitch {
       if (!b) return;
       b.root.position.y = y0;
       // volta à posição neutra suavemente e só então volta a respirar; a câmera volta ao normal
+      b.real?.puppet();
       void easeToRest((d, fn) => this.tween(d, fn), b, 0.35).then(() => { b.busy = (b.busy ?? 1) - 1; this.endCelebCam(cam); setMood(b, 'calm'); });
     });
   }

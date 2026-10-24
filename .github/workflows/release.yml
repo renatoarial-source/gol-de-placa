@@ -66,6 +66,10 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Jogadores realistas (versão adulta)
+        run: scripts/modelos.sh --obrigatorio
+        env:
+          ARIAL_TOKEN: ${{ secrets.ARIAL_TOKEN }}
       - run: npm ci && npm run build && npx cap sync android
 
       - name: Build signed AAB
@@ -136,6 +140,10 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Jogadores realistas (versão adulta)
+        run: scripts/modelos.sh --obrigatorio
+        env:
+          ARIAL_TOKEN: ${{ secrets.ARIAL_TOKEN }}
       - run: npm ci && npm run build && npx cap sync ios
 
       - name: App Store Connect API key

@@ -492,14 +492,14 @@ const EXTRA4 = {
 
 // ---------- idioma da narração (pode ser diferente do jogo) ----------
 const EXTRA5 = {
-  pt: { narrLang: '🗣️ Narrador', narrSame: 'Igual ao jogo' },
-  en: { narrLang: '🗣️ Commentator', narrSame: 'Same as game' },
-  es: { narrLang: '🗣️ Narrador', narrSame: 'Igual que el juego' },
-  de: { narrLang: '🗣️ Kommentator', narrSame: 'Wie das Spiel' },
-  fr: { narrLang: '🗣️ Commentateur', narrSame: 'Comme le jeu' },
-  it: { narrLang: '🗣️ Telecronista', narrSame: 'Come il gioco' },
-  zh: { narrLang: '🗣️ 解说语言', narrSame: '与游戏相同' },
-  ja: { narrLang: '🗣️ 実況の言語', narrSame: 'ゲームと同じ' },
+  pt: { narrLang: '🗣️ Narrador', narrSame: 'Igual ao jogo', verTitle: 'Como você quer jogar?', verKids: 'Versão infantil', verKidsDesc: 'Bonequinhos coloridos e divertidos', verAdult: 'Versão adulta', verAdultDesc: 'Jogadores e jogadoras realistas', verSetting: '🎮 Versão' },
+  en: { narrLang: '🗣️ Commentator', narrSame: 'Same as game', verTitle: 'How do you want to play?', verKids: 'Kids version', verKidsDesc: 'Fun, colorful little players', verAdult: 'Adult version', verAdultDesc: 'Realistic male and female players', verSetting: '🎮 Version' },
+  es: { narrLang: '🗣️ Narrador', narrSame: 'Igual que el juego', verTitle: '¿Cómo quieres jugar?', verKids: 'Versión infantil', verKidsDesc: 'Muñequitos coloridos y divertidos', verAdult: 'Versión adulta', verAdultDesc: 'Jugadores y jugadoras realistas', verSetting: '🎮 Versión' },
+  de: { narrLang: '🗣️ Kommentator', narrSame: 'Wie das Spiel', verTitle: 'Wie willst du spielen?', verKids: 'Kinderversion', verKidsDesc: 'Bunte, lustige Spielfiguren', verAdult: 'Erwachsenenversion', verAdultDesc: 'Realistische Spieler und Spielerinnen', verSetting: '🎮 Version' },
+  fr: { narrLang: '🗣️ Commentateur', narrSame: 'Comme le jeu', verTitle: 'Comment veux-tu jouer ?', verKids: 'Version enfants', verKidsDesc: 'Petits joueurs colorés et rigolos', verAdult: 'Version adulte', verAdultDesc: 'Joueurs et joueuses réalistes', verSetting: '🎮 Version' },
+  it: { narrLang: '🗣️ Telecronista', narrSame: 'Come il gioco', verTitle: 'Come vuoi giocare?', verKids: 'Versione bambini', verKidsDesc: 'Omini colorati e divertenti', verAdult: 'Versione adulti', verAdultDesc: 'Giocatori e giocatrici realistici', verSetting: '🎮 Versione' },
+  zh: { narrLang: '🗣️ 解说语言', narrSame: '与游戏相同', verTitle: '你想怎么玩？', verKids: '儿童版', verKidsDesc: '可爱多彩的小球员', verAdult: '成人版', verAdultDesc: '逼真的男女球员', verSetting: '🎮 版本' },
+  ja: { narrLang: '🗣️ 実況の言語', narrSame: 'ゲームと同じ', verTitle: 'どちらで遊ぶ？', verKids: 'キッズ版', verKidsDesc: 'カラフルでかわいい選手たち', verAdult: '大人版', verAdultDesc: 'リアルな男子・女子選手', verSetting: '🎮 バージョン' },
 } satisfies Record<Lang, Record<string, string>>;
 
 export const LANGS: Record<Lang, Pack> = { pt, en, es, de, fr, it, zh, ja };

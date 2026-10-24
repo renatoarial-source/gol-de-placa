@@ -191,3 +191,31 @@ select { font: 700 16px var(--font); color: var(--text); background: rgba(0, 0, 
 .logo .round-tease { margin-top: 6px; font-size: 13px; opacity: .85; }
 /* tela inicial: o topo fica mais claro para ver os dois craques ao lado do título */
 .screen.full:has(.logo) { background: linear-gradient(180deg, rgba(5, 25, 12, .1), rgba(5, 25, 12, .25) 28%, rgba(5, 25, 12, .88) 42%); }
+
+/* escolha da versão (primeira tela) */
+.ver { display: flex; align-items: center; gap: 14px; min-height: 120px; padding: 10px 14px 10px 10px; border-radius: 20px; text-align: left;
+  border: 2px solid var(--line); background: var(--panel); color: var(--text); font: inherit; cursor: pointer; }
+.ver .pic { flex: 0 0 104px; height: 104px; border-radius: 14px; background: #2a6 center/cover no-repeat; }
+.ver.kids .pic { background-image: url(ver-kids.jpg); }
+.ver.adult .pic { background-image: url(ver-adult.jpg); }
+.ver b { display: block; font-size: 22px; }
+.ver small { display: block; color: var(--muted); font-size: 15px; margin-top: 2px; }
+.screen:has(.ver) { align-content: center; }
+.ver:active { border-color: var(--yellow); }
+
+/* versão adulta: visual mais sóbrio (estádio à noite, cores de transmissão esportiva) */
+body.adult {
+  --grass: #070b14;
+  --panel: rgba(10, 16, 30, 0.9);
+  --muted: #b9c4d8;
+  --yellow: #f2c94c;
+  --yellow-ink: #141008;
+  --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+body.adult .screen.full { background: linear-gradient(180deg, rgba(4, 8, 18, .55), rgba(4, 8, 18, .92)); }
+body.adult .screen.full:has(.logo) { background: linear-gradient(180deg, rgba(4, 8, 18, .05), rgba(4, 8, 18, .2) 30%, rgba(4, 8, 18, .9) 46%); }
+body.adult .logo h1 { color: #fff; font-weight: 900; letter-spacing: 1px; transform: none; text-shadow: 0 2px 0 #b8902a, 0 8px 22px rgba(0, 0, 0, .7); }
+body.adult .logo .ball { animation-duration: 6s; }
+body.adult .btn { border-radius: 12px; box-shadow: 0 3px 0 #9c7a1c; }
+body.adult .btn.alt { box-shadow: none; }
+body.adult .card, body.adult .mode { border-radius: 12px; }

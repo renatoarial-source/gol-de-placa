@@ -62,3 +62,11 @@ Nome e descrição da compra (a Apple aceita até 55 caracteres):
 2. Rode **Publish to stores** só com Android; baixe o AAB do artefato e envie à mão na primeira vez (Teste interno). Depois o envio é automático.
 3. *Monetizar → Produtos → Produtos únicos* → `com.arial.goldeplaca.completo`, R$ 4,90.
 4. Preencha *Conteúdo do app* (público-alvo: até 12 anos, Famílias; sem anúncios; segurança dos dados: nada coletado) e a ficha da loja com `store/LISTING.md` e as capturas.
+
+## Jogadores realistas (versão adulta)
+Os modelos do Mixamo não podem ficar neste repositório público. Ficam no repositório privado
+Arial (branch `mixamo-assets`, pasta `mixamo/glb`). Na hora de montar o app, os robôs baixam os
+dois arquivos com `scripts/modelos.sh`, usando o secret `ARIAL_TOKEN`: uma chave do GitHub
+(fine-grained) que só lê o Arial (Contents: Read-only). Quando a chave vencer, crie outra igual e
+troque o valor do secret. Sem os modelos, a versão adulta mostra os bonequinhos (o jogo não quebra);
+o "Publish to stores" para com erro, para não sair uma versão sem eles.
